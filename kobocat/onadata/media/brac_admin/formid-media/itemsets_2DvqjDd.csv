@@ -1,0 +1,15 @@
+list_name,label,name,district,upazila,branch,union_name,village
+district_list,Patuakhali,78,,,,,
+,,,,,,,
+upazila_list,Patuakhali Sadar,7895,78,,,,
+,,,,,,,
+branch_list,Branch 1,789501,78,7895,,,
+,,,,,,,
+union_list,Madarbunia,78950167,78,7895,789501,,
+,,,,,,,
+village_list,Nundipara ,7895016701,78,7895,789501,78950167,
+,,,,,,,
+pra_list,PRA-01,789501670101,78,7895,789501,78950167,7895016701
+,,,,,,,
+,,,,,,,
+,,,,,,,

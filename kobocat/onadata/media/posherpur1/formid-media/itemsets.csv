@@ -1,0 +1,30 @@
+list_name,label,name,districts,upazila,union_name,village,pra
+district_list,Sherpur,89
+upazila_list,Sherpur Sadar,8988,89
+union_name_list,Kamarer Char Union,898861,89,8988
+union_name_list,Ward No-01,881101,88,8811
+union_name_list,Ward No-04,881104,88,8811
+union_name_list,Ward No-07,881107,88,8811
+union_name_list,Kamaria Union,898867,89,8988
+union_name_list,Dhala Union,898847,89,8988
+union_name_list,Ward No-05,881105,88,8811
+union_name_list,Ward No-06,881106,88,8811
+union_name_list,Char Mucharia Union,898827,89,8988
+union_name_list,Ward No-03,881103,88,8811
+union_name_list,Ward No-08,881108,88,8811
+union_name_list,Balair Char Union,898813,89,8988
+union_name_list,Ward No-09,881109,88,8811
+union_name_list,Pakuria Union,898881,89,8988
+union_name_list,Char Pakshimari Union,898833,89,8988
+union_name_list,Ghazir Khamar Union,898854,89,8988
+union_name_list,Bajitkhila Union,898811,89,8988
+union_name_list,Betmari Ghughurakandi Union,898815,89,8988
+union_name_list,Rauha Union,898888,89,8988
+union_name_list,Ward No-02,881102,88,8811
+union_name_list,Char Sherpur Union,898840,89,8988
+union_name_list,Bhatsala Union,898820,89,8988
+union_name_list,Lakshmanpur Union,898874,89,8988
+pra_list,Hawlader para,8988610101,89,8988,898861,89886101
+pra_list,Kazi para,8988670101,89,8988,898867,89886701
+village_list,Mofizpur,89886101,89,8988,898861
+village_list,Talepur,89886701,89,8988,898867

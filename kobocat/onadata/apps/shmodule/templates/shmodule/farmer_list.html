@@ -1,0 +1,127 @@
+{% extends 'base_test.html' %}
+{% load i18n %}
+
+{% block additional-headers %}
+<head>
+    <title>
+        {% block title %} Farmer Management {% endblock %}
+    </title>
+</head>
+<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}assets/plugins/select2/select2_metro.css"/>
+<link rel="stylesheet" href="{{STATIC_URL}}assets/plugins/data-tables/DT_bootstrap.css"/>
+<!--<style >
+.data-table-container table {
+    clear: both;
+    display: table !important;
+    overflow-x: auto;
+    width: 98% !important;
+}
+
+.table th, .table td {
+    border: 1px solid #dddddd !important;
+}
+</style>-->
+{% endblock %}
+
+{% block content %}
+
+<form action="/tupmodule/add-cohort/">
+    <input type="submit" class="btn red pull-right" value="Add New" style="margin-bottom:15px;">
+</form>
+<div class="portlet box red">
+    <div class="portlet-title">
+        <div class="caption"><i class="fa fa-users"></i>Farmer List</div>
+    </div>
+    <div class="portlet-body">
+        <table id="farmer_table" class="table table-bordered table-striped table-condensed flip-content">
+            <thead class="flip-content">
+            <tr>
+                <!--<th>Farmer's Name</th>-->
+                <!--<th>Mobile Number</th>-->
+                <!--<th>Number of Cases</th>-->
+                <!--<th>Registered By</th>-->
+                <!--<th>Date & Time</th>-->
+                <!--<th class="td-center">Action</th>-->
+            </tr>
+            </thead>
+            <tbody>
+
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="myModalLabel">Confirm Action</h4>
+            </div>
+
+            <div class="modal-body">
+                <p>You are about to delete a , this procedure is irreversible.</p>
+                <p>Do you want to proceed?</p>
+                <p class="debug-url"></p>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <a href="#" class="btn btn-danger btn-ok">Delete</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block additional-javascript %}
+<script type="text/javascript" src="{{STATIC_URL}}assets/plugins/data-tables/jquery.dataTables.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}assets/plugins/data-tables/DT_bootstrap.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/cupdashboard.js"></script>
+<script>
+    $('.delete-item').on('click', function(e) {
+        var criteria_id = $(this).attr("data-href");
+        $('.btn-ok').attr("href",criteria_id);
+    });
+
+    $(document).ready(function(){
+
+        filterFarmerList();
+//        $('#farmer_table').dataTable({
+//        // set the initial value
+//        "iDisplayLength": 10,
+//        "sPaginationType": "bootstrap",
+//        "aLengthMenu": [
+//            [10, 20, 50, -1],
+//            [10, 20, 50, "All"] // change per page values here
+//        ],
+//        "aoColumnDefs": [{
+//                'bSortable': false,
+//                'aTargets': [2]
+//            }
+//        ]
+//    });
+
+//$('#farmer_table_wrapper .dataTables_filter input').addClass("form-control input-medium"); // modify table search input
+//$('#farmer_table_wrapper .dataTables_length select').addClass("form-control input-xsmall"); // modify table per page dropdown
+
+if ($('.alert-block').is(':visible')) {
+            window.setTimeout(function () {
+                    $(".alert-success").fadeTo(1500, 0).slideUp(500, function () {
+                        $(this).remove();
+                    });
+                }, 5000);
+            }
+
+});
+
+
+
+
+
+</script>
+{% endblock %}

@@ -1,0 +1,10 @@
+list_name,label,name,districts,upazila,union_name,village
+district_list,Bogra,10,,,,
+district_list,Sirajganj,88,,,,
+upazila_list,Belkuchi,8811,88,,,
+upazila_list,Dhunat,1027,10,,,
+union_name_list,Bara Dhul,881113,88,8811,,
+union_name_list,Nimgachhi,102795,10,1027,,
+union_name_list,Bhangabari,881140,88,8811,,
+village_list,Village Test,10279501,10,1027,102795,
+pra_list,PRA Test,1027950101,10,1027,102795,10279501

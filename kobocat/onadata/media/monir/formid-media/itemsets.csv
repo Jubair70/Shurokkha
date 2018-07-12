@@ -1,0 +1,16 @@
+list_name,label,name,districts,upazila,union_name,village,pra
+district_list,Sirajganj,88
+upazila_list,Tarash,8889,88
+union_name_list,Magura Binod Union,888942,88,8889
+union_name_list,Baruhas Union,888910,88,8889
+union_name_list,Saguna Union,888963,88,8889
+union_name_list,Deshigram Union,888921,88,8889
+union_name_list,Madhainagar Union,888931,88,8889
+union_name_list,Naogaon Union,888952,88,8889
+union_name_list,Talam Union,888973,88,8889
+union_name_list,Tarash Union,888984,88,8889
+pra_list,Majhipara,8889100201,88,8889,888910,88891002
+pra_list,Natunpara,8889100202,88,8889,888910,88891002
+pra_list,Madhyampara,8889100101,88,8889,888910,88891001
+village_list,Ahmedpur,88891002,88,8889,888910
+village_list,Rasulpur,88891001,88,8889,888910

@@ -1,0 +1,32 @@
+list_name,label,name,districts,upazila,union_name,village,pra
+district_list,Jamalpur,39
+upazila_list,Jamalpur Sadar,3936,39
+union_name_list,Ward No-11,765511,76,7655
+union_name_list,Narundi Union,393653,39,3936
+union_name_list,Ward No-01,881101,88,8811
+union_name_list,Ward No-04,881104,88,8811
+union_name_list,Ward No-07,881107,88,8811
+union_name_list,Ward No-05,881105,88,8811
+union_name_list,Kendua Union,393635,39,3936
+union_name_list,Ward No-03,881103,88,8811
+union_name_list,Ward No-08,881108,88,8811
+union_name_list,Lakshmir Char Union,393641,39,3936
+union_name_list,Ward No-09,881109,88,8811
+union_name_list,Banshchara Union,393613,39,3936
+union_name_list,Sreepur Union,393683,39,3936
+union_name_list,Ranagachha Union,393659,39,3936
+union_name_list,Ghoradhap Union,393617,39,3936
+union_name_list,Ward No-02,881102,88,8811
+union_name_list,Rashidpur Union,393665,39,3936
+union_name_list,Tulsir Char Union,393695,39,3936
+union_name_list,Ward No-10,765510,76,7655
+union_name_list,Digpaith Union,393619,39,3936
+union_name_list,Titpalla Union,393689,39,3936
+union_name_list,Itail Union,393623,39,3936
+union_name_list,Sahabajpur Union,393671,39,3936
+union_name_list,Ward No-06,881106,88,8811
+union_name_list,Ward No-12,765512,76,7655
+union_name_list,Meshta Union,393647,39,3936
+union_name_list,Sharifpur Union,393677,39,3936
+village_list,Tati para,39365302,39,3936,393653
+village_list,Kamar para,39365301,39,3936,393653

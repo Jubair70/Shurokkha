@@ -1,0 +1,7 @@
+list_name,label,name,district,upazila,union_name,village
+district_list,Sirajganj,88
+upazila_list,Belkuchi,8811,88
+union_name_list,Bhangabari,881140,88,8811
+union_name_list,Bara Dhul,881113,88,8811
+village_list,Bad gram,88114003,88,8811,881140
+village_list,Valo Gram,88111301,88,8811,881113

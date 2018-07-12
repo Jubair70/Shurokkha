@@ -1,0 +1,34 @@
+list_name,label,name,districts,upazila,union_name,village,pra
+district_list,Pabna,76
+upazila_list,Pabna Sadar,7655,76
+union_name_list,Ward No-11,765511,76,7655
+union_name_list,Dapunia Union,765534,76,7655
+union_name_list,Malanchi Union,765569,76,7655
+union_name_list,Ward No-01,881101,88,8811
+union_name_list,Ward No-04,881104,88,8811
+union_name_list,Ward No-07,881107,88,8811
+union_name_list,Bharara Union,765517,76,7655
+union_name_list,Char Tarapur Union,765525,76,7655
+union_name_list,Ward No-05,881105,88,8811
+union_name_list,Ward No-03,881103,88,8811
+union_name_list,Ward No-08,881108,88,8811
+union_name_list,Gayeshpur Union,765551,76,7655
+union_name_list,Maligachha Union,765577,76,7655
+union_name_list,Ward No-09,881109,88,8811
+union_name_list,Dogachhi Union,765543,76,7655
+union_name_list,Sadullahpur Union,765594,76,7655
+union_name_list,Ataikola Union,765516,76,7655
+union_name_list,Hemayetpur Union,765560,76,7655
+union_name_list,Ward No-14,765514,76,7655
+union_name_list,Ward No-13,765513,76,7655
+union_name_list,Ward No-02,881102,88,8811
+union_name_list,Ward No-10,765510,76,7655
+union_name_list,Ward No-15,765515,76,7655
+union_name_list,Ward No-06,881106,88,8811
+union_name_list,Ward No-12,765512,76,7655
+pra_list,Matborbari,7655340301,76,7655,765534,76553403
+pra_list,Sarkar para,7655340101,76,7655,765534,76553401
+pra_list,Kazipara,7655340201,76,7655,765534,76553402
+village_list,Kalmegha,76553403,76,7655,765534
+village_list,Suhilpur,76553401,76,7655,765534
+village_list,Ruhitpur,76553402,76,7655,765534

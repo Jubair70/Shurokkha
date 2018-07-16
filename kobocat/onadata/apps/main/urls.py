@@ -272,7 +272,7 @@ urlpatterns = patterns(
     url(r"^xformsMedia/(?P<pk>[\d+^/]+)/(?P<metadata>[\d+^/.]+)\."
         "(?P<format>[a-z0-9]+)$",
         XFormListApi.as_view({'get': 'media'}), name='xform-media'),
-    url(r"^(?P<username>\w+)/submission$",
+    url(r"^(?P<username>[\w.%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4})/submission$",
         XFormSubmissionApi.as_view({'post': 'create', 'head': 'create'}),
         name='submissions'),
     url(r"^(?P<username>\w+)/bulk-submission$",

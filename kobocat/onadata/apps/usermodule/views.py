@@ -2260,7 +2260,7 @@ def login_verify(request):
         # This information is obtained from the login form.
 	print "check1"
 	print request.body
-        json_string = request.body
+        json_string = request.POST.get('data')
 	print "check2" +json_string
         data = json.loads(json_string)
 	print "check3 "
@@ -2354,8 +2354,8 @@ def save_user(request):
 
 
     """
-    json_string = request.body
-    # json_string = data
+    json_string = request.POST.get('data')
+    print json_string
     # print json_string
     data = json.loads(json_string)
     submitted_data = {}

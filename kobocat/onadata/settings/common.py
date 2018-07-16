@@ -249,6 +249,7 @@ INSTALLED_APPS = (
     #'highcharts',
     'onadata.apps.audit_log',
     'crispy_forms',
+    'onadata.apps.livestock',
 )
 
 OAUTH2_PROVIDER = {

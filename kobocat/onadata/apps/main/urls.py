@@ -28,6 +28,7 @@ urlpatterns = patterns(
     url(r'^approve-status/', include('onadata.apps.approval.urls', namespace="approval-status")),
     url(r'^unicef/', include('onadata.apps.unicef.urls', namespace="unicef")),
     url(r'^audit/', include('onadata.apps.audit_log.urls', namespace="audit_log",app_name="audit_log")),
+    url(r'^livestock/', include('onadata.apps.livestock.urls', namespace="livestock")),
 
     # tupmodule
     #url(r'^tupmodule/', include('onadata.apps.tupmodule.urls', namespace="tupmodule")),

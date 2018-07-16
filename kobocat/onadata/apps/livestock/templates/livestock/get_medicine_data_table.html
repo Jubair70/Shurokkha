@@ -1,0 +1,25 @@
+<table id ="medicine_table" class="table table-bordered table-hover table-fixed table-striped">
+        <thead>
+            <th> SL NO </th>
+            <th>Medicine Type </th>
+            <th> Medicine name </th>
+            <th> Pack Size </th>
+            <th>Action  </th>
+        </thead>
+        <tbody>
+        {% for data in dataset %}
+        <tr>
+            <td>{{data.id}}</td>
+            <td>{{data.m_type }}</td>
+            <td> {{ data.medicine_name }}</td>
+            <td> {{ data.packsize }}</td>
+            <td>
+                <button onclick="edit_entity('{{ data.id }}')" id = ""  class="btn btn-primary btn-md"  data-original-title="" title="">Edit</button>
+                <button onclick="delete_entity('{{ data.id }}')" id = ""  class="btn btn-danger btn-md"  data-original-title="" title="">Delete</button>
+
+            </td>
+
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>

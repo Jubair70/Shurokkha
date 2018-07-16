@@ -1,0 +1,333 @@
+{% extends "base_test.html" %}
+{% block additional-headers %}
+    <link href="/static/css/datepicker.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="/static/js/DataTables/datatables.css">
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.29.0/mapbox-gl.css' rel='stylesheet'/>
+    <style type="text/css">
+
+
+    </style>
+{% endblock %}
+
+{% block content %}
+
+
+    <div class="">
+
+        <div class ="col-md-12" style = "">
+
+                <div class="page-header align">
+                   <h4>Medicine list</h4>
+                </div>
+
+                <div class = "col-md-12" style="margin-bottom:15px;"></div>
+
+            </div>
+
+
+
+        <div class="row " >
+            <div class="col-md-4">
+                <select class="form-control" id="add_med_types" name="">
+                    <option value="" selected>Add medicine</option>
+                    <option value="1">Upload medicine by Excel</option>
+                    <option value="2">Add medicine by form</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="portlet box red" style="margin-top:15px;">
+            <div class="portlet-title">
+                <div class="caption"><i class="fa fa-adn"></i></div>
+            </div>
+            <div class="portlet-body">
+                <div id="medicine_table_block">
+
+                </div>
+            </div>
+        </div>
+
+    </div> <!--end tab content-->
+
+
+ <!-- ADD MEDICINE EXCEL UPLOAD MODAL-->
+<div class="modal fade" id="upload_excel_modal" tabindex="-1" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <button type="button" class="bootbox-close-button close" data-dismiss="modal" aria-hidden="true" style="margin-top: -10px;">×</button>
+                    <div class="portlet box red">
+    <div class="portlet-title">
+        <div class="caption"><i class="fa fa-adn"></i>Upload medicine</div>
+    </div>
+    <div class="portlet-body form">
+    <form id="upload_medicine_form" class="horizontal-form "  method="post"
+                       action="/livestock/upload_medicine/"
+                      enctype="multipart/form-data">
+                    {% csrf_token %}
+
+        <div class="form-body">
+                    <div class="row"><div id="error_msg_upload" style="color:red;margin-left: 10px;margin-top: 10px;"> </div></div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="Field Name">Upload an excel file</label><br>
+                                <input type="file" name="ex_file">
+
+                            </div>
+                        </div>
+                    </div>
+
+
+
+
+
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <button class="btn btn-danger pull-left" id="submit" name="submit" type="submit"
+                                    data-original-title=""
+                                    title="">Submit
+                            </button>
+                            <!--<button onclick="history.go(-1);" style="margin-left:10px;" type="button"
+                                    class="btn btn-info pull-left" data-original-title="" title="">Cancel
+                            </button>-->
+                        </div>
+                    </div>
+        </div>
+    </form>
+                </div>
+    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn  btn-success" data-dismiss="modal">Close</button>
+                    </button>
+                </div>
+            </div>
+        </div>
+</div>
+<!-- ADD MEDICINE FORM MODAL-->
+    <div class="modal fade" id="add_med_form_modal" tabindex="-1" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <button type="button" class="bootbox-close-button close" data-dismiss="modal" aria-hidden="true" style="margin-top: -10px;">×</button>
+                    <div class="portlet box red">
+    <div class="portlet-title">
+        <div class="caption"><i class="fa fa-adn"></i>Add medicine</div>
+    </div>
+    <div class="portlet-body form">
+    <form id="add_medicine_form" class="horizontal-form "  method="post"
+                       action="/livestock/add_medicine/"
+                      enctype="multipart/form-data">
+                    {% csrf_token %}
+<input type="hidden" id="med_id" value="">
+        <div class="form-body">
+                    <div class="row"><div id="error_msg" style="color:red;margin-left: 10px;margin-top: 10px;"> </div></div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="Field Name">Medicine Type</label><br>
+                                <select required class="form-control cattle_type " id="medicine_type" name="medicine_type">
+                                        {% for type in type_list %}
+                                            <option value="{{ type.0 }}">{{ type.1 }}</option>
+                                        {% endfor %}
+                                </select>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="Field Name">Medicine name</label>
+                                <input type="text" required class="form-control cattle_type" id="trans_to" name="medicine_name">
+
+
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="Field Name">Pack Size</label>
+                                <input type="text" required class="form-control cattle_type" id="trans_to" name="pack_size">
+
+
+                            </div>
+                        </div>
+
+                    </div>
+
+
+
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <button class="btn btn-danger pull-left" id="submit" name="submit" type="submit"
+                                    data-original-title=""
+                                    title="">Submit
+                            </button>
+                            <!--<button onclick="history.go(-1);" style="margin-left:10px;" type="button"
+                                    class="btn btn-info pull-left" data-original-title="" title="">Cancel
+                            </button>-->
+                        </div>
+                    </div>
+        </div>
+    </form>
+                </div>
+    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn  btn-success" data-dismiss="modal">Close</button>
+                    </button>
+                </div>
+            </div>
+        </div>
+</div>
+    <!-- DELETE SUCCESS MODAL-->
+    <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <button type="button" class="bootbox-close-button close" data-dismiss="modal" aria-hidden="true" style="margin-top: -10px;">×</button>
+                        <h4 class="modal-title" id="myModalLabel">Medicine has been deleted successfully.</h4>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn  btn-success" data-dismiss="modal">Close</button>
+                        </button>
+                    </div>
+                </div>
+            </div>
+    </div>
+<!--modal ended-->
+{% endblock %}
+
+{% block additional-javascript %}
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.15/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.3.1/js/dataTables.buttons.min.js"></script>
+
+        <script>
+        $(document).ready(function () {
+            //var s_type = ''
+            get_medicine_data_table()
+        });
+
+
+        function get_medicine_data_table(){
+            $.ajax({
+                url: '/livestock/get_medicine_data_table/',
+                type: 'POST',
+                success: function (data) {
+                    $("#medicine_table_block").html(data);
+                    $('#medicine_table').dataTable({
+                                "retrieve": true,
+                                "bFilter": true,
+                                "paging": true,
+                                "scrollCollapse": true,
+                                select: true,
+                                dom: 'Bfrtip',
+                                //dom: 'Blfrtip',
+                                buttons: [{extend: 'excel',  exportOptions: {
+            columns: 'th:not(:last-child)'
+        },text: "Export to excel", title: 'Cattle data list'}],
+                                ordering: true,
+                                "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+                                "scrollX": true
+
+                            });
+
+                }
+            });
+    //}
+    }
+
+    $(document).on("change", "#add_med_types", function () {
+            var add_medi_type = $("#add_med_types").val();
+            if (add_medi_type == 1) {
+                $('#upload_excel_modal').modal('show');
+                $('#error_msg_upload').html("");
+            }
+            if (add_medi_type == 2) {
+                $('#add_med_form_modal').modal('show');
+                $('#error_msg').html("")
+            }
+
+        });
+
+        $(document).on("submit", "#add_medicine_form", function (event) {
+            event.preventDefault();
+            form_url = $(this).attr('action');
+            console.log("url is:");console.log($(this).serialize());
+            $.ajax({
+                type: 'POST',
+                url: form_url,
+                data: $(this).serialize(),
+                success: function (data) {
+                    $('#add_med_form_modal').modal('toggle');
+                    get_medicine_data_table()
+
+                },
+                error: function (xhr, status, error) {
+                    console.log("error occured");
+                    $('#error_msg').html("<h5><strong>error.</strong></h5>");
+                }
+            }); //ajax end
+        });
+
+        $(document).on("submit", "#upload_medicine_form", function (event) {
+            event.preventDefault();
+            form_url = $(this).attr('action');
+            var data = new FormData(this); // <-- 'this' is form element
+            //return formData;
+            $.ajax({
+                type: 'POST',
+                url: form_url,
+                contentType: false,
+                processData: false,
+                data: data,
+                success: function (data) {
+                    get_medicine_data_table()
+                },
+                error: function (xhr, status, error) {
+                    $('#error_msg_upload').html("<h5><strong>"+xhr.responseText+"</strong></h5>");
+                }
+            }); //ajax end
+        });
+        function delete_entity(id){
+            if(confirm("Are you sure you want to delete this?")){
+                $.ajax({
+                type : 'GET',
+                url : "/livestock/delete_medicine/"+id+"/",
+                success : function(data) {
+                    $('#deleteModal').modal('show');
+                    get_medicine_data_table();
+                }
+            }); //ajax end
+            }
+            else{
+                return false;
+            }
+
+        }
+
+        function edit_entity(id){
+            $('#add_med_form_modal').modal('show');
+            $('#med_id').val(id);
+            $.ajax({
+                type : 'GET',
+                url : "/livestock/edit_medicine/"+id+"/",
+                success : function(data) {
+                    console.log(typeof (data))
+                    datao = $.parseJSON(data)
+                    $.each(datao, function (i, obj) {
+                        console.log(obj.med_type);
+                    });
+                    //load_datepicker();
+                }
+            }); //ajax end
+        }
+    </script>
+{% endblock %}

@@ -95,11 +95,14 @@ def add_medicine(request):
         medicine_type = request.POST.get('medicine_type')
         medicine_name = request.POST.get('medicine_name')
         pack_size = request.POST.get('pack_size')
+        id = request.POST.get('id')
         check_q = "select * from medicine where medicine_type::text like '"+medicine_type+"' and medicine_name like '"+medicine_name+"' and  packsize like '"+pack_size+"' "
         data = __db_fetch_values_dict((check_q))
-        print len(data)
         if len(data) == 0:
-            q = "INSERT INTO public.medicine(id, medicine_type, medicine_name, packsize, created_at, created_by)VALUES (DEFAULT , '"+medicine_type+"','"+medicine_name+"', '"+pack_size+"', NOW(), "+str(request.user.id)+");"
+            if id == '':
+                q = "INSERT INTO public.medicine(id, medicine_type, medicine_name, packsize, created_at, created_by)VALUES (DEFAULT , '"+medicine_type+"','"+medicine_name+"', '"+pack_size+"', NOW(), "+str(request.user.id)+");"
+            else:
+                q = "update public.medicine set medicine_type = "+medicine_type+" ,medicine_name = '"+medicine_name+"',packsize='"+pack_size+"' where id ="+id
             __db_commit_query(q)
         else:
             return HttpResponse(json.dumps(len(data)), content_type="application/json", status=500)

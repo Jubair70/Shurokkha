@@ -1,0 +1,182 @@
+{% extends 'base_test.html' %}
+
+{% block additional-headers %}
+
+
+    <link rel="stylesheet" type="text/css" media="all" href="/static/css/Date-Range-Picker-For-Twitter-Bootstrap/daterangepicker.css" />
+
+    <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}assets/plugins/select2/select2_metro.css"/>
+<link rel="stylesheet" href="{{STATIC_URL}}assets/plugins/data-tables/DT_bootstrap.css"/>
+
+
+
+    <style type="text/css">
+    .thumbnail{
+        border: 0;
+    }
+
+    </style>
+
+{% endblock %}
+
+
+{% block content %}
+    <div class ="col-md-12" style = "">
+    <div class="page-header align">
+        <h3>Approval Queue</h3>
+    </div>
+
+
+    <div class="row">
+        <div class="col-md-2"><label class="control-label">User </label><br>
+            <select class="form-control" id = "gender">
+            <option value="%">All</option>
+
+            </select>
+        </div>
+
+        <div class="col-md-2"><label class="control-label">Status </label><br>
+            <select class="form-control" id = "gender">
+            <option value="%">All</option>
+                <option value="0">Pending</option>
+                <option value="1">Approved</option>
+
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="control-label"> </label><br>
+            <button id="filter_beneList" style="margin-top:8px;" class="btn red-custom btn-md"  data-original-title="" title="">Search</button>
+        </div>
+
+    </div>
+
+    </div>
+
+    <br>
+    <div class="portlet box red" style="margin-top:15px;">
+            <div class="portlet-title">
+                <div class="caption"><i class="fa fa-adn"></i></div>
+            </div>
+            <div class="portlet-body">
+
+                <div id="approval_table_block">
+
+                </div>
+            </div>
+        </div>
+
+</div>
+{% endblock %}
+
+{% block additional-javascript %}
+
+
+
+    <!--datatable -->
+    <script type="text/javascript" src="{{STATIC_URL}}assets/plugins/data-tables/jquery.dataTables.js"></script>
+    <script type="text/javascript" src="{{STATIC_URL}}assets/plugins/data-tables/DT_bootstrap.js"></script>
+    <!--datatable ended-->
+     <script type="text/javascript" src="/static/js/Date-Range-Picker-For-Twitter-Bootstrap/date.js"></script>
+	<script type="text/javascript" src="/static/js/Date-Range-Picker-For-Twitter-Bootstrap/daterangepicker.js"></script>
+
+
+    <script>
+        var district = '%';
+        var upazila = '%';
+        var union = '%';
+        var ward = '%';
+        var gender = '%';
+        var start_date = '';
+        var end_date = '';
+        var youth_group_affliation = '%';
+        var train_id = '%';
+        $( ".datepicker" ).each(function() {
+            $(this).datepicker({autoclose:true  });
+        });
+
+
+        //  Page Loading First Time
+
+        $(document).ready(function () {
+            get_approval_table()
+            $('#date_range').daterangepicker({ showDropdowns: true,maxDate: new Date()});
+
+        });
+
+    function getfilterCriteria(){
+        district = $('#district').val();
+        upazila = $('#upazila').val();
+        union = $('#union').val();
+    }
+
+    function get_approval_table(){
+        $.ajax({
+            url: '/livestock/get_approval_table/',
+            type: 'POST',
+            data:{
+                },
+
+            success: function (data) {
+                $("#approval_table_block").html(data);
+                $('#approval_table_id').dataTable({
+                            "retrieve": true,
+                            "bFilter": true,
+                            "paging": true,
+                            "scrollCollapse": true,
+                            select: true,
+                            // dom: 'Bfrtip',
+                            dom: 'Blfrtip',
+                            buttons: [{extend: 'excel', text: "Export to excel", title: 'Direct Beneficiary list'}],
+                            ordering: true,
+                            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+                            "scrollX": true
+
+                        });
+
+            }
+        });
+    //}
+    }
+
+     $(document).on("click", "#filter_beneList", function () {
+         console.log("trigger filter");
+         $('#benelist_table_id').DataTable().destroy()
+         getfilterCriteria();
+         getBeneListTable();
+     });
+
+     function approve_entity(id,role,mobile) {
+         console.log(id);
+         if(confirm("Are you sure you want to approve this?")){
+            $.ajax({
+                type : 'POST',
+                dataType : 'json',data:{'role' :role,'mobile' : mobile},
+                url : "/livestock/approve/"+id+"/",
+                success : function(data) {
+                    //alert(data)
+                    get_approval_table();
+                }
+            }); //ajax end
+        }
+
+     }
+
+    function reject_entity(id,role,mobile) {
+         console.log(id);
+         if(confirm("Are you sure you want to reject this?")){
+            $.ajax({
+                type : 'POST',
+                dataType : 'json',data:{'role' :role,'mobile' : mobile},
+                url : "/livestock/reject/"+id+"/",
+                success : function(data) {
+                    //alert(data)
+                    get_approval_table();
+                }
+            }); //ajax end
+        }
+
+     }approve_entity
+
+</script>
+
+{% endblock %}

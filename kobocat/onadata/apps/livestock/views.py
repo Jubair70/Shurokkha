@@ -17,6 +17,11 @@ import pandas as pd
 import decimal
 
 import pandas as pd
+from onadata.apps.usermodule.models import OrganizationRole,MenuRoleMap,UserRoleMap
+from django.contrib.auth.models import User
+from django.core.mail import send_mail, BadHeaderError
+import smtplib
+
 
 def __db_fetch_values(query):
     cursor = connection.cursor()
@@ -193,3 +198,52 @@ def get_farmer_table(request):
     q = "select * from farmer"
     dataset = __db_fetch_values_dict(q)
     return render(request,"livestock/farmer_table.html",{'dataset' : dataset})
+
+@login_required
+def approval_list(request):
+    return render(request, "livestock/approval_list.html")
+
+def get_approval_table(request):
+    q = "select * from approval_queue"
+    dataset = __db_fetch_values_dict(q)
+    return render(request,"livestock/approval_table.html",{'dataset' : dataset})
+
+
+def approve(request,id):
+    role_name = request.POST.get('role')
+    mobile = request.POST.get('mobile')
+    q = "update approval_queue set status = 1,approve_by = "+str(request.user.id)+",approval_date = NOW() where id  ="+str(id)
+    __db_commit_query(q)
+    role_list = []
+    role_list.append(role_name)
+    user_roles = OrganizationRole.objects.filter(role__in=role_list)
+    user = User.objects.filter(username=mobile).first()
+    profile = user.usermoduleprofile
+    for role in user_roles:
+        UserRoleMap(user=profile, role=role).save()
+
+    # TO DO :: Notification
+    send_mail(
+        'Successful Approval',
+        'Hi,\n\nWelcome to Shurokkha!!\n\nYou are successfully approved as ' + role_name + '.',
+        'zinia@mpower-social.com',
+        [mobile],
+        fail_silently=False,
+    )
+    return HttpResponse(json.dumps("Approved Successfully."), content_type="application/json", status=200)
+
+
+def reject(request,id):
+    role = request.POST.get('role')
+    mobile = request.POST.get('mobile')
+    q = "update approval_queue set status = 2,approve_by = "+str(request.user.id)+",approval_date = NOW() where id  ="+str(id)
+    __db_commit_query(q)
+    # TO DO :: Notification
+    send_mail(
+        'Rejected Approval',
+        'Hi,\n\nWelcome to Shurokkha!!\n\nYou are Rejected.',
+        'zinia@mpower-social.com',
+        [mobile],
+        fail_silently=False,
+    )
+    return HttpResponse(json.dumps("Rejected Successfully."), content_type="application/json", status=200)

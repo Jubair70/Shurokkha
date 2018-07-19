@@ -1,0 +1,26 @@
+<table id ="approval_table_id" class="table table-bordered table-hover table-fixed table-striped">
+        <thead>
+            <th> Name </th>
+            <th>Mobile number</th>
+            <th> Type</th>
+            <th>Status</th>
+            <th>Action</th>
+        </thead>
+        <tbody>
+        {% for data in dataset %}
+        <tr>
+            <td>{{data.name}}</td>
+            <td>{{data.mobile }}</td>
+            <td> {{ data.role_name }}</td>
+            <td> {%  if data.status == 0  %} Pending {% elif data.status == 1 %} Approved {% else %}"" {% endif %}</td>
+            <td>
+                <button onclick="approve_entity('{{ data.id }}','{{ data.role_name }}','{{ data.mobile }}')" id = ""  class="btn btn-primary btn-md"  data-original-title="" title="">Approve</button>
+                <button onclick="reject_entity('{{ data.id }}','{{ data.role_name }}','{{ data.mobile }}')" id = ""  class="btn btn-danger"  data-original-title="" title="">Reject</button>
+                <button onclick="edit_entity('{{ data.id }}')" id = ""  class="btn btn-primary green"  data-original-title="" title="">Update</button>
+
+            </td>
+
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>

@@ -179,8 +179,10 @@ def save_user(request):
         # submitted_data['last_name'] = data['LastName'][0].upper() + data['LastName'][1:]
         role = data['occupation']
         role_list = ['Farmer']
+        '''
         if role != 'Farmer':
             role_list.append(role)
+        '''
         user_roles = OrganizationRole.objects.filter(role__in=role_list)
         # submitted_data['role'] = Role.id
 
@@ -254,12 +256,15 @@ def save_user(request):
             auth_user_id = user.id
             farmer_name = data['name'][0].upper() + data['name'][1:]
             mobile = data['phone']
-            if data['occupation'] == 'Farmer':
-                insert_q = "INSERT INTO public.farmer(id, farmer_name, mobile,submission_time,submitted_by)VALUES (DEFAULT, '" + farmer_name + "','" + mobile + "', NOW()," + str(
-                    auth_user_id) + ");"
-                print insert_q
-                views.__db_commit_query(insert_q)
-
+            #if data['occupation'] == 'Farmer':
+            insert_q = "INSERT INTO public.farmer(id, farmer_name, mobile,submission_time,submitted_by)VALUES (DEFAULT, '" + farmer_name + "','" + mobile + "', NOW()," + str(
+                auth_user_id) + ");"
+            print insert_q
+            views.__db_commit_query(insert_q)
+            if data['occupation'] != 'Farmer':
+                approval_q = "INSERT INTO public.approval_queue(id,name, mobile, role_name, status, submitted_by, submission_time)VALUES (DEFAULT, '"+farmer_name+"','"+mobile+"', '"+data['occupation']+"', 0, "+str(auth_user_id)+", NOW());"
+                print approval_q
+                views.__db_commit_query(approval_q)
 
                 ## Sending notification mail ----------- (Start) // we have imported (from django.core.mail import send_mail)
 
@@ -301,6 +306,8 @@ def get_farmer_list(request):
     q= "select *,string_to_array(gps,' ') gps_list,date(submission_time)::text as s_date from farmer"
     dataset = views. __db_fetch_values_dict(q)
     data_list = []
+    farmerprofileupdate_form_owner_q = "select (select username from auth_user where id = logger_xform.user_id limit 1) as user_name from public.logger_xform where id_string = 'farmer_profile_update'"
+    farmerprofileupdate_form_owner = views.__db_fetch_single_value(farmerprofileupdate_form_owner_q)
     for temp in dataset:
         data_dict = {}
         data_dict['id'] = temp['id']
@@ -318,6 +325,11 @@ def get_farmer_list(request):
             gps = ""
         data_dict['gps'] = gps
         data_dict['submission_date'] = temp['s_date']
+        img = ""
+        if temp['image'] is not None:
+            img = temp['image']
+        data_dict['image_url'] = "media/"+farmerprofileupdate_form_owner+"/attachments/"+img
+
         data_list.append(data_dict.copy())
         data_dict.clear()
     return HttpResponse(json.dumps(data_list))

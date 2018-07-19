@@ -12,6 +12,11 @@ urlpatterns = patterns('',
 
                         url(r'^farmer_list/$', views.farmer_list, name='farmer_list'),
                         url(r'^get_farmer_table/$', views.get_farmer_table, name='get_farmer_table'),
+                        url(r'^approval_list/$', views.approval_list, name='approval_list'),
+                        url(r'^get_approval_table/$', views.get_approval_table, name='get_approval_table'),
+                        url(r'^approve/(?P<id>\d+)/$', views.approve, name='approve'),
+                        url(r'^reject/(?P<id>\d+)/$', views.reject, name='reject'),
+
 
 
                        #******************   MOBILE API     ***********************************#

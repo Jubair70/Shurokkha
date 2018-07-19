@@ -1,6 +1,6 @@
 from django.conf.urls import patterns, include, url
 from django.contrib import admin
-from . import views
+from . import views,views_api
 
 urlpatterns = patterns('',
                        url(r'^medicine_list/$', views.medicine_list, name='medicine_list'),
@@ -9,6 +9,15 @@ urlpatterns = patterns('',
                         url(r'^upload_medicine/$', views.upload_medicine, name='upload_medicine'),
                         url(r'^delete_medicine/(?P<id>\d+)/$', views.delete_medicine, name='delete_medicine'),
                         url(r'^edit_medicine/(?P<id>\d+)/$', views.edit_medicine, name='edit_medicine'),
+
+                        url(r'^farmer_list/$', views.farmer_list, name='farmer_list'),
+                        url(r'^get_farmer_table/$', views.get_farmer_table, name='get_farmer_table'),
+
+
+                       #******************   MOBILE API     ***********************************#
+                        url(r"^get/user_info/$", views_api.login_verify, name='user_verify'),
+                        url(r"^save_user/$", views_api.save_user, name='save_user'),
+                        url(r"^get_farmer_list/$", views_api.get_farmer_list, name='get_farmer_list'),
 
 
                        )

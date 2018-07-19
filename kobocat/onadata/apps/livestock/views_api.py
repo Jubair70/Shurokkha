@@ -1,0 +1,324 @@
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.hashers import make_password
+from django.contrib import messages
+from django.db.models import Count,Q
+from django.http import (
+    HttpResponseRedirect, HttpResponse)
+from django.shortcuts import render_to_response, get_object_or_404
+from django.template import RequestContext,loader
+from django.contrib.auth.models import User
+from datetime import date, timedelta, datetime
+# from django.utils import simplejson
+import json
+
+from django.db import (IntegrityError,transaction)
+from django.db.models import ProtectedError
+from django.shortcuts import redirect
+from onadata.apps.main.models.user_profile import UserProfile
+from onadata.apps.usermodule.forms import UserForm, UserProfileForm, ChangePasswordForm, UserEditForm,OrganizationForm,OrganizationDataAccessForm,ResetPasswordForm
+from onadata.apps.usermodule.models import UserModuleProfile, UserPasswordHistory, UserFailedLogin,Organizations,OrganizationDataAccess
+
+from onadata.apps.usermodule.models import OrganizationRole,MenuRoleMap,UserRoleMap
+
+from django.views.decorators.csrf import csrf_exempt
+from django.db import connection
+import pandas
+from django.shortcuts import render
+from collections import OrderedDict
+
+from django.core.files.storage import FileSystemStorage
+import string
+import random
+
+
+from django.core.mail import send_mail, BadHeaderError
+import smtplib
+from onadata.apps.livestock import views
+
+
+
+
+def get_farm_id(auth_user_id):
+    farm_id = 0
+    query = "select organisation_name_id from usermodule_usermoduleprofile where user_id ="+str(auth_user_id)+" limit 1"
+    farm_id = views.__db_fetch_single_value(query)
+    print ("Farm ID ::"+str(farm_id))
+    return farm_id
+# mobile login verify
+
+@csrf_exempt
+def login_verify(request):
+    if request.method == 'POST':
+        # Gather the username and password provided by the user.
+        # This information is obtained from the login form.
+        print "check1"
+        print request.body
+        json_string = request.POST.get('data')
+        print "check2" + json_string
+        data = json.loads(json_string)
+        print "check3 "
+        username = data['phone']
+        password = data['verification_code']
+        # Use Django's machinery to attempt to see if the username/password
+        # combination is valid - a User object is returned if it is.
+        user = authenticate(username=username, password=password)
+
+        # If we have a User object, the details are correct.
+        # If None (Python's way of representing the absence of a value), no user
+        # with matching credentials was found.
+
+        if user:
+
+            # number of login attempts allowed
+            max_allowed_attempts = 5
+            # count of invalid logins in db
+            counter_login_attempts = UserFailedLogin.objects.filter(user_id=user.id).count()
+            # check for number of allowed logins if it crosses limit do not login.
+            if counter_login_attempts > max_allowed_attempts:
+                # return HttpResponse("Your account is locked for multiple invalid logins, contact admin to unlock")
+                messages.error(request,
+                               'Your account is locked for multiple invalid logins, contact admin to unlock!')
+                user_information['login_status'] = 'Successfully logged in'
+
+                return HttpResponse('Login failed', status=409)
+
+            # Is the account active? It could have been disabled.
+            if user.is_active:
+
+                if hasattr(user, 'usermoduleprofile'):
+                    # user profile
+                    user_profile = user.usermoduleprofile
+                    if date.today() > user_profile.expired.date():
+                        return HttpResponse('Login failed', status=409)
+                    # if user and password is valid then
+                    print user_profile.id
+                    user_role = UserRoleMap.objects.filter(user_id=user_profile.id)
+                    roles = [u.role.role for u in user_role]
+                    # profile_organization = ProfileOrganization.objects.filter(profile_id = user_profile.id)
+
+                    # organization_list = [pro.organization.organization for pro in profile_organization]
+                    # user role
+                    # print user_role
+                    user_information = {
+
+                    }
+                    user_information['Name'] = user.first_name + " " + user.last_name
+                    user_information['Email'] = user.email
+                    user_information['is_superuser'] = str(user.is_superuser)
+                    user_information['is_staff'] = str(user.is_staff)
+                    user_information['IsAdmin'] = str(user_profile.admin)
+                    # user_information['EmployeeId'] = str(user_profile.employee_id)
+                    # user_information['Position'] = user_profile.position
+                    user_information['Role'] = roles
+                    user_information["farm_id"] = get_farm_id(user.id)
+                    # user_information['Organizations'] = [pro.organization.organization for pro in profile_organization]
+                    # user_information['Claims'] = mobile_access(request,username)
+
+                    print user_information
+                login(request, user)
+                UserFailedLogin.objects.filter(user_id=user.id).delete()
+                # return HttpResponseRedirect(request.POST['redirect_url'])
+                return HttpResponse(json.dumps(user_information))
+
+
+
+            else:
+                # An inactive account was used - no logging in!
+                # return HttpResponse("Your User account is disabled.")
+                user_information['login_status'] = 'Your account is Inactive!'
+                return HttpResponse('Login failed', status=409)
+
+    return HttpResponse('Login failed', status=409)
+
+
+def id_generator(size=8):
+    return ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(size))
+
+
+# mobile save user
+@csrf_exempt
+def save_user(request):
+    """{
+ "name":"Jon Snow",
+ "phone":"01234567891",
+ "occupation":"Farmer"
+}
+
+
+    """
+    json_string = request.POST.get('data')
+    print json_string
+    # print json_string
+    data = json.loads(json_string)
+    submitted_data = {}
+    submitted_data['username'] = data['phone']
+    user = User.objects.filter(username=data['phone']).first()
+    password = id_generator()
+    # when login
+    if user is not None:
+        # password = id_generator()
+        print user
+        encrypted_password = make_password(password)
+        user.password = encrypted_password
+        user.save()
+        profile = user.usermoduleprofile
+        next_expiry_date = (datetime.today() + timedelta(minutes=5))
+
+        profile.expired = next_expiry_date
+        profile.save()
+
+        passwordHistory = UserPasswordHistory(user_id=user.id, date=datetime.now())
+        passwordHistory.password = encrypted_password
+        passwordHistory.save()
+
+    # when signup
+    else:
+        submitted_data['contact_number'] = data['phone']
+
+        submitted_data['first_name'] = data['name'][0].upper() + data['name'][1:]
+        # submitted_data['last_name'] = data['LastName'][0].upper() + data['LastName'][1:]
+        role = data['occupation']
+        role_list = ['Farmer']
+        if role != 'Farmer':
+            role_list.append(role)
+        user_roles = OrganizationRole.objects.filter(role__in=role_list)
+        # submitted_data['role'] = Role.id
+
+        submitted_data['password'] = password
+        submitted_data['password_repeat'] = password
+        submitted_data['organisation_name'] = 397
+
+        #
+        # if data['IsAdmin']:
+        #     submitted_data['admin'] = True
+        # else:
+        #     submitted_data['admin'] = False
+        # submitted_data['password'] = data['Password']
+        # if 'Email' in data:
+        #     submitted_data['email'] = data['Email']
+        #     print data['Email']
+        # if 'EmployeeId' in data:
+        #     submitted_data['employee_id'] = data['EmployeeId']
+        # if 'Position' in data:
+        #     submitted_data['position'] = data['Position']
+        # if data['IsUpdate']:
+        #     user_update = True
+        # else:
+        #     user_update = False
+        # user_form = UserForm(username=data['UserName'], email=data['Email'], password=data['Password'], password_repeat=data['Password'])
+
+        user_form = UserForm(data=submitted_data)
+        profile_form = UserProfileForm(data=submitted_data)
+        userRole_flag = 0
+
+        user_form = UserForm(data=submitted_data)
+        profile_form = UserProfileForm(data=submitted_data)
+
+        if user_form.is_valid() and profile_form.is_valid():
+
+            user = user_form.save()
+            form_bool_value = False
+
+            encrypted_password = make_password(user.password)
+            user.password = encrypted_password
+            user.save()
+
+            profile = profile_form.save(commit=False)
+
+            profile.user = user
+
+            expiry_months_delta = 3
+
+            # next_expiry_date = (datetime.today() + timedelta(expiry_months_delta * 365 / 12))
+            next_expiry_date = (datetime.today() + timedelta(minutes=5))
+
+            profile.expired = next_expiry_date
+            profile.admin = form_bool_value
+
+            profile.save()
+            # kobo main/models/UserProfile
+            if userRole_flag == 0:
+                main_user_profile = UserProfile(user=user)
+                main_user_profile.save()
+
+            registered = True
+
+            passwordHistory = UserPasswordHistory(user_id=user.id, date=datetime.now())
+            passwordHistory.password = encrypted_password
+            passwordHistory.save()
+            submitted_data['user'] = profile.id
+
+            for role in user_roles:
+                UserRoleMap(user=profile, role=role).save()
+            # insert into farmer
+            auth_user_id = user.id
+            farmer_name = data['name'][0].upper() + data['name'][1:]
+            mobile = data['phone']
+            if data['occupation'] == 'Farmer':
+                insert_q = "INSERT INTO public.farmer(id, farmer_name, mobile,submission_time,submitted_by)VALUES (DEFAULT, '" + farmer_name + "','" + mobile + "', NOW()," + str(
+                    auth_user_id) + ");"
+                print insert_q
+                views.__db_commit_query(insert_q)
+
+
+                ## Sending notification mail ----------- (Start) // we have imported (from django.core.mail import send_mail)
+
+            # loggeusername = request.user.username
+            # currentOwner = get_object_or_404(User, username__iexact=loggeusername)
+            # sendermail = currentOwner.email
+            receivermail = data['phone']
+
+            send_mail(
+                'User LogIn One Time Password',
+                'Hi,\n\nWelcome to Shurokkha!!\n\nPlease use this Password given below  to access The shurokkha App.\n\n Password :' + password + '\n\n',
+                'zinia@mpower-social.com',
+                [receivermail],
+                fail_silently=False,
+            )
+
+            return HttpResponse(json.dumps({'password': password}), status=200)
+
+        else:
+
+            err = user_form.errors.as_text() + profile_form.errors.as_text()
+            print err
+
+            return HttpResponse(err, status=409)
+
+    receivermail = data['phone']
+
+    send_mail(
+        'User LogIn One Time Password',
+        'Hi,\n\nWelcome to Shurokkha!!\n\nPlease use this Password given below  to access The shurokkha App.\n\n Password :' + password + '\n\n',
+        'zinia@mpower-social.com',
+        [receivermail],
+        fail_silently=False,
+    )
+    return HttpResponse(json.dumps({'password': password}), status=200)
+
+@csrf_exempt
+def get_farmer_list(request):
+    q= "select *,string_to_array(gps,' ') gps_list,date(submission_time)::text as s_date from farmer"
+    dataset = views. __db_fetch_values_dict(q)
+    data_list = []
+    for temp in dataset:
+        data_dict = {}
+        data_dict['id'] = temp['id']
+        data_dict['name'] = temp['farmer_name']
+        data_dict['phone'] = temp['mobile']
+        data_dict['no_of_cattle'] = 2
+        data_dict['division'] = temp['division']
+        data_dict['district'] = temp['district']
+        data_dict['upzilla'] = temp['upazila']
+        data_dict['union'] = ''
+        data_dict['village'] = ''
+        if temp['gps_list']:
+            gps = str(temp['gps_list'][0])+","+str(temp['gps_list'][1])
+        else:
+            gps = ""
+        data_dict['gps'] = gps
+        data_dict['submission_date'] = temp['s_date']
+        data_list.append(data_dict.copy())
+        data_dict.clear()
+    return HttpResponse(json.dumps(data_list))
+

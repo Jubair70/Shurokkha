@@ -11,20 +11,10 @@ from django.db.models import ProtectedError
 from django.db import connection
 from onadata.apps.livestock.models import *
 import json
-from django.forms.models import inlineformset_factory
+
 from collections import OrderedDict
 import pandas as pd
-from django.views.decorators.csrf import csrf_exempt
-from datetime import datetime as dt
-import dateutil.parser
-from django.core.files.storage import FileSystemStorage
-from xml.etree import ElementTree as ET
-import requests
-import os
-import time
-import sys
-from django.contrib.auth.models import User
-from onadata.apps.usermodule.models import UserModuleProfile, Organizations
+import decimal
 
 import pandas as pd
 
@@ -73,6 +63,28 @@ def makeTableList(tableListQuery):
     return tableList
 
 
+##****Json Serialize (Start)**********
+
+def decimal_date_default(obj):
+    if isinstance(obj, decimal.Decimal):
+        return float(obj)
+    elif hasattr(obj, 'isoformat'):
+        return obj.isoformat()
+    else:
+        return obj
+
+    raise TypeError
+
+
+
+'''
+
+    MEDICINE::
+    ADD,UPLOAD,EDIT,DELETE
+
+'''
+
+
 
 @login_required
 def medicine_list(request):
@@ -81,13 +93,11 @@ def medicine_list(request):
     return render(request, "livestock/medicine_list.html",{'type_list':type_list})
 
 
-
 def get_medicine_data_table(request):
     q = "select *,(select name from medicine_type where id = medicine.medicine_type limit 1) as m_type from medicine order by id desc"
     dataset = __db_fetch_values_dict(q)
     return render(request, 'livestock/get_medicine_data_table.html',
                   {'dataset': dataset}, status=200)
-
 
 
 def add_medicine(request):
@@ -112,10 +122,8 @@ def add_medicine(request):
 
 def upload_medicine(request):
     des = handle_uploaded_file(request.FILES['ex_file'])
-    # open the file
-    xlsx = pd.ExcelFile(des)
-    # get the first sheet as an object
-    df = xlsx.parse(0)
+    xlsx = pd.ExcelFile(des)        # open the file
+    df = xlsx.parse(0)              # get the first sheet as an object
     # print pd.__version__
     duplicate_medicine = []
     for index, row in df.iterrows():
@@ -144,8 +152,6 @@ def handle_uploaded_file(file):
     if file:
         filePath = 'onadata/media/'+str(file.name)
         destination = open('onadata/media/'+str(file.name), 'w+')
-        #print destination
-        #destination = open('/tmp', 'wb+')
         for chunk in file.chunks():
             destination.write(chunk)
         destination.close()
@@ -167,3 +173,23 @@ def edit_medicine(request,id):
             'med_type' : temp['medicine_type'],'medicine_name' : temp['medicine_name'],'pack_size' : temp['packsize']
          }
     return HttpResponse(json.dumps(data), content_type="application/json", status=200)
+
+
+
+
+
+'''
+
+    FARMER & CATTLE
+
+'''
+
+@login_required
+def farmer_list(request):
+    return render(request,"livestock/farmer_list.html")
+
+
+def get_farmer_table(request):
+    q = "select * from farmer"
+    dataset = __db_fetch_values_dict(q)
+    return render(request,"livestock/farmer_table.html",{'dataset' : dataset})

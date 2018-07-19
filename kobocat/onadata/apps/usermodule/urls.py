@@ -69,8 +69,7 @@ urlpatterns = patterns('',
     url(r"^(?P<username>\w+)/(?P<hhid>\d+)/hh_datalist/$", views.get_hh_datalist, name='get_hh_datalist'),
     url(r"^(?P<username>\w+)/(?P<hhid>\d+)/hh_profile/$", views.get_hh_profile, name='get_hh_profile'),
     # user role
-    url(r"^get/user_info/$", views.login_verify, name='user_verify'),
-    url(r"^save_user/$", views.save_user, name='save_user'),
+
     
     # user role map urls
     url(r'^organization-roles/$', views.organization_roles, name='organization_roles'),

@@ -259,11 +259,11 @@ def save_user(request):
             #if data['occupation'] == 'Farmer':
             insert_q = "INSERT INTO public.farmer(id, farmer_name, mobile,submission_time,submitted_by)VALUES (DEFAULT, '" + farmer_name + "','" + mobile + "', NOW()," + str(
                 auth_user_id) + ");"
-            print insert_q
+            ##print insert_q
             views.__db_commit_query(insert_q)
             if data['occupation'] != 'Farmer':
                 approval_q = "INSERT INTO public.approval_queue(id,name, mobile, role_name, status, submitted_by, submission_time)VALUES (DEFAULT, '"+farmer_name+"','"+mobile+"', '"+data['occupation']+"', 0, "+str(auth_user_id)+", NOW());"
-                print approval_q
+                #print approval_q
                 views.__db_commit_query(approval_q)
 
                 ## Sending notification mail ----------- (Start) // we have imported (from django.core.mail import send_mail)
@@ -334,3 +334,32 @@ def get_farmer_list(request):
         data_dict.clear()
     return HttpResponse(json.dumps(data_list))
 
+
+
+@csrf_exempt
+def get_cattle_list(request):
+    farmer_id = request.GET.get('farmer_id')
+    print farmer_id
+    q = " select *,get_form_option_text(597,'cattle_type',cattle_type) cattle_type_text,get_form_option_text(597,'cattle_origin',cattle_origin) cattle_origin_text from vwcattle_registration where mobile like '%'"
+    dataset = views.__db_fetch_values_dict(q)
+    cattle_regi_form_owner_q = "select (select username from auth_user where id = logger_xform.user_id limit 1) as user_name from public.logger_xform where id_string = 'cattle_registration'"
+    cattle_regi_form_owner = views.__db_fetch_single_value(cattle_regi_form_owner_q)
+    data_list = []
+    for temp in dataset:
+        data_dict = {}
+        data_dict['id'] = temp['cattle_id']
+        data_dict['name'] = temp['cattle_name']
+        data_dict['farmer_phone'] = temp['mobile']
+        data_dict['calf_age'] = temp['calf_age']
+        data_dict['cattle_age'] = temp['cattle_age']
+        data_dict['register_date'] = temp['_submission_time']
+        data_dict['weight'] = temp['calf_birth_weight']
+        data_dict['cattle_type'] = temp['cattle_type_text']
+        img = ""
+        if temp['picture'] is not None:
+            img = temp['picture']
+        data_dict['image_url'] = "media/"+cattle_regi_form_owner+"/attachments/"+img
+
+        data_list.append(data_dict.copy())
+        data_dict.clear()
+    return HttpResponse(json.dumps(data_list))

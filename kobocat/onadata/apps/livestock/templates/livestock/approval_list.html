@@ -25,27 +25,33 @@
     <div class="page-header align">
         <h3>Approval Queue</h3>
     </div>
-
+    <div class = "row" style ="margin-bottom: 20px;">
+        <div class="col-md-2"><b>Paravet Queue</b></div>
+        <div class="col-md-2"><b>{{ paravet }}</b></div>
+        <div class="col-md-2"><b>AI Technician Queue</b></div>
+        <div class="col-md-2"><b>{{ ai_tech }}</b></div>
+    </div>
 
     <div class="row">
-        <div class="col-md-2"><label class="control-label">User </label><br>
+        <!--<div class="col-md-2"><label class="control-label">User </label><br>
             <select class="form-control" id = "gender">
             <option value="%">All</option>
 
             </select>
-        </div>
+        </div>-->
 
         <div class="col-md-2"><label class="control-label">Status </label><br>
-            <select class="form-control" id = "gender">
+            <select class="form-control" id = "status">
             <option value="%">All</option>
                 <option value="0">Pending</option>
                 <option value="1">Approved</option>
+                <option value="2">Rejected</option>
 
             </select>
         </div>
         <div class="col-md-3">
             <label class="control-label"> </label><br>
-            <button id="filter_beneList" style="margin-top:8px;" class="btn red-custom btn-md"  data-original-title="" title="">Search</button>
+            <button id="filter" style="margin-top:8px;" class="btn red-custom btn-md"  data-original-title="" title="">Search</button>
         </div>
 
     </div>
@@ -81,19 +87,6 @@
 
 
     <script>
-        var district = '%';
-        var upazila = '%';
-        var union = '%';
-        var ward = '%';
-        var gender = '%';
-        var start_date = '';
-        var end_date = '';
-        var youth_group_affliation = '%';
-        var train_id = '%';
-        $( ".datepicker" ).each(function() {
-            $(this).datepicker({autoclose:true  });
-        });
-
 
         //  Page Loading First Time
 
@@ -104,16 +97,15 @@
         });
 
     function getfilterCriteria(){
-        district = $('#district').val();
-        upazila = $('#upazila').val();
-        union = $('#union').val();
+        status = $('#status').val();
     }
 
     function get_approval_table(){
+        getfilterCriteria()
         $.ajax({
             url: '/livestock/get_approval_table/',
             type: 'POST',
-            data:{
+            data:{'status' : status
                 },
 
             success: function (data) {
@@ -138,11 +130,9 @@
     //}
     }
 
-     $(document).on("click", "#filter_beneList", function () {
-         console.log("trigger filter");
-         $('#benelist_table_id').DataTable().destroy()
+     $(document).on("click", "#filter", function () {
          getfilterCriteria();
-         getBeneListTable();
+         get_approval_table();
      });
 
      function approve_entity(id,role,mobile) {
@@ -164,15 +154,19 @@
     function reject_entity(id,role,mobile) {
          console.log(id);
          if(confirm("Are you sure you want to reject this?")){
-            $.ajax({
+             var comment=prompt("Please mention the cause of rejection.");
+             if(comment != ''){
+                 $.ajax({
                 type : 'POST',
-                dataType : 'json',data:{'role' :role,'mobile' : mobile},
+                dataType : 'json',data:{'role' :role,'mobile' : mobile,'comment' : comment},
                 url : "/livestock/reject/"+id+"/",
                 success : function(data) {
                     //alert(data)
                     get_approval_table();
                 }
             }); //ajax end
+             }
+
         }
 
      }approve_entity

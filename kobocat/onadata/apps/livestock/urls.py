@@ -23,6 +23,7 @@ urlpatterns = patterns('',
                         url(r"^get/user_info/$", views_api.login_verify, name='user_verify'),
                         url(r"^save_user/$", views_api.save_user, name='save_user'),
                         url(r"^get_farmer_list/$", views_api.get_farmer_list, name='get_farmer_list'),
+                        url(r"^get_cattle_list/$", views_api.get_cattle_list, name='get_cattle_list')
 
 
                        )

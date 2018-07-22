@@ -201,10 +201,20 @@ def get_farmer_table(request):
 
 @login_required
 def approval_list(request):
-    return render(request, "livestock/approval_list.html")
+    q = "with paravet as(select count(*) as paravets from public.approval_queue where status = 0 and role_name ='Paravet'), ai as(select count(*) as ai_techs from public.approval_queue where status = 0 and role_name ='AI Technicians') select paravet.paravets as num_paravet,ai.ai_techs as num_ai_techs from paravet,ai"
+    paravet = 0
+    ai_tech = 0
+    for temp in __db_fetch_values_dict(q):
+        paravet = temp['num_paravet']
+        ai_tech = temp['num_ai_techs']
+    context = {
+        'paravet' : paravet,'ai_tech' : ai_tech
+    }
+    return render(request, "livestock/approval_list.html",context)
 
 def get_approval_table(request):
-    q = "select * from approval_queue"
+    status = request.POST.get('status')
+    q = "select * from approval_queue where  status::text like '"+str(status)+"'"
     dataset = __db_fetch_values_dict(q)
     return render(request,"livestock/approval_table.html",{'dataset' : dataset})
 
@@ -222,7 +232,7 @@ def approve(request,id):
     for role in user_roles:
         UserRoleMap(user=profile, role=role).save()
 
-    # TO DO :: Notification
+    # TO DO ::SMS Notification
     send_mail(
         'Successful Approval',
         'Hi,\n\nWelcome to Shurokkha!!\n\nYou are successfully approved as ' + role_name + '.',
@@ -236,9 +246,10 @@ def approve(request,id):
 def reject(request,id):
     role = request.POST.get('role')
     mobile = request.POST.get('mobile')
-    q = "update approval_queue set status = 2,approve_by = "+str(request.user.id)+",approval_date = NOW() where id  ="+str(id)
+    comment = request.POST.get('comment')
+    q = "update approval_queue set status = 2,approve_by = "+str(request.user.id)+",approval_date = NOW(),rejection_cause = '"+comment+"' where id  ="+str(id)
     __db_commit_query(q)
-    # TO DO :: Notification
+    # TO DO :: SMS Notification
     send_mail(
         'Rejected Approval',
         'Hi,\n\nWelcome to Shurokkha!!\n\nYou are Rejected.',

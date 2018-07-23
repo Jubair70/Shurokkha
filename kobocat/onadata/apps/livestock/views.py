@@ -258,3 +258,17 @@ def reject(request,id):
         fail_silently=False,
     )
     return HttpResponse(json.dumps("Rejected Successfully."), content_type="application/json", status=200)
+
+
+def farmer_profile(request,id):
+    q = "select *,date(submission_time) as regi_date from farmer where id ="+str(id)
+    dataset = __db_fetch_values_dict(q)
+    return render(request,'livestock/farmer_profile.html',{'dataset' : dataset,'FARMER_ID' : id})
+
+
+def get_cattle_list(request,id):
+    q = " select *,get_form_option_text(597,'cattle_type',cattle_type) cattle_type_text,get_form_option_text(597,'cattle_origin',cattle_origin) cattle_origin_text from vwcattle_registration "
+    dataset = __db_fetch_values_dict(q)
+    cattle_regi_form_owner_q = "select (select username from auth_user where id = logger_xform.user_id limit 1) as user_name from public.logger_xform where id_string = 'cattle_registration'"
+    cattle_regi_form_owner = __db_fetch_single_value(cattle_regi_form_owner_q)
+    return render(request,'livestock/cattle_list_table.html',{'dataset' : dataset,'cattle_regi_form_owner' :cattle_regi_form_owner})

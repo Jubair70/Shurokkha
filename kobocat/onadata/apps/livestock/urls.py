@@ -16,6 +16,8 @@ urlpatterns = patterns('',
                         url(r'^get_approval_table/$', views.get_approval_table, name='get_approval_table'),
                         url(r'^approve/(?P<id>\d+)/$', views.approve, name='approve'),
                         url(r'^reject/(?P<id>\d+)/$', views.reject, name='reject'),
+                        url(r'^farmer_profile/(?P<id>\d+)/$', views.farmer_profile, name='farmer_profile'),
+                        url(r'^get_cattle_list/(?P<id>\d+)/$', views.get_cattle_list, name='get_cattle_list'),
 
 
 

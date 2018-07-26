@@ -2,16 +2,16 @@
         <thead>
             <th> Image </th>
             <th>Cattle Type</th>
-            <th> Age</th>
+            <th> Age(Month)</th>
             <th></th>
             <!--<th>Action</th>-->
         </thead>
         <tbody>
         {% for data in dataset %}
         <tr>
-            <td><img src="/media/{{ cattle_regi_form_owner }}/attachments/{{ data.image }}" class="img-responsive" alt=""  style="border: 3px solid #f9f9f9;width: 97%;height:50%;margin: 0 auto;"></td>
+            <td><img src="{{ data.image_url }}" class="img-responsive" alt=""  style="border: 3px solid #f9f9f9;width: 150px;height:100px;margin: 0 auto;"></td>
             <td>{{data.cattle_type_text }}</td>
-            <td> {{ data.calf_age }}</td>
+            <td> {{ data.cattle_age }}</td>
             <td> <a  href = "" id = ""  class="btn btn-primary btn-md"  data-original-title="" title="">Details</a></td>
             <!--<td>
                 <button onclick="approve_entity('{{ data.id }}','{{ data.role_name }}','{{ data.mobile }}')" id = ""  class="btn btn-primary btn-md"  data-original-title="" title="">Approve</button>

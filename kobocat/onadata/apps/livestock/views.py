@@ -21,7 +21,7 @@ from onadata.apps.usermodule.models import OrganizationRole,MenuRoleMap,UserRole
 from django.contrib.auth.models import User
 from django.core.mail import send_mail, BadHeaderError
 import smtplib
-
+from datetime import datetime as dt
 
 def __db_fetch_values(query):
     cursor = connection.cursor()
@@ -221,12 +221,15 @@ def get_approval_table(request):
 
 def approve(request,id):
     role_name = request.POST.get('role')
+    print role_name
     mobile = request.POST.get('mobile')
     q = "update approval_queue set status = 1,approve_by = "+str(request.user.id)+",approval_date = NOW() where id  ="+str(id)
-    __db_commit_query(q)
+    #__db_commit_query(q)
     role_list = []
     role_list.append(role_name)
+    print role_list
     user_roles = OrganizationRole.objects.filter(role__in=role_list)
+    print user_roles
     user = User.objects.filter(username=mobile).first()
     profile = user.usermoduleprofile
     for role in user_roles:
@@ -236,8 +239,8 @@ def approve(request,id):
     send_mail(
         'Successful Approval',
         'Hi,\n\nWelcome to Shurokkha!!\n\nYou are successfully approved as ' + role_name + '.',
-        'zinia@mpower-social.com',
-        [mobile],
+        'mpowersocial2018@gmail.com',
+        ['mpowersocialent@gmail.com'],
         fail_silently=False,
     )
     return HttpResponse(json.dumps("Approved Successfully."), content_type="application/json", status=200)
@@ -253,22 +256,42 @@ def reject(request,id):
     send_mail(
         'Rejected Approval',
         'Hi,\n\nWelcome to Shurokkha!!\n\nYou are Rejected.',
-        'zinia@mpower-social.com',
-        [mobile],
+        'mpowersocial2018@gmail.com',
+        ['mpowersocialent@gmail.com'],
         fail_silently=False,
     )
     return HttpResponse(json.dumps("Rejected Successfully."), content_type="application/json", status=200)
 
 
 def farmer_profile(request,id):
+    cattle_proupdate_form_owner_q = "select (select username from auth_user where id = logger_xform.user_id limit 1) as user_name from public.logger_xform where id_string = 'farmer_profile_update'"
+    cattle_proupdate_form_owner = __db_fetch_single_value(cattle_proupdate_form_owner_q)
     q = "select *,date(submission_time) as regi_date from farmer where id ="+str(id)
     dataset = __db_fetch_values_dict(q)
-    return render(request,'livestock/farmer_profile.html',{'dataset' : dataset,'FARMER_ID' : id})
+    return render(request,'livestock/farmer_profile.html',{'dataset' : dataset,'FARMER_ID' : id,'cattle_proupdate_form_owner' : cattle_proupdate_form_owner})
 
 
 def get_cattle_list(request,id):
-    q = " select *,get_form_option_text(597,'cattle_type',cattle_type) cattle_type_text,get_form_option_text(597,'cattle_origin',cattle_origin) cattle_origin_text from vwcattle_registration "
-    dataset = __db_fetch_values_dict(q)
+    cattle_type = request.POST.get('cattle_type')
     cattle_regi_form_owner_q = "select (select username from auth_user where id = logger_xform.user_id limit 1) as user_name from public.logger_xform where id_string = 'cattle_registration'"
     cattle_regi_form_owner = __db_fetch_single_value(cattle_regi_form_owner_q)
-    return render(request,'livestock/cattle_list_table.html',{'dataset' : dataset,'cattle_regi_form_owner' :cattle_regi_form_owner})
+    #q = " select *,get_form_option_text(597,'cattle_type',cattle_type) cattle_type_text,get_form_option_text(597,'cattle_origin',cattle_origin) cattle_origin_text from vwcattle_registration where cattle_type::text  like '"+cattle_type+"'"
+    q = " select *,date(created_date)::text as register_date ,(select label from vwcattle_type where value =cattle_type ) cattle_type_text,(select label from vwcattle_origin where value =cattle_origin ) cattle_origin_text from cattle where cattle_type::text  like '"+cattle_type+"'"
+    dataset = __db_fetch_values_dict(q)
+    data_list = []
+    age_cattle = 0
+    for temp in dataset:
+        data_dict = {}
+        if temp['cattle_birth_date'] is not None:
+            dob_cattle = temp['cattle_birth_date']
+            dob_cf = dt.strptime(temp['cattle_birth_date'], '%Y-%m-%d')
+            age_cattle = ((dt.today() - dob_cf).days / 30)
+        data_dict['cattle_type_text'] = temp['cattle_type_text']
+        data_dict['cattle_age'] = age_cattle
+        img = ""
+        if temp['picture'] is not None:
+            img = temp['picture']
+        data_dict['image_url'] = "/media/" + cattle_regi_form_owner + "/attachments/" + img
+        data_list.append(data_dict.copy())
+        data_dict.clear()
+    return render(request,'livestock/cattle_list_table.html',{'dataset' : data_list,'cattle_regi_form_owner' :cattle_regi_form_owner})

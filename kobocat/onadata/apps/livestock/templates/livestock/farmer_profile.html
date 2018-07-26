@@ -5,7 +5,7 @@
     <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.29.0/mapbox-gl.css' rel='stylesheet'/>
     <style type="text/css">
      div.dataTables_scrollHeadInner thead th {
-        height: 55px;
+        /*height: 55px;*/
 
 
     }
@@ -28,7 +28,7 @@
         {% for data in dataset %}
         <div class="row box">
          <div class="col-md-2">
-            <img src="/media/{{ cattle_regi_form_owner }}/attachments/{{ data.image }}" class="img-responsive" alt=""  style="border: 3px solid #f9f9f9;width: 97%;height:50%;margin: 0 auto;">
+            <img src="/media/{{ cattle_proupdate_form_owner }}/attachments/{{ data.image }}" class="img-responsive" alt=""  style="border: 3px solid #f9f9f9;width: 97%;height:50%;margin: 0 auto;">
             <!--<img src="/media/oxfam/attachments/{{ image }}" class="img-responsive" alt=""  style="border: 3px solid #f9f9f9;width: 97%;margin: 0 auto;"><br>
             <!--<img src="{{ STATIC_URL }}assets/img/profile/defaultavatar.jpg" class="img-responsive" alt=""  style="border: 3px solid #f9f9f9;width: 97%;margin: 0 auto;"><br>-->
 
@@ -54,6 +54,16 @@
 
         </div>
         <div class="row">
+            <div class="col-md-2"><label class="control-label">Cattle Type </label><br>
+            <select class="form-control" id = "cattle_type">
+            <option value="%">All</option>
+                <option value="1">বকনা</option>
+                <option value="2">গাভী</option>
+                <option value="3">ষাঁড়/দামড়া</option>
+                <option value="4">বাছুর</option>
+
+            </select>
+        </div>
             <div id="cattle_table_block">
             </div>
 
@@ -97,9 +107,11 @@
 
 
     function get_cattle_table(){
+        var cattle_type = $('#cattle_type').val()
         $.ajax({
             url: '/livestock/get_cattle_list/'+FARMER_ID+"/",
             type: 'POST',
+            data: {'cattle_type' : cattle_type},
             success: function (data) {
                 $("#cattle_table_block").html(data);
                 $('#cattle_table_id').dataTable({
@@ -119,284 +131,10 @@
         });
     }
 
-    function getfilterCriteria() {
-        from_date = $('#from_date').val();
-        to_date = $('#to_date').val();
-        milking_session = $('#milking_session').val();
-
-    }
-
-    function get_milkproduction_chart(){
-        getfilterCriteria();
-        $.ajax({
-            url: '/livestock/get_milkproduction_profile_chart/'+CATTLE_PROFILE_ID+"/",
-            data: {'from_date' : from_date,'to_date' : to_date,'milking_session' : milking_session },
-            type: 'POST',
-            success: function (result) {
-                get_line_chart('milkproduction_chart_cont','Milk Production (litre)',result.data_list, result.time)
-            }
-        });
-
-    }
-
-    function get_line_chart(container_id,title,dataseries,category) {
-        Highcharts.chart(container_id, {
-
-            title: {
-                text: title
-            },
-
-            subtitle: {
-                text: ''
-            },
-
-            yAxis: {
-                title: {
-                    text: ''
-                }
-            },
-            legend: false,
-
-
-            xAxis: {
-            categories: category
-                },
-
-            series: [{
-                name: 'Milk (litre)',
-                data: dataseries
-            }],
-
-            responsive: {
-                rules: [{
-                    condition: {
-                        maxWidth: 500
-                    },
-                    chartOptions: {
-                        legend: {
-                            layout: 'horizontal',
-                            align: 'center',
-                            verticalAlign: 'bottom'
-                        }
-                    }
-                }]
-            },
-            credits: {
-      enabled: false
-  }
-
-        });
-    }
-
-
-
-    function get_health_followup_profile(){
-        $.ajax({
-            url: '/livestock/get_health_followup_profile/'+CATTLE_PROFILE_ID+"/",
-            type: 'POST',
-            success: function (result) {
-                $("#health_followup_block").html(result);
-                $('#abnormalities_table').dataTable({
-                           retrieve: false,
-                            bFilter: false,
-                            select: false,
-                            ordering: true,
-                            scrollX: true,
-                            scrollY: "200px",
-                            scrollCollapse: true,
-                            paging:     false
-
-                });
-                $('#locomotion_grading_table').dataTable({
-                           retrieve: false,
-                            bFilter: false,
-                            select: false,
-                            ordering: true,
-                            scrollX: true,
-                            scrollY: "200px",
-                            scrollCollapse: true,
-                            paging:     false
-
-                });
-                $('#body_condition_table').dataTable({
-                           retrieve: false,
-                            bFilter: false,
-                            select: false,
-                            ordering: true,
-                            scrollX: true,
-                            sscrollY: "200px",
-                            scrollCollapse: true,
-                            paging:     false
-
-                });
-            }
-        });
-
-    }
-
-    function get_health_followup_chart() {
-        $.ajax({
-            url: '/livestock/get_health_followup_chart/'+CATTLE_PROFILE_ID+"/",
-            type: 'POST',
-            success: function (result) {
-                get_line_chart('health_followup_chart_block','Body Weight',result.data_list, result.time)
-            }
-        });
-    }
-
-
-
-    function get_reproduction_profile(){
-        $.ajax({
-            url: '/livestock/get_reproduction_profile/'+CATTLE_PROFILE_ID+"/",
-            type: 'POST',
-            success: function (result) {
-                $("#reproduction_block").html(result);
-                $('#rp_table').DataTable({
-                           retrieve: false,
-                            bFilter: false,
-                            select: false,
-                            ordering: true,
-                            scrollX: true,
-                            "scrollY": "200px",
-                            "scrollCollapse": true,
-                            "paging":     false
-
-                });
-                $('#parturition_table').dataTable({
-                           retrieve: false,
-                            bFilter: false,
-                            select: false,
-                            ordering: true,
-                            scrollX: true,
-                           "scrollY": "200px",
-                            "scrollCollapse": true,
-                            "paging":     false
-
-                });
-                $('#pd_table').dataTable({
-                           retrieve: false,
-                            bFilter: false,
-                            select: false,
-                            ordering: true,
-                            scrollX: true,
-                           "scrollY": "200px",
-                            "scrollCollapse": true,
-                            "paging":     false
-
-                });
-                $('#ri_table').dataTable({
-                           retrieve: false,
-                            bFilter: false,
-                            select: false,
-                            ordering: true,
-                            scrollX: true,
-                            "scrollY": "200px",
-                            "scrollCollapse": true,
-                            "paging":     false
-                });
-                $('#breed_table').dataTable({
-                           retrieve: false,
-                            bFilter: false,
-                            select: false,
-                            ordering: true,
-                            scrollX: true,
-                            "scrollY": "200px",
-                            "scrollCollapse": true,
-                            "paging":     false
-
-                });
-            }
-        });
-
-    }
-
-
-
-    $(document).on("click", "#filter_milkproduction_list", function () {
-                get_milkproduction_chart()
+    $(document).on("change", "#cattle_type", function () {
+               get_cattle_table()
     });
 
-    function get_sickness_profile(){
-        $.ajax({
-            url: '/livestock/get_sickness_profile/'+CATTLE_PROFILE_ID+"/",
-            type: 'POST',
-            success: function (result) {
-                $("#sickness_block").html(result);
-
-
-            }
-        });
-
-    }
-
-     /*Followup loading*/
-         $(document).on("change", "#case_id", function () {
-            case_id =$('#case_id option:selected').text();
-
-            $.ajax({
-                type: 'POST',
-                url: '/livestock/get_sickness_followup/',
-                data: {
-
-                    'case_id': case_id,
-                },
-                success: function (data) {
-                   list = JSON.parse(data)
-
-                    $('#followup').find('option').remove()
-                    $('#followup').append('<option value = "%">All</option>')
-                    for (var i = 0 ; i < list.followup_list.length ; i++){
-                         $('#followup').append('<option value = '+list.followup_list[i][0]+'>Followup-'+i+'</option>')
-                    }
-                }
-
-            });
-            case_id = $('#case_id option:selected').text();
-            case_sys_id = $(this).val();
-            //console.log("case text::"+case_text);
-            console.log("case value::"+case_id);
-
-            $.ajax({
-                type: 'POST',
-                url: '/livestock/get_followup_filter_data/',
-                data: {
-
-                    'followup_id': case_sys_id,'case_id' : case_id,'followup' : '0'
-                },
-
-                   success: function (result) {
-                        $("#sickness_block").html(result);
-                    }
-
-
-            });
-
-
-
-        });
-
-         $(document).on("change", "#followup", function () {
-            followup_id = $(this).val();
-            case_id = $('#case_id option:selected').text();
-            console.log("case_id::"+case_id);
-            $.ajax({
-                type: 'POST',
-                url: '/livestock/get_followup_filter_data/',
-                data: {
-
-                    'followup_id': followup_id,'case_id' : case_id,'followup' : '1'
-                },
-
-                   success: function (result) {
-                        $("#sickness_block").html(result);
-                    }
-
-
-            });
-
-
-        });
 
     </script>
 {% endblock %}

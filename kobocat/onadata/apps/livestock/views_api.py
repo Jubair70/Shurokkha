@@ -111,6 +111,7 @@ def login_verify(request):
                     # user_information['Position'] = user_profile.position
                     user_information['Role'] = roles
                     user_information["farm_id"] = get_farm_id(user.id)
+                    user_information["username"] = username
                     # user_information['Organizations'] = [pro.organization.organization for pro in profile_organization]
                     # user_information['Claims'] = mobile_access(request,username)
 
@@ -276,9 +277,9 @@ def save_user(request):
             send_mail(
                 'User LogIn One Time Password',
                 'Hi,\n\nWelcome to Shurokkha!!\n\nPlease use this Password given below  to access The shurokkha App.\n\n Password :' + password + '\n\n',
-                'zinia@mpower-social.com',
-                [receivermail],
-                fail_silently=False,
+                'mpowersocial2018@gmail.com',
+                ['mpowersocialent@gmail.com'],
+                fail_silently=False
             )
 
             return HttpResponse(json.dumps({'password': password}), status=200)
@@ -295,9 +296,9 @@ def save_user(request):
     send_mail(
         'User LogIn One Time Password',
         'Hi,\n\nWelcome to Shurokkha!!\n\nPlease use this Password given below  to access The shurokkha App.\n\n Password :' + password + '\n\n',
-        'zinia@mpower-social.com',
-        [receivermail],
-        fail_silently=False,
+        'mpowersocial2018@gmail.com',
+        ['mpowersocialent@gmail.com'],
+        fail_silently=False
     )
     return HttpResponse(json.dumps({'password': password}), status=200)
 
@@ -325,10 +326,11 @@ def get_farmer_list(request):
             gps = ""
         data_dict['gps'] = gps
         data_dict['submission_date'] = temp['s_date']
-        img = ""
+        img_path = None
         if temp['image'] is not None:
             img = temp['image']
-        data_dict['image_url'] = "media/"+farmerprofileupdate_form_owner+"/attachments/"+img
+            img_path = "media/"+farmerprofileupdate_form_owner+"/attachments/"+img
+        data_dict['image_url'] = img_path
 
         data_list.append(data_dict.copy())
         data_dict.clear()
@@ -340,7 +342,7 @@ def get_farmer_list(request):
 def get_cattle_list(request):
     farmer_id = request.GET.get('farmer_id')
     print farmer_id
-    q = " select *,get_form_option_text(597,'cattle_type',cattle_type) cattle_type_text,get_form_option_text(597,'cattle_origin',cattle_origin) cattle_origin_text from vwcattle_registration where mobile like '%'"
+    q = " select *,date(created_date)::text as register_date ,(select label from vwcattle_type where value =cattle_type ) cattle_type_text,(select label from vwcattle_origin where value =cattle_origin ) cattle_origin_text from cattle where mobile like '%'"
     dataset = views.__db_fetch_values_dict(q)
     cattle_regi_form_owner_q = "select (select username from auth_user where id = logger_xform.user_id limit 1) as user_name from public.logger_xform where id_string = 'cattle_registration'"
     cattle_regi_form_owner = views.__db_fetch_single_value(cattle_regi_form_owner_q)
@@ -352,14 +354,16 @@ def get_cattle_list(request):
         data_dict['farmer_phone'] = temp['mobile']
         data_dict['calf_age'] = temp['calf_age']
         data_dict['cattle_age'] = temp['cattle_age']
-        data_dict['register_date'] = temp['_submission_time']
+        data_dict['register_date'] = temp['register_date']
         data_dict['weight'] = temp['calf_birth_weight']
         data_dict['cattle_type'] = temp['cattle_type_text']
-        img = ""
+        data_dict['cattle_type'] = temp['cattle_type_text']
+        data_dict['cattle_system_id'] = temp['cattle_system_id']
+        img_path = None
         if temp['picture'] is not None:
             img = temp['picture']
-        data_dict['image_url'] = "media/"+cattle_regi_form_owner+"/attachments/"+img
-
+            img_path = "media/"+cattle_regi_form_owner+"/attachments/"+img
+        data_dict['image_url'] = img_path
         data_list.append(data_dict.copy())
         data_dict.clear()
     return HttpResponse(json.dumps(data_list))

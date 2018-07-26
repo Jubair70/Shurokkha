@@ -248,7 +248,7 @@ urlpatterns = patterns(
         'onadata.apps.logger.views.formList'),
     url(r"^formList$",
         XFormListApi.as_view({'get': 'list'}), name='form-list'),
-    url(r"^(?P<username>[\w.%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4})/formList$",
+    url(r"^(?P<username>\w+)/formList$",
         XFormListApi.as_view({'get': 'list'}), name='form-list'),
     url(r"^(?P<username>\w+)/xformsManifest/(?P<pk>[\d+^/]+)$",
         XFormListApi.as_view({'get': 'manifest'}),

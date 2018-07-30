@@ -22,6 +22,7 @@ from django.contrib.auth.models import User
 from django.core.mail import send_mail, BadHeaderError
 import smtplib
 from datetime import datetime as dt
+import time
 
 def __db_fetch_values(query):
     cursor = connection.cursor()
@@ -195,7 +196,7 @@ def farmer_list(request):
 
 
 def get_farmer_table(request):
-    q = "select * from farmer"
+    q = "select * from farmer where deleted_at is null"
     dataset = __db_fetch_values_dict(q)
     return render(request,"livestock/farmer_table.html",{'dataset' : dataset})
 
@@ -221,15 +222,12 @@ def get_approval_table(request):
 
 def approve(request,id):
     role_name = request.POST.get('role')
-    print role_name
     mobile = request.POST.get('mobile')
     q = "update approval_queue set status = 1,approve_by = "+str(request.user.id)+",approval_date = NOW() where id  ="+str(id)
-    #__db_commit_query(q)
+    __db_commit_query(q)
     role_list = []
     role_list.append(role_name)
-    print role_list
     user_roles = OrganizationRole.objects.filter(role__in=role_list)
-    print user_roles
     user = User.objects.filter(username=mobile).first()
     profile = user.usermoduleprofile
     for role in user_roles:
@@ -295,3 +293,91 @@ def get_cattle_list(request,id):
         data_list.append(data_dict.copy())
         data_dict.clear()
     return render(request,'livestock/cattle_list_table.html',{'dataset' : data_list,'cattle_regi_form_owner' :cattle_regi_form_owner})
+
+
+def upload_prescription(request):
+    if request.method == 'POST':
+        file = request.FILES['ex_file']
+        millis = int(round(time.time() * 1000))
+        if file:
+            filePath = 'onadata/media/prescription/'+str(millis)+'_'+str(file.name)
+            destination = open('onadata/media/prescription/'+str(millis)+'_'+str(file.name), 'w+')
+            for chunk in file.chunks():
+                destination.write(chunk)
+            destination.close()
+        des = filePath
+        xlsx = pd.ExcelFile(des)  # open the file
+        df = xlsx.parse(0)  # get the first sheet as an object
+        duplicate_diagnosis = []
+        df_1 = df.groupby(['Tentative Diagnosis', 'Type','Body Weight From','Body Weight To']).size().reset_index(name='Freq')
+        for index_1,row_1 in df_1.iterrows():
+            diagnosis_1 =  row_1[0]
+            type_1 = row_1[1].encode('utf-8')
+            cattle_type_id = __db_fetch_single_value(
+                "select value from vwcattle_type where label = '" + type_1 + "'")
+            weight_from_1 = row_1[2]
+            weight_to_1 = row_1[3]
+            check_q = "select id from diagnosis where diagnosis_name::text like '"+ diagnosis_1 + "' and cattle_type::text like '" + str(cattle_type_id) + "' and  weight_from::text like '" + str(weight_from_1) + "' and  weight_to::text like '" + str(weight_to_1) + "'"
+            data = __db_fetch_values_dict((check_q))
+            if len(data) != 0:
+                delete_duplicate_presciption_diagnosis(data)
+                #duplicate_item_str = "Diagnosis "+diagnosis_1 +" of cattle  type "+ unicode(type_1, 'utf-8') +" with weight range from  "+str(weight_from_1)+" to "+str(weight_to_1) + " is already existed."
+                #duplicate_diagnosis.append(duplicate_item_str)
+                #continue
+            #else:
+            insert_diagnosis_q = "INSERT INTO public.diagnosis(id, diagnosis_name, cattle_type, weight_from, weight_to, created_by, created_date)VALUES (DEFAULT ,'" + diagnosis_1 + "', " + str(
+                cattle_type_id) + ", " + str(weight_from_1) + ", " + str(weight_to_1) + ", " + str(
+                request.user.id) + ", NOW())  RETURNING id;"
+            inserted_id = __db_fetch_single_value(insert_diagnosis_q)
+            for index, row in df.iterrows():
+                #*** Diagnosis *******#
+                diagnosis_name = row[0]
+                description_type = row[1]
+                cattle_type = row[2].encode('utf-8')
+
+                #print cattle_type_id
+                weight_from = row[3]
+                weight_to = row[4]
+
+                # *** Medicine *******#
+                med_type = row[5]
+                med_type_id = __db_fetch_single_value("select id from medicine_type where name = '" + med_type + "'")
+                #print med_type_id
+                med_name = row[6]
+                packsize = row[7]
+                qty = row[8]
+                dose = row[9]
+                route = row[10]
+                days = row[11]
+
+                advice = row[12]
+                if ((diagnosis_1 == diagnosis_name) and (type_1 == cattle_type) and (weight_from_1 == weight_from) and (weight_to_1 == weight_to )):
+
+                    if description_type == 'M':
+                        insert_diagnosis_medicine_q = "INSERT INTO public.diagnosis_medicine(id, diagnosis_id, medicine_type, medicine_name, packsize, quantity, dose, route, days)" \
+                                                      "VALUES (DEFAULT, "+str(inserted_id)+", "+str(med_type_id)+", '"+med_name+"', '"+packsize+"', "+str(qty)+", '"+dose+"', '"+route+"', '"+days+"');"
+                        __db_commit_query(insert_diagnosis_medicine_q)
+                    if description_type == 'A':
+                        insert_diagnosis_advice_q = "INSERT INTO public.diagnosis_advice(id, diagnosis_id, advice)VALUES (DEFAULT , "+str(inserted_id)+", '"+advice+"');"
+                        __db_commit_query(insert_diagnosis_advice_q)
+
+        if len(duplicate_diagnosis) == 0:
+            return HttpResponse(json.dumps('ok'), content_type="application/json", status=200)
+        else:
+            duplicate_item = ", ".join(x for x in duplicate_diagnosis)
+            #duplicate_item = duplicate_item + " already exist."
+            return HttpResponse(json.dumps(duplicate_item), content_type="application/json", status=500)
+
+    return render(request,'livestock/upload_prescription.html')
+
+
+def delete_duplicate_presciption_diagnosis(data):
+    for tmp in data:
+        delete_advice_q = "delete from diagnosis_advice where diagnosis_id = " + str(tmp['id'])
+        __db_commit_query(delete_advice_q)
+        delete_medicine_q = "delete from diagnosis_medicine where diagnosis_id = " + str(tmp['id'])
+        __db_commit_query(delete_medicine_q)
+        delete_q = "delete from diagnosis where id = "+str(tmp['id'])
+        __db_commit_query(delete_q)
+    return "1"
+

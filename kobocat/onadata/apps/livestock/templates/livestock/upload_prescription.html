@@ -1,0 +1,152 @@
+{% extends 'base_test.html' %}
+
+{% block additional-headers %}
+
+
+    <link rel="stylesheet" type="text/css" media="all" href="/static/css/Date-Range-Picker-For-Twitter-Bootstrap/daterangepicker.css" />
+
+    <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}assets/plugins/select2/select2_metro.css"/>
+<link rel="stylesheet" href="{{STATIC_URL}}assets/plugins/data-tables/DT_bootstrap.css"/>
+
+
+
+    <style type="text/css">
+    .thumbnail{
+        border: 0;
+    }
+
+    </style>
+
+{% endblock %}
+
+
+{% block content %}
+    <div class ="col-md-12" style = "">
+    <div class="page-header align">
+        <h3>Prescription Upload</h3>
+    </div>
+
+
+    </div>
+
+    <br>
+    <div class="portlet box red">
+    <div class="portlet-title">
+        <div class="caption"><i class="fa fa-adn"></i>Upload prescription</div>
+    </div>
+    <div class="portlet-body form">
+    <form id="upload_prescription_form" class="horizontal-form "  method="post"
+                       action="/livestock/upload_prescription/"
+                      enctype="multipart/form-data">
+                    {% csrf_token %}
+
+        <div class="form-body">
+                    <div class="row"><div id="error_msg_upload" style="color:red;margin-left: 10px;margin-top: 10px;"> </div></div>
+            <div id="success_msg_upload">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="Field Name">Upload an excel file</label><br>
+                                <input required type="file" name="ex_file">
+
+                            </div>
+                        </div>
+                    </div>
+
+
+
+
+
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <button class="btn btn-danger pull-left" id="submit" name="submit" type="submit"
+                                    data-original-title=""
+                                    title="">Submit
+                            </button>
+                            <!--<button onclick="history.go(-1);" style="margin-left:10px;" type="button"
+                                    class="btn btn-info pull-left" data-original-title="" title="">Cancel
+                            </button>-->
+                        </div>
+                    </div>
+        </div>
+    </form>
+                </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block additional-javascript %}
+
+
+
+    <!--datatable -->
+    <script type="text/javascript" src="{{STATIC_URL}}assets/plugins/data-tables/jquery.dataTables.js"></script>
+    <script type="text/javascript" src="{{STATIC_URL}}assets/plugins/data-tables/DT_bootstrap.js"></script>
+    <!--datatable ended-->
+     <script type="text/javascript" src="/static/js/Date-Range-Picker-For-Twitter-Bootstrap/date.js"></script>
+	<script type="text/javascript" src="/static/js/Date-Range-Picker-For-Twitter-Bootstrap/daterangepicker.js"></script>
+
+
+    <script>
+
+        //  Page Loading First Time
+
+        $(document).ready(function () {
+            get_approval_table()
+            $('#date_range').daterangepicker({ showDropdowns: true,maxDate: new Date()});
+
+        });
+        $(document).on("submit", "#upload_prescription_form", function (event) {
+        event.preventDefault();
+        form_url = $(this).attr('action');
+        var data = new FormData(this); // <-- 'this' is form element
+        //return formData;
+        $.ajax({
+            type: 'POST',
+            url: form_url,
+            contentType: false,
+            processData: false,
+            data: data,
+            success: function (data) {
+                $('#success_msg_upload').html("");
+               $('#success_msg_upload').html('<div class="alert alert-success fade in alert-dismissible"><strong>Success!</strong> Successfully uploaded</div>');
+
+            },
+            error: function (xhr, status, error) {
+                $('#error_msg_upload').html("<h5><strong>"+xhr.responseText+"</strong></h5>");
+            }
+        }); //ajax end
+    });
+</script>
+
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

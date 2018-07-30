@@ -302,9 +302,11 @@ def save_user(request):
     )
     return HttpResponse(json.dumps({'password': password}), status=200)
 
+
 @csrf_exempt
 def get_farmer_list(request):
-    q= "select *,string_to_array(gps,' ') gps_list,date(submission_time)::text as s_date from farmer"
+    username = request.GET.get('username')
+    q = "select *,(select count(*) from cattle where mobile = farmer.mobile) as no_cattle,string_to_array(gps,' ') gps_list,date(submission_time)::text as s_date from farmer where id in(with t1 as ((select id from farmer where submitted_by = (select id from auth_user where username='" + username + "')) union (select id from farmer where mobile = '" + username + "') union(select farmer_id from user_farmer_map where user_id = (select id from usermodule_usermoduleprofile where user_id = (select id from auth_user where username = '"+username+"')) ) )select * from t1) and deleted_at is null"
     dataset = views. __db_fetch_values_dict(q)
     data_list = []
     farmerprofileupdate_form_owner_q = "select (select username from auth_user where id = logger_xform.user_id limit 1) as user_name from public.logger_xform where id_string = 'farmer_profile_update'"
@@ -314,7 +316,7 @@ def get_farmer_list(request):
         data_dict['id'] = temp['id']
         data_dict['name'] = temp['farmer_name']
         data_dict['phone'] = temp['mobile']
-        data_dict['no_of_cattle'] = 2
+        data_dict['no_of_cattle'] = temp['no_cattle']
         data_dict['division'] = temp['division']
         data_dict['district'] = temp['district']
         data_dict['upzilla'] = temp['upazila']
@@ -329,9 +331,8 @@ def get_farmer_list(request):
         img_path = None
         if temp['image'] is not None:
             img = temp['image']
-            img_path = "media/"+farmerprofileupdate_form_owner+"/attachments/"+img
+            img_path = "media/" + farmerprofileupdate_form_owner + "/attachments/" + img
         data_dict['image_url'] = img_path
-
         data_list.append(data_dict.copy())
         data_dict.clear()
     return HttpResponse(json.dumps(data_list))
@@ -341,8 +342,7 @@ def get_farmer_list(request):
 @csrf_exempt
 def get_cattle_list(request):
     farmer_id = request.GET.get('farmer_id')
-    print farmer_id
-    q = " select *,date(created_date)::text as register_date ,(select label from vwcattle_type where value =cattle_type ) cattle_type_text,(select label from vwcattle_origin where value =cattle_origin ) cattle_origin_text from cattle where mobile like '%'"
+    q = " select *,date(created_date)::text as register_date ,(select label from vwcattle_type where value =cattle_type ) cattle_type_text,(select label from vwcattle_origin where value =cattle_origin ) cattle_origin_text from cattle where mobile like '"+farmer_id+"'"
     dataset = views.__db_fetch_values_dict(q)
     cattle_regi_form_owner_q = "select (select username from auth_user where id = logger_xform.user_id limit 1) as user_name from public.logger_xform where id_string = 'cattle_registration'"
     cattle_regi_form_owner = views.__db_fetch_single_value(cattle_regi_form_owner_q)
@@ -362,8 +362,52 @@ def get_cattle_list(request):
         img_path = None
         if temp['picture'] is not None:
             img = temp['picture']
-            img_path = "media/"+cattle_regi_form_owner+"/attachments/"+img
+            img_path = "media/" + cattle_regi_form_owner + "/attachments/" + img
         data_dict['image_url'] = img_path
+
         data_list.append(data_dict.copy())
         data_dict.clear()
     return HttpResponse(json.dumps(data_list))
+
+
+
+@csrf_exempt
+def delete_farmer(request):
+    username = request.GET.get('username')
+    user_id = views.__db_fetch_single_value("select id from auth_user where username = '" + username + "'")
+    deleted_farmers = request.body
+    deleted_farmer_list = json.loads(deleted_farmers)
+    for temp in deleted_farmer_list:
+        #farmer cannot be deleted by his/her own
+        if username == temp:
+            continue
+        q = "update  farmer set deleted_at = NOW(),deleted_by = "+str(user_id)+"  where mobile='"+str(temp)+"'"
+        views.__db_commit_query(q)
+    return HttpResponse(json.dumps('Deleted successfully.'))
+
+
+
+@csrf_exempt
+def search_farmer(request):
+    username = request.GET.get('username')
+    farmer_id = request.GET.get('farmer_id')
+    q = "select *,(select count(*) from cattle where mobile = farmer.mobile) as no_cattle,string_to_array(gps,' ') gps_list,date(submission_time)::text as s_date from farmer where mobile = '"+farmer_id+"' and deleted_at is null;"
+    dataset = views.__db_fetch_values_dict(q)
+    msg = ""
+    if dataset:
+        user_id = views.__db_fetch_single_value("select id from usermodule_usermoduleprofile where user_id = (select id from auth_user where username = '"+username+"')")
+        farmer_id = views.__db_fetch_single_value("select id from farmer where mobile = '"+farmer_id+"'")
+        duplicate_check_q = "select id from user_farmer_map where user_id = "+str(user_id)+" and farmer_id = "+str(farmer_id)
+        data = views.__db_fetch_values_dict(duplicate_check_q)
+
+        if data:
+            msg = "Already assigned"
+        else:
+            insert_q = "INSERT INTO public.user_farmer_map(id, user_id, farmer_id)VALUES (DEFAULT, " + str(
+                user_id) + ", " + str(farmer_id) + ");"
+            views.__db_commit_query(insert_q)
+            msg = "Assigned successfully"
+    else:
+        msg = "No farmer exists."
+    print(msg)
+    return HttpResponse(json.dumps(msg))

@@ -371,6 +371,7 @@ def upload_prescription(request):
     return render(request,'livestock/upload_prescription.html')
 
 
+
 def delete_duplicate_presciption_diagnosis(data):
     for tmp in data:
         delete_advice_q = "delete from diagnosis_advice where diagnosis_id = " + str(tmp['id'])
@@ -381,3 +382,43 @@ def delete_duplicate_presciption_diagnosis(data):
         __db_commit_query(delete_q)
     return "1"
 
+
+
+'''
+     CATTLE PROFILE
+
+'''
+
+def cattle_profile(request,id):
+    cattle_info = get_cattle_info(id)
+    farmer_mobile = cattle_info.get('mobile')
+    farmer_info= get_farmer_info(farmer_mobile)
+    q="select value_text as val,value_label as label from xform_extracted where xform_id = 604 and field_name = 'cattle_type'"
+    context = dict(cattle_info.items() + farmer_info.items() )
+
+    return render(request,'livestock/cattle_profile.html',context)
+
+
+def get_cattle_info(id):
+    q = "select mobile,coalesce(round(cattle_weight::numeric,2)::text,'') cattleweight,AGE(current_date ,date(cattle_birth_date))::text cattle_age,coalesce(cattle_name,'') cattle_name,(select label from vwcattle_type where value = cattle_type limit 1) as cattletype,coalesce(calf_birth_weight,'') calf_birth_weight from cattle where cattle_system_id = " + str(id)
+    dataset = __db_fetch_values_dict(q)
+    cattle_dict = {}
+    for temp in dataset:
+        cattle_dict = {'mobile' : temp['mobile'],'cattle_name' : temp['cattle_name'],'cattle_weight' : temp['cattleweight'],'cattle_age' : temp['cattle_age'],'cattle_type': temp['cattletype'], 'calf_birth_weight' : temp['calf_birth_weight']}
+    return cattle_dict
+
+
+def get_farmer_info(mobile):
+    farmerprofileupdate_form_owner_q = "select (select username from auth_user where id = logger_xform.user_id limit 1) as user_name from public.logger_xform where id_string = 'farmer_profile_update'"
+    farmerprofileupdate_form_owner = __db_fetch_single_value(farmerprofileupdate_form_owner_q)
+    q = "select id, coalesce(farmer_name,'') farmer_name,mobile,date(submission_time)::text registration_date,image from farmer where mobile = '"+mobile+"'"
+    dataset = __db_fetch_values_dict(q)
+    farmer_dict = {}
+    img_path = ''
+    for temp in dataset:
+        if temp['image'] is not None:
+            img = temp['image']
+            img_path = "media/" + farmerprofileupdate_form_owner + "/attachments/" + img
+        farmer_dict = { 'id' : temp['id'],'farmer_name' : temp['farmer_name'], 'mobile' : temp['mobile'], 'registration_date' : temp['registration_date'],  'image_url' :  img_path
+        }
+    return farmer_dict

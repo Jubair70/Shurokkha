@@ -19,6 +19,7 @@ urlpatterns = patterns('',
                         url(r'^reject/(?P<id>\d+)/$', views.reject, name='reject'),
                         url(r'^farmer_profile/(?P<id>\d+)/$', views.farmer_profile, name='farmer_profile'),
                         url(r'^get_cattle_list/(?P<id>\d+)/$', views.get_cattle_list, name='get_cattle_list'),
+                        url(r'^cattle_profile/(?P<id>\d+)/$', views.cattle_profile, name='cattle_profile'),
 
 
 

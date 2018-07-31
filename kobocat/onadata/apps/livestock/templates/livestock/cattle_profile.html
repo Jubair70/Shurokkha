@@ -1,0 +1,621 @@
+{% extends 'base_test.html' %}
+
+{% block additional-headers %}
+
+
+    <link rel="stylesheet" type="text/css" media="all" href="/static/css/Date-Range-Picker-For-Twitter-Bootstrap/daterangepicker.css" />
+
+    <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}assets/plugins/select2/select2_metro.css"/>
+<link rel="stylesheet" href="{{STATIC_URL}}assets/plugins/data-tables/DT_bootstrap.css"/>
+     <!-- Bootstrap core CSS-->
+  <link href="/static/bootstrap4/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Custom fonts for this template-->
+  <link href="/static/bootstrap4/vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+  <!-- Custom styles for this template-->
+  <link href="/static/bootstrap4/css/sb-admin.css" rel="stylesheet">
+
+
+
+    <style type="text/css">
+    .thumbnail{
+        border: 0;
+    }
+    </style>
+
+{% endblock %}
+
+
+{% block content %}
+
+<div class="content-wrapper">
+    <div class="container-fluid gray-bg">
+    <p class="pt-2">Veterinarian's panel</p>
+
+    <!-- veterinarian panel start-->
+      <div class="row">
+
+        <!-- veterinarian block 1 start-->
+
+        <div class="col-xl-4 col-md-4 col-sm-12">
+          <div class="veterinarian-box">
+            <div class="card">
+              <div class="card-body pb-4">
+                <img src="{{ image_url }}" class="img-fluid"  alt="">
+                <div class="card-text float-right">
+                  <p>Registration Date:{{ registration_date }}<br>
+                  Name: {{ farmer_name }}<br>
+                  Mobile Number: {{ mobile }}</p>
+                  <button onclick(add_loc({{ id }})) href="#" class="btn btn-success  mt-4">Add Location</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- date bloc start-->
+
+            <div class="date-block mt-3">
+              <div class="date-btn">
+                <a href="#" class="btn btn-success p-3 "><i class="fa fa-angle-left"></i></a>
+                <a href="#" class="btn btn-success p-3"><i class="fa fa-angle-right"></i></a>
+              </div>
+              <p class="ml-2">Date: 10/03/2018</p>
+              <p class="float-right mr-3 mt-3">Health Records</p>
+            </div>
+
+            <!-- date bloc end-->
+
+            <!-- info collapse start-->
+
+            <div class="info-collapse">
+              <div id="accordion">
+                <div class="card">
+                  <div class="card-header" id="hr-headingOne">
+                    <h5 class="mb-0">
+                      <a class="btn btn-link" data-toggle="collapse" data-target="#hr-collapseOne" aria-expanded="true" aria-controls="hr-collapseOne">
+                        Feeding Information <span>+</span>
+                      </a>
+                    </h5>
+                  </div>
+
+                  <div id="hr-collapseOne" class="collapse" aria-labelledby="hr-headingOne" data-parent="#accordion">
+                    <div class="card-body">
+                      Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.
+                    </div>
+                  </div>
+                </div>
+                <div class="card">
+                  <div class="card-header" id="hr-headingTwo">
+                    <h5 class="mb-0">
+                      <a class="btn btn-link collapsed" data-toggle="collapse" data-target="#hr-collapseTwo" aria-expanded="false" aria-controls="hr-collapseTwo">
+                        Milk Production <span>+</span>
+                      </a>
+                    </h5>
+                  </div>
+                  <div id="hr-collapseTwo" class="collapse" aria-labelledby="hr-headingTwo" data-parent="#accordion">
+                    <div class="card-body">
+                      Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.
+                    </div>
+                  </div>
+                </div>
+                <div class="card">
+                  <div class="card-header" id="hr-headingThree">
+                    <h5 class="mb-0">
+                      <a class="btn btn-link collapsed" data-toggle="collapse" data-target="#hr-collapseThree" aria-expanded="false" aria-controls="hr-collapseThree">
+                        Deworming Vaccination <span>+</span>
+                      </a>
+                    </h5>
+                  </div>
+                  <div id="hr-collapseThree" class="collapse" aria-labelledby="hr-headingThree" data-parent="#accordion">
+                    <div class="card-body">
+                      Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- info collapse end-->
+
+            <!-- date bloc start-->
+
+            <div class="date-block mt-3">
+              <div class="date-btn">
+                <a href="#" class="btn btn-success p-3 "><i class="fa fa-angle-left"></i></a>
+                <a href="#" class="btn btn-success p-3"><i class="fa fa-angle-right"></i></a>
+              </div>
+              <p class="ml-2">Date: 10/03/2018</p>
+              <p class="float-right mr-3 mt-3">Reproduction</p>
+            </div>
+
+            <!-- date bloc end-->
+
+             <!-- info collapse start-->
+
+            <div class="info-collapse">
+              <div id="accordion">
+                <div class="card">
+                  <div class="card-header" id="re-headingOne">
+                    <h5 class="mb-0">
+                      <a class="btn btn-link" data-toggle="collapse" data-target="#re-collapseOne" aria-expanded="true" aria-controls="re-collapseOne">
+                        Feeding Information <span>+</span>
+                      </a>
+                    </h5>
+                  </div>
+
+                  <div id="re-collapseOne" class="collapse" aria-labelledby="re-headingOne" data-parent="#accordion">
+                    <div class="card-body">
+                      Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.
+                    </div>
+                  </div>
+                </div>
+                <div class="card">
+                  <div class="card-header" id="re-headingTwo">
+                    <h5 class="mb-0">
+                      <a class="btn btn-link collapsed" data-toggle="collapse" data-target="#re-collapseTwo" aria-expanded="false" aria-controls="re-collapseTwo">
+                        Milk Production <span>+</span>
+                      </a>
+                    </h5>
+                  </div>
+                  <div id="re-collapseTwo" class="collapse" aria-labelledby="re-headingTwo" data-parent="#accordion">
+                    <div class="card-body">
+                      Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.
+                    </div>
+                  </div>
+                </div>
+                <div class="card">
+                  <div class="card-header" id="re-headingThree">
+                    <h5 class="mb-0">
+                      <a class="btn btn-link collapsed" data-toggle="collapse" data-target="#re-collapseThree" aria-expanded="false" aria-controls="re-collapseThree">
+                        Deworming Vaccination <span>+</span>
+                      </a>
+                    </h5>
+                  </div>
+                  <div id="re-collapseThree" class="collapse" aria-labelledby="re-headingThree" data-parent="#accordion">
+                    <div class="card-body">
+                      Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- info collapse end-->
+
+
+          </div>
+        </div>
+
+        <!-- veterinarian block 1 end-->
+
+
+        <!-- veterinarian block 2 start-->
+
+        <div class="col-xl-4 col-md-4 col-sm-12">
+          <div class="veterinarian-box">
+            <div class="card">
+              <div class="card-body pb-4">
+                <img src="./img/veterinarian-img1.jpg" class="img-fluid"  alt="">
+                <div class="card-text float-right">
+                  <p>Cattle Name: {{ cattle_name }}<br>
+                     Cattle type: {{ cattle_type }}<br>
+                     Age: {{ cattle_age | safe}}<br>
+                     Weight: {{ cattle_weight }}<br>Birth weight:  {{calf_birth_weight  }}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- date bloc start-->
+
+            <div class="date-block mt-3">
+              <div class="date-btn">
+                <a href="#" class="btn btn-success p-3 "><i class="fa fa-angle-left"></i></a>
+                <a href="#" class="btn btn-success p-3"><i class="fa fa-angle-right"></i></a>
+              </div>
+              <p class="ml-2">Date: 10/03/2018</p>
+              <p class="float-right mr-3 mt-3">Sickness</p>
+            </div>
+            <p class="px-3 py-3">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.</p>
+
+
+            <!-- date bloc end-->
+
+
+
+            <!-- date bloc start-->
+
+            <div class="date-block pt-2">
+              <p class="ml-3 mt-2">Clinical Findings</p>
+            </div>
+            <p class="px-3 py-3">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.</p>
+            <p class="px-3">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.</p>
+
+            <!-- date bloc end-->
+
+          </div>
+        </div>
+
+        <!-- veterinarian block 2 end-->
+
+        <!-- veterinarian block 3 start-->
+
+        <div class="col-xl-4 col-md-4 col-sm-12">
+          <div class="veterinarian-box">
+            <div class="card">
+              <div class="card-body pb-4">
+                <img src="./img/veterinarian-img2.jpg" class="img-fluid"  alt="">
+                <div class="card-text float-right">
+                  <h4 class="mt-5">Sickness Image</h4>
+                </div>
+              </div>
+            </div>
+
+            <!-- date bloc start-->
+
+            <div class="date-block mt-3">
+              <p class="ml-3 mt-2">Enter Clinical findings</p>
+            </div>
+            <!-- date bloc end-->
+
+            <!-- clinical finding form start-->
+            <form class="py-3 px-3">
+            <div class="form-group">
+              <label for="exampleInputEmail1">গরুর ধরন:</label>
+              <!--<input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="">-->
+                <select  class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
+                    <option>f</option>
+                    <option>f</option>
+                    <option>f</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+              <label for="exampleInputEmail1">Details of Farmer's complain; including duration of sickness</label>
+                <textarea type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder=""></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="exampleInputEmail1">Treatment history (if under treatment)</label>
+                <textarea type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder=""></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="exampleInputEmail1">Is there other cattle infected with same type of sickness?:</label>
+              <select  class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
+                    <option>f</option>
+                    <option>f</option>
+                    <option>f</option>
+                </select>
+            </div>
+
+                <div class="form-group">
+              <label for="exampleInputEmail1">How many of the sick cattle was affected or died?</label>
+                <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="">
+            </div>
+
+                <div class="form-group">
+                <label for="exampleInputEmail1">Deworming history</label>
+                <textarea type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder=""></textarea>
+            </div>
+
+                <div class="form-group">
+              <label for="exampleInputEmail1">Feeding history</label>
+                <textarea type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder=""></textarea>
+            </div>
+
+                <div class="form-group">
+              <label for="exampleInputEmail1">What wrong feeding done in last few days?:</label>
+              <select  class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
+                    <option>f</option>
+                    <option>f</option>
+                    <option>f</option>
+                </select>
+            </div>
+
+                <div class="form-group">
+              <label for="exampleInputEmail1"> Details of rumination</label>
+                <textarea type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder=""></textarea>
+            </div>
+
+                <div class="form-group">
+              <label for="exampleInputEmail1">Details of lacrimation</label>
+                <textarea type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder=""></textarea>
+            </div>
+
+                <div class="form-group">
+              <label for="exampleInputEmail1">Wetness of muzzle:</label>
+              <select  class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
+                    <option>f</option>
+                    <option>f</option>
+                    <option>f</option>
+                </select>
+            </div>
+
+                <div class="form-group">
+              <label for="exampleInputEmail1">Generalized sign of sickness:</label>
+              <select  class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
+                    <option>f</option>
+                    <option>f</option>
+                    <option>f</option>
+                </select>
+            </div>
+
+                <div class="form-group">
+              <label for="exampleInputEmail1">আচরণগত লক্ষণ:</label>
+              <select  class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
+                    <option>f</option>
+                    <option>f</option>
+                    <option>f</option>
+                </select>
+            </div>
+
+                <div class="form-group">
+              <label for="exampleInputEmail1">মুখ ও পরিপাক সংক্রান্ত লক্ষণ:</label>
+              <select  class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
+                    <option>f</option>
+                    <option>f</option>
+                    <option>f</option>
+                </select>
+            </div>
+
+                <div class="form-group">
+              <label for="exampleInputEmail1">পায়খানার অবস্থা:</label>
+              <select  class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
+                    <option>f</option>
+                    <option>f</option>
+                    <option>f</option>
+                </select>
+            </div>
+
+                <div class="form-group">
+              <label for="exampleInputEmail1">শ্বাসতন্ত্রের লক্ষণ:</label>
+              <select  class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
+                    <option>f</option>
+                    <option>f</option>
+                    <option>f</option>
+                </select>
+            </div>
+
+                <div class="form-group">
+              <label for="exampleInputEmail1">বর্তমানে প্রজনন সংক্রান্ত কি সমস্যা আছে?:</label>
+              <select  class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
+                    <option>f</option>
+                    <option>f</option>
+                    <option>f</option>
+                </select>
+            </div>
+
+                <div class="form-group">
+              <label for="exampleInputEmail1">দুধ উৎপাদন সম্পর্কিত কোন সমস্যা আছে? থাকলে কি কি ?:</label>
+              <select  class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
+                    <option>f</option>
+                    <option>f</option>
+                    <option>f</option>
+                </select>
+            </div>
+
+                <div class="form-group">
+              <label for="exampleInputEmail1">পুরুষ প্রজননতন্ত্রের সমস্যা:</label>
+              <select  class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
+                    <option>f</option>
+                    <option>f</option>
+                    <option>f</option>
+                </select>
+            </div>
+
+                <div class="form-group">
+              <label for="exampleInputEmail1">চামড়ার সমস্যা:</label>
+              <select  class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
+                    <option>f</option>
+                    <option>f</option>
+                    <option>f</option>
+                </select>
+            </div>
+
+                <div class="form-group">
+              <label for="exampleInputEmail1">পায়ের সমস্যা:</label>
+              <select  class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
+                    <option>f</option>
+                    <option>f</option>
+                    <option>f</option>
+                </select>
+            </div>
+
+                <div class="form-group">
+              <label for="exampleInputEmail1">মেগট ঘা:</label>
+              <select  class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
+                    <option>f</option>
+                    <option>f</option>
+                    <option>f</option>
+                </select>
+            </div>
+
+                <div class="form-group">
+              <label for="exampleInputEmail1">রোগ সংক্রমণের ধরণ কি রকম?:</label>
+              <select  class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
+                    <option>f</option>
+                    <option>f</option>
+                    <option>f</option>
+                </select>
+            </div>
+          </form>
+
+            <!-- clinical finding form end-->
+
+          </div>
+        </div>
+
+        <!-- veterinarian block 3 end-->
+
+      </div>
+
+    <!-- Veterinarian panel end-->
+
+    <!-- Prescription panel start-->
+      <div class="prescription">
+        <div class="date-block mt-3">
+           <div class="date-btn float-right">
+                <a href="#" class="btn btn-warning p-3 ">Suggested Prescription</a>
+                <a href="#" class="btn btn-warning p-3">Add Medicine</a>
+              </div>
+              <p class="ml-3 mt-2">Enter Clinical findings</p>
+        </div>
+        <div class="suggestion-box mt-4">
+          <div class="row">
+            <div class=" ml-5 mr-3">1.</div>
+            <div class="col-md-11">
+              <form action="">
+              <div class="form-group">
+                <input type="email" class="form-control" id="exampleFormControlInput1" placeholder="Medicine type, Name, Pack size, quantity:">
+              </div>
+              <div class="form-group">
+                <input type="email" class="form-control" id="exampleFormControlInput1" placeholder="Dose, Route days:">
+              </div>
+              <div class="form-group">
+                 <label for="exampleFormControlTextarea1">Advice</label>
+                 <textarea class="form-control" id="exampleFormControlTextarea1" rows="3" placeholder="Suggestion box"></textarea>
+              </div>
+            </form>
+            </div>
+          </div>
+
+          <div class="row mb-4">
+            <div class="col-md-7">
+              <div class="revisit">
+                Please see the doctor again after:
+                <select class="mb-3">
+                  <option selected>3</option>
+                  <option value="1">4</option>
+                  <option value="2">7</option>
+                  <option value="3">10</option>
+                </select>
+               days
+               </div>
+            </div>
+            <div class="col-md-5 ">
+              <a href="#" class="btn btn-danger p-3">Cancel</a>
+              <a href="#" class="btn btn-primary p-3">Save</a>
+              <a href="#" class="btn btn-success p-3">Submit</a>
+
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    <!-- Prescription panel end-->
+
+    </div>
+    <!-- /.container-fluid-->
+    <!-- /.content-wrapper-->
+    <footer class="sticky-footer">
+      <div class="container">
+        <div class="text-center">
+          <small>Copyright © Your Website 2018</small>
+        </div>
+      </div>
+    </footer>
+    <!-- Scroll to Top Button-->
+    <a class="scroll-to-top rounded" href="#page-top">
+      <i class="fa fa-angle-up"></i>
+    </a>
+    <!-- Logout Modal-->
+    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">Ready to Leave?</h5>
+            <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">×</span>
+            </button>
+          </div>
+          <div class="modal-body">Select "Logout" below if you are ready to end your current session.</div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
+            <a class="btn btn-primary" href="login.html">Logout</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+{% endblock %}
+
+{% block additional-javascript %}
+
+
+     <!-- Bootstrap core JavaScript-->
+    <script src="/static/bootstrap4/vendor/jquery/jquery.min.js"></script>
+    <script src="/static/bootstrap4/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <!-- Core plugin JavaScript-->
+    <script src="/static/bootstrap4/vendor/jquery-easing/jquery.easing.min.js"></script>
+    <!-- Custom scripts for all pages-->
+    <script src="/static/bootstrap4/js/sb-admin.min.js"></script>
+    <!--datatable -->
+    <script type="text/javascript" src="{{STATIC_URL}}assets/plugins/data-tables/jquery.dataTables.js"></script>
+    <script type="text/javascript" src="{{STATIC_URL}}assets/plugins/data-tables/DT_bootstrap.js"></script>
+    <!--datatable ended-->
+     <script type="text/javascript" src="/static/js/Date-Range-Picker-For-Twitter-Bootstrap/date.js"></script>
+	<script type="text/javascript" src="/static/js/Date-Range-Picker-For-Twitter-Bootstrap/daterangepicker.js"></script>
+
+
+    <script>
+
+        //  Page Loading First Time
+
+        $(document).ready(function () {
+
+            $('#date_range').daterangepicker({ showDropdowns: true,maxDate: new Date()});
+
+        });
+        $(document).on("submit", "#upload_prescription_form", function (event) {
+        event.preventDefault();
+        form_url = $(this).attr('action');
+        var data = new FormData(this); // <-- 'this' is form element
+        //return formData;
+        $.ajax({
+            type: 'POST',
+            url: form_url,
+            contentType: false,
+            processData: false,
+            data: data,
+            success: function (data) {
+                $('#success_msg_upload').html("");
+               $('#success_msg_upload').html('<div class="alert alert-success fade in alert-dismissible"><strong>Success!</strong> Successfully uploaded</div>');
+
+            },
+            error: function (xhr, status, error) {
+                $('#error_msg_upload').html("<h5><strong>"+xhr.responseText+"</strong></h5>");
+            }
+        }); //ajax end
+    });
+</script>
+
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

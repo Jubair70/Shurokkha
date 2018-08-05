@@ -19,7 +19,12 @@ urlpatterns = patterns('',
                         url(r'^reject/(?P<id>\d+)/$', views.reject, name='reject'),
                         url(r'^farmer_profile/(?P<id>\d+)/$', views.farmer_profile, name='farmer_profile'),
                         url(r'^get_cattle_list/(?P<id>\d+)/$', views.get_cattle_list, name='get_cattle_list'),
-                        url(r'^cattle_profile/(?P<id>\d+)/$', views.cattle_profile, name='cattle_profile'),
+                        url(r'^cattle_profile/(?P<cattle_id>\d+)/(?P<appointment_id>\d+)$', views.cattle_profile, name='cattle_profile'),
+                        url(r'^clinical_findings/(?P<appointment_id>\d+)$', views.clinical_findings, name='clinical_findings'),
+                        url(r'^get_diagnosis_name/$', views.get_diagnosis_name, name='get_diagnosis_name'),
+                        url(r'^advisory_list/$', views.advisory_list, name='advisory_list'),
+                        url(r'^get_advisory_table/$', views.get_advisory_table, name='get_advisory_table'),
+
 
 
 

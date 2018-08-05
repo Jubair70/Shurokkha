@@ -4,15 +4,16 @@
 
 
     <link rel="stylesheet" type="text/css" media="all" href="/static/css/Date-Range-Picker-For-Twitter-Bootstrap/daterangepicker.css" />
-
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/bootstrap-multiselect.css" type="text/css"/>
     <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}assets/plugins/select2/select2_metro.css"/>
-<link rel="stylesheet" href="{{STATIC_URL}}assets/plugins/data-tables/DT_bootstrap.css"/>
+    <link rel="stylesheet" href="{{STATIC_URL}}assets/plugins/data-tables/DT_bootstrap.css"/>
      <!-- Bootstrap core CSS-->
   <link href="/static/bootstrap4/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
   <!-- Custom fonts for this template-->
   <link href="/static/bootstrap4/vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
   <!-- Custom styles for this template-->
   <link href="/static/bootstrap4/css/sb-admin.css" rel="stylesheet">
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 
 
 
@@ -196,7 +197,7 @@
                 <img src="./img/veterinarian-img1.jpg" class="img-fluid"  alt="">
                 <div class="card-text float-right">
                   <p>Cattle Name: {{ cattle_name }}<br>
-                     Cattle type: {{ cattle_type }}<br>
+                     Cattle type: {{ cattle_type_text }}<br>
                      Age: {{ cattle_age | safe}}<br>
                      Weight: {{ cattle_weight }}<br>Birth weight:  {{calf_birth_weight  }}
                   </p>
@@ -250,195 +251,197 @@
             </div>
 
             <!-- date bloc start-->
-
+            <div id = "clinical_findings_div">
             <div class="date-block mt-3">
               <p class="ml-3 mt-2">Enter Clinical findings</p>
             </div>
             <!-- date bloc end-->
 
             <!-- clinical finding form start-->
-            <form class="py-3 px-3">
-            <div class="form-group">
-              <label for="exampleInputEmail1">গরুর ধরন:</label>
-              <!--<input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="">-->
-                <select  class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
-                    <option>f</option>
-                    <option>f</option>
-                    <option>f</option>
-                </select>
-            </div>
+            <form id="clinical_diagnosis_form" class="py-3 px-3" action="/livestock/clinical_findings/{{ appointment_id }}" method="post">
+            {% csrf_token %}
+            <input type="hidden" value="" id="clinical_findings_id" name = "clinical_findings_id">
 
             <div class="form-group">
               <label for="exampleInputEmail1">Details of Farmer's complain; including duration of sickness</label>
-                <textarea type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder=""></textarea>
+                <textarea type="email" class="form-control" name="complain_details" id="complain_details" aria-describedby="emailHelp" placeholder=""></textarea>
             </div>
 
             <div class="form-group">
               <label for="exampleInputEmail1">Treatment history (if under treatment)</label>
-                <textarea type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder=""></textarea>
+                <textarea type="email" class="form-control" name="treatment_history" id="treatment_history" aria-describedby="emailHelp" placeholder=""></textarea>
             </div>
 
             <div class="form-group">
               <label for="exampleInputEmail1">Is there other cattle infected with same type of sickness?:</label>
-              <select  class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
-                    <option>f</option>
-                    <option>f</option>
-                    <option>f</option>
+              <select  class="form-control" id="same_sickness_other_cattle"  name="same_sickness_other_cattle" aria-describedby="emailHelp">
+                    {% for data in same_sickness_other_cattle %}
+                    <option value="{{ data.0 }}">{{ data.1 }}</option>
+                    {% endfor %}
                 </select>
             </div>
 
                 <div class="form-group">
               <label for="exampleInputEmail1">How many of the sick cattle was affected or died?</label>
-                <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="">
+                <input type="number" class="form-control"  name="sick_cattle_affected_or_died" id="sick_cattle_affected_or_died" aria-describedby="emailHelp" placeholder="">
             </div>
 
                 <div class="form-group">
                 <label for="exampleInputEmail1">Deworming history</label>
-                <textarea type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder=""></textarea>
+                <textarea type="email" class="form-control" id="deworming_history" name="deworming_history" aria-describedby="emailHelp" placeholder=""></textarea>
             </div>
 
                 <div class="form-group">
               <label for="exampleInputEmail1">Feeding history</label>
-                <textarea type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder=""></textarea>
+                <textarea type="email" class="form-control" id="feeding_history" name="feeding_history" aria-describedby="emailHelp" placeholder=""></textarea>
             </div>
 
                 <div class="form-group">
               <label for="exampleInputEmail1">What wrong feeding done in last few days?:</label>
-              <select  class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
-                    <option>f</option>
-                    <option>f</option>
-                    <option>f</option>
+              <select  class="form-control multiselect_class" multiple="multiple" name="wrong_feeding_last_days[]"  id="wrong_feeding_last_days" aria-describedby="emailHelp"  style="buttonWidth: '100%'">
+                     {% for data in wrong_feeding_last_days %}
+                    <option value="{{ data.0 }}">{{ data.1 }}</option>
+                    {% endfor %}
                 </select>
             </div>
 
                 <div class="form-group">
               <label for="exampleInputEmail1"> Details of rumination</label>
-                <textarea type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder=""></textarea>
+                <textarea class="form-control" id="rumination" name="rumination" aria-describedby="emailHelp" placeholder=""></textarea>
             </div>
 
                 <div class="form-group">
               <label for="exampleInputEmail1">Details of lacrimation</label>
-                <textarea type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder=""></textarea>
+                <textarea  class="form-control" id="lacrimation" name="lacrimation" aria-describedby="emailHelp" placeholder=""></textarea>
             </div>
 
                 <div class="form-group">
               <label for="exampleInputEmail1">Wetness of muzzle:</label>
-              <select  class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
-                    <option>f</option>
-                    <option>f</option>
-                    <option>f</option>
+              <select  class="form-control" id="muzzle" name="muzzle" aria-describedby="emailHelp">
+                     {% for data in muzzle %}
+                    <option value="{{ data.0 }}">{{ data.1 }}</option>
+                    {% endfor %}
                 </select>
             </div>
 
                 <div class="form-group">
               <label for="exampleInputEmail1">Generalized sign of sickness:</label>
-              <select  class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
-                    <option>f</option>
-                    <option>f</option>
-                    <option>f</option>
+              <select  class="form-control multiselect_class" multiple="multiple" name="sickness_sign[]" id="sickness_sign" aria-describedby="emailHelp">
+                     {% for data in sickness_sign %}
+                    <option value="{{ data.0 }}">{{ data.1 }}</option>
+                    {% endfor %}
                 </select>
             </div>
 
                 <div class="form-group">
               <label for="exampleInputEmail1">আচরণগত লক্ষণ:</label>
-              <select  class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
-                    <option>f</option>
-                    <option>f</option>
-                    <option>f</option>
+              <select  class="form-control multiselect_class" multiple="multiple"  name="behavioral_signs[]" id="behavioral_signs" aria-describedby="emailHelp">
+                     {% for data in behavioral_signs %}
+                    <option value="{{ data.0 }}">{{ data.1 }}</option>
+                    {% endfor %}
                 </select>
             </div>
 
                 <div class="form-group">
               <label for="exampleInputEmail1">মুখ ও পরিপাক সংক্রান্ত লক্ষণ:</label>
-              <select  class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
-                    <option>f</option>
-                    <option>f</option>
-                    <option>f</option>
+              <select  class="form-control multiselect_class" multiple="multiple"  name="mouth_digestion_sign[]" id="mouth_digestion_sign" aria-describedby="emailHelp">
+                     {% for data in mouth_digestion_sign %}
+                    <option value="{{ data.0 }}">{{ data.1 }}</option>
+                    {% endfor %}
                 </select>
             </div>
 
                 <div class="form-group">
               <label for="exampleInputEmail1">পায়খানার অবস্থা:</label>
-              <select  class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
-                    <option>f</option>
-                    <option>f</option>
-                    <option>f</option>
+              <select  class="form-control" id="stool_condition" name = "stool_condition" aria-describedby="emailHelp">
+                     {% for data in stool_condition %}
+                    <option value="{{ data.0 }}">{{ data.1 }}</option>
+                    {% endfor %}
                 </select>
             </div>
 
                 <div class="form-group">
               <label for="exampleInputEmail1">শ্বাসতন্ত্রের লক্ষণ:</label>
-              <select  class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
-                    <option>f</option>
-                    <option>f</option>
-                    <option>f</option>
+              <select  class="form-control multiselect_class" multiple="multiple" name="repiratory_sign[]" id="repiratory_sign" aria-describedby="emailHelp">
+                     {% for data in repiratory_sign %}
+                    <option value="{{ data.0 }}">{{ data.1 }}</option>
+                    {% endfor %}
                 </select>
             </div>
 
-                <div class="form-group">
+                <div class="form-group " id="q_reproductive_problem"  style="display: none">
               <label for="exampleInputEmail1">বর্তমানে প্রজনন সংক্রান্ত কি সমস্যা আছে?:</label>
-              <select  class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
-                    <option>f</option>
-                    <option>f</option>
-                    <option>f</option>
+              <select  class="form-control multiselect_class" multiple="multiple"  name="reproductive_problem[]" id="reproductive_problem" aria-describedby="emailHelp">
+                     {% for data in reproductive_problem %}
+                    <option value="{{ data.0 }}">{{ data.1 }}</option>
+                    {% endfor %}
                 </select>
             </div>
 
-                <div class="form-group">
+                <div class="form-group" id="q_milking_problem"  style="display: none">
               <label for="exampleInputEmail1">দুধ উৎপাদন সম্পর্কিত কোন সমস্যা আছে? থাকলে কি কি ?:</label>
-              <select  class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
-                    <option>f</option>
-                    <option>f</option>
-                    <option>f</option>
+              <select  class="form-control multiselect_class" multiple="multiple" name ="milking_problem[]" id="milking_problem" aria-describedby="emailHelp">
+                     {% for data in milking_problem %}
+                    <option value="{{ data.0 }}">{{ data.1 }}</option>
+                    {% endfor %}
                 </select>
             </div>
 
-                <div class="form-group">
+                <div class="form-group" id ="q_male_reproductive_problem" style="display: none">
               <label for="exampleInputEmail1">পুরুষ প্রজননতন্ত্রের সমস্যা:</label>
-              <select  class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
-                    <option>f</option>
-                    <option>f</option>
-                    <option>f</option>
+              <select  class="form-control multiselect_class" multiple="multiple"  name ="male_reproductive_problem[]" id="male_reproductive_problem" aria-describedby="emailHelp">
+                     {% for data in male_reproductive_problem %}
+                    <option value="{{ data.0 }}">{{ data.1 }}</option>
+                    {% endfor %}
                 </select>
             </div>
 
                 <div class="form-group">
               <label for="exampleInputEmail1">চামড়ার সমস্যা:</label>
-              <select  class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
-                    <option>f</option>
-                    <option>f</option>
-                    <option>f</option>
+              <select class="form-control multiselect_class" multiple="multiple"  name="skin_problem[]" id="skin_problem" aria-describedby="emailHelp">
+                     {% for data in skin_problem %}
+                    <option value="{{ data.0 }}">{{ data.1 }}</option>
+                    {% endfor %}
+
                 </select>
             </div>
 
                 <div class="form-group">
               <label for="exampleInputEmail1">পায়ের সমস্যা:</label>
-              <select  class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
-                    <option>f</option>
-                    <option>f</option>
-                    <option>f</option>
+              <select  class="form-control multiselect_class" multiple="multiple"  name = "foot_problem[]" id="foot_problem" aria-describedby="emailHelp">
+                    < {% for data in foot_problem %}
+                    <option value="{{ data.0 }}">{{ data.1 }}</option>
+                    {% endfor %}
                 </select>
             </div>
 
                 <div class="form-group">
               <label for="exampleInputEmail1">মেগট ঘা:</label>
-              <select  class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
-                    <option>f</option>
-                    <option>f</option>
-                    <option>f</option>
+              <select  class="form-control multiselect_class" multiple="multiple"  id="megot" name ="megot[]">
+                    {% for data in megot %}
+                    <option value="{{ data.0 }}">{{ data.1 }}</option>
+                    {% endfor %}
                 </select>
             </div>
 
                 <div class="form-group">
               <label for="exampleInputEmail1">রোগ সংক্রমণের ধরণ কি রকম?:</label>
-              <select  class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
-                    <option>f</option>
-                    <option>f</option>
-                    <option>f</option>
+              <select  class="form-control" id="disease_pattern" aria-describedby="emailHelp" name="disease_pattern">
+                     {% for data in disease_pattern %}
+                         <option value="{{ data.0 }}">{{ data.1 }}</option>
+                    {% endfor %}
                 </select>
             </div>
-          </form>
 
+            <div class="form-group">
+              <label for="exampleInputEmail1">Tentative Diagnosis</label>
+                <input type="text" class="form-control" name="tentative_diagnosis" id="diagnosis_name" aria-describedby="emailHelp" placeholder="">
+            </div>
+            <div class="form-group">
+              <input type="submit">
+            </div>
+          </form>
+            </div>
             <!-- clinical finding form end-->
 
           </div>
@@ -451,7 +454,7 @@
     <!-- Veterinarian panel end-->
 
     <!-- Prescription panel start-->
-      <div class="prescription">
+      <div class="prescription" id ="prescription" style="display:none">
         <div class="date-block mt-3">
            <div class="date-btn float-right">
                 <a href="#" class="btn btn-warning p-3 ">Suggested Prescription</a>
@@ -461,18 +464,38 @@
         </div>
         <div class="suggestion-box mt-4">
           <div class="row">
-            <div class=" ml-5 mr-3">1.</div>
+            <!--<div class=" ml-5 mr-3">1.</div>-->
             <div class="col-md-11">
               <form action="">
-              <div class="form-group">
-                <input type="email" class="form-control" id="exampleFormControlInput1" placeholder="Medicine type, Name, Pack size, quantity:">
-              </div>
-              <div class="form-group">
-                <input type="email" class="form-control" id="exampleFormControlInput1" placeholder="Dose, Route days:">
-              </div>
+                  <div id = "container_loop">
+                    <div class = "loop">
+
+                      <div class="form-group">
+                        <input type="email" class="form-control lst" id="exampleFormControlInput1" placeholder="Medicine type, Name, Pack size, quantity:">
+                      </div>
+                      <div class="form-group">
+                        <input type="email" class="form-control lst" id="exampleFormControlInput1" placeholder="Dose, Route days:">
+                      </div>
+
+                    <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <!--<button class="btn btn-lg" type="button" id="plus">
+                                <span class="glyphicon glyphicon-plus"></span>
+                            </button>-->
+                            <button class="btn btn-lg" type="button" class="minus">
+                                <span class="glyphicon glyphicon-minus"></span>
+                            </button>
+                        </div>
+                    </div>
+                    </div>
+</div><!--end loop div-->
+
+                    </div> <!--end container loop div-->
+
               <div class="form-group">
                  <label for="exampleFormControlTextarea1">Advice</label>
-                 <textarea class="form-control" id="exampleFormControlTextarea1" rows="3" placeholder="Suggestion box"></textarea>
+                 <textarea class="form-control" name="advice" id="exampleFormControlTextarea1" rows="3" placeholder="Suggestion box"></textarea>
               </div>
             </form>
             </div>
@@ -482,7 +505,7 @@
             <div class="col-md-7">
               <div class="revisit">
                 Please see the doctor again after:
-                <select class="mb-3">
+                <select class="mb-3" name="revisit">
                   <option selected>3</option>
                   <option value="1">4</option>
                   <option value="2">7</option>
@@ -500,6 +523,7 @@
           </div>
 
         </div>
+           </form>
 
       </div>
 
@@ -508,13 +532,13 @@
     </div>
     <!-- /.container-fluid-->
     <!-- /.content-wrapper-->
-    <footer class="sticky-footer">
+    <!--<footer class="sticky-footer">
       <div class="container">
         <div class="text-center">
           <small>Copyright © Your Website 2018</small>
         </div>
       </div>
-    </footer>
+    </footer>-->
     <!-- Scroll to Top Button-->
     <a class="scroll-to-top rounded" href="#page-top">
       <i class="fa fa-angle-up"></i>
@@ -545,7 +569,7 @@
 
 
      <!-- Bootstrap core JavaScript-->
-    <script src="/static/bootstrap4/vendor/jquery/jquery.min.js"></script>
+    <!--<script src="/static/bootstrap4/vendor/jquery/jquery.min.js"></script>-->
     <script src="/static/bootstrap4/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
     <!-- Core plugin JavaScript-->
     <script src="/static/bootstrap4/vendor/jquery-easing/jquery.easing.min.js"></script>
@@ -558,17 +582,133 @@
      <script type="text/javascript" src="/static/js/Date-Range-Picker-For-Twitter-Bootstrap/date.js"></script>
 	<script type="text/javascript" src="/static/js/Date-Range-Picker-For-Twitter-Bootstrap/daterangepicker.js"></script>
 
+    <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-multiselect.js"></script>
+
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/clinical_findings.js"></script>
 
     <script>
+        var appointment_id = {{ appointment_id }}
+        var cattle_type = {{ cattle_type }}
+        var appointment_status = {{ appointment_status }}
+        var appointment_type = {{ appointment_type }}
+        if ((appointment_type == 2) && (appointment_status == 1)){
+            if ('{{ clinical_findings_data }}'){
+                $('#clinical_findings_id').val('{{ clinical_findings_data.id }}')
+                $('#complain_details').val('{{ clinical_findings_data.complain_details  | safe}}')
+                $('#treatment_history').val('{{ clinical_findings_data.treatment_history | safe}}')
+                $('#same_sickness_other_cattle').val({{ clinical_findings_data.same_sickness_other_cattle  | safe}} )
+                $('#sick_cattle_affected_or_died').val('{{ clinical_findings_data.sick_cattle_affected_or_died | safe}}')
+                $('#deworming_history').val('{{ clinical_findings_data.deworming_history | safe}}')
+                $('#feeding_history').val('{{ clinical_findings_data.feeding_history | safe}}')
+                $('#wrong_feeding_last_days').val({{ clinical_findings_data.wrong_feeding_last_days | safe}})
+                $('#rumination').val('{{ clinical_findings_data.rumination | safe}}')
+                $('#lacrimation').val('{{ clinical_findings_data.lacrimation | safe}}')
+                $('#muzzle').val({{ clinical_findings_data.muzzle | safe}})
+                $('#sickness_sign').val({{ clinical_findings_data.sickness_sign | safe}})
+                $('#behavioral_signs').val({{ clinical_findings_data.behavioral_signs | safe}})
+                $('#mouth_digestion_sign').val({{ clinical_findings_data.mouth_digestion_sign | safe}})
+                $('#stool_condition').val('{{ clinical_findings_data.stool_condition | safe}}')
+                $('#repiratory_sign').val({{ clinical_findings_data.repiratory_sign | safe}})
+                $('#reproductive_problem').val({{ clinical_findings_data.reproductive_problem | safe}})
+                $('#milking_problem').val({{ clinical_findings_data.milking_problem | safe}})
+                $('#male_reproductive_problem').val({{ clinical_findings_data.male_reproductive_problem | safe}})
+                $('#skin_problem').val({{ clinical_findings_data.skin_problem | safe}})
+                $('#foot_problem').val({{ clinical_findings_data.foot_problem | safe}})
+                $('#megot').val({{ clinical_findings_data.megot|safe }})
+                $('#disease_pattern').val('{{ clinical_findings_data.disease_pattern | safe}}')
+                $('#diagnosis_name').val('{{ clinical_findings_data.tentative_diagnosis | safe}}')
 
-        //  Page Loading First Time
+            }
+            $('#prescription').show();
+        }
+        if (((appointment_type == 1) || (appointment_type == 3)) && (appointment_status == 0)){
+            $('#prescription').show();
+        }
+        //বকনা	:1,গাভী:2,ষাঁড়/দামড়া:3,বাছুর:4
+
+
+        if (cattle_type == 1){
+            console.log("1")
+            $('#q_reproductive_problem').show()
+            $('#q_milking_problem').hide()
+            $('#q_male_reproductive_problem').hide()
+        }
+
+        if (cattle_type == 2){
+            console.log("2")
+            $('#q_reproductive_problem').show()
+            $('#q_milking_problem').show()
+            $('#q_male_reproductive_problem').hide()
+        }
+
+        if (cattle_type == 3){
+            console.log("3")
+            $('#q_reproductive_problem').show()
+            $('#q_milking_problem').hide()
+            $('#q_male_reproductive_problem').show()
+        }
 
         $(document).ready(function () {
+            $('.multiselect_class').multiselect({
+                onDropdownHidden: function(event) {
+                //alert('Dropdown closed.');
+                multiselect_class = $('.multiselect_class').val();
+                },
+                buttonWidth: '60%',
+                numberDisplayed: 1,
+                includeSelectAllOption: true,
+            });
+            $("#diagnosis_name").autocomplete({
+                 source: function( request, response ) {
+                        var diagnosis = $("#diagnosis_name").val();
+                        var output = [];
+                        $.ajax({
+                                url: "/livestock/get_diagnosis_name/",
+                                data: {
+                                    'diagnosis_name' : diagnosis},
+                                type : "POST",
+                                success: function( data ) {
+                                     $.each(data, function(i, item) {
+                                         output.push( item.diagnosis_name );
+                                     });
+                                    response(output);
+                                }
+                       });
 
-            $('#date_range').daterangepicker({ showDropdowns: true,maxDate: new Date()});
+             },
+             minLength: 0,
+                }).focus(function () {
+                    $(this).autocomplete("search");
+                });
 
-        });
-        $(document).on("submit", "#upload_prescription_form", function (event) {
+            /*$('#plus').on('click',function () {
+                $("#loop").clone().appendTo("#container_loop").find("input").val("");
+            });*/
+
+            $('.minus').on('click',function () {
+                if($('#container_loop').children().length!=1)
+                     $(this).parent('div').remove();
+                     //$(this).closest('.loop').remove();
+
+                     //$(this).parent('div').remove();
+                    //$(this).siblings().remove();
+
+                 //$('#container_loop').children().last().remove();
+
+            });
+
+        }); //ready function ended
+
+        $(document).on('keyup', '.lst', function(e) {
+              var code = (e.keyCode ? e.keyCode : e.which);
+              if (code == 13) {
+                $(".loop").clone().appendTo("#container_loop").find("input").val("");
+                $(this).focus().select();
+
+              }
+            });
+        $(document).on("submit", "#clinical_diagnosis_form", function (event) {
         event.preventDefault();
         form_url = $(this).attr('action');
         var data = new FormData(this); // <-- 'this' is form element
@@ -580,12 +720,13 @@
             processData: false,
             data: data,
             success: function (data) {
-                $('#success_msg_upload').html("");
-               $('#success_msg_upload').html('<div class="alert alert-success fade in alert-dismissible"><strong>Success!</strong> Successfully uploaded</div>');
+                alert(data);
+                //$('#success_msg_upload').html("");
+                //$('#success_msg_upload').html('<div class="alert alert-success fade in alert-dismissible"><strong>Success!</strong> Successfully uploaded</div>');
 
             },
             error: function (xhr, status, error) {
-                $('#error_msg_upload').html("<h5><strong>"+xhr.responseText+"</strong></h5>");
+               // $('#error_msg_upload').html("<h5><strong>"+xhr.responseText+"</strong></h5>");
             }
         }); //ajax end
     });

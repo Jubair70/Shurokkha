@@ -389,22 +389,82 @@ def delete_duplicate_presciption_diagnosis(data):
 
 '''
 
-def cattle_profile(request,id):
-    cattle_info = get_cattle_info(id)
+def cattle_profile(request,cattle_id,appointment_id):
+    q = "select * from appointment where id="+str(appointment_id)
+    data = __db_fetch_values_dict(q)
+    clinical_findings_data = []
+    for temp in data:
+        appointment_status = temp['status']
+        appointment_type = temp['appointment_type']
+        if ((appointment_type == 2) and (appointment_status == 1)):
+            clinical_findings_id = temp['clinical_diagnosis_id']
+            clinical_findings_data = __db_fetch_values_dict("select *, string_to_array(wrong_feeding_last_days,',')::int[] wrong_feeding_last_days_arr, string_to_array(sickness_sign,',')::int[] sickness_sign_arr, string_to_array(behavioral_signs,',')::int[] behavioral_signs_arr, string_to_array(mouth_digestion_sign,',')::int[] mouth_digestion_sign_arr, string_to_array(repiratory_sign,',')::int[] repiratory_sign_arr, string_to_array(reproductive_problem,',')::int[] reproductive_problem_arr, string_to_array(milking_problem,',')::int[] milking_problem_arr, string_to_array(male_reproductive_problem,',')::int[] male_reproductive_problem_arr, string_to_array(skin_problem,',')::int[] skin_problem_arr, string_to_array(foot_problem,',')::int[] foot_problem_arr, string_to_array(megot,',')::int[] megot_arr from clinical_findings where id = "+str(clinical_findings_id))
+            print clinical_findings_data
+    cattle_info = get_cattle_info(cattle_id)
     farmer_mobile = cattle_info.get('mobile')
     farmer_info= get_farmer_info(farmer_mobile)
-    q="select value_text as val,value_label as label from xform_extracted where xform_id = 604 and field_name = 'cattle_type'"
-    context = dict(cattle_info.items() + farmer_info.items() )
+
+    option_dict = {
+        'appointment_id' : appointment_id,'appointment_status' : appointment_status,'appointment_type' : appointment_type,
+        'wrong_feeding_last_days' : get_option_list('wrong_feeding_last_days'),
+        'muzzle': get_option_list('muzzle'),'same_sickness_other_cattle' : get_option_list('same_sickness_other_cattle'),
+        'sickness_sign': get_option_list('sickness_sign'),
+        'behavioral_signs': get_option_list('behavioral_signs'),
+        'mouth_digestion_sign': get_option_list('mouth_digestion_sign'),
+        'stool_condition': get_option_list('stool_condition'),
+        'repiratory_sign': get_option_list('repiratory_sign'),
+        'reproductive_problem': get_option_list('reproductive_problem'),
+        'milking_problem': get_option_list('milking_problem'),
+        'male_reproductive_problem': get_option_list('male_reproductive_problem'),
+        'skin_problem': get_option_list('skin_problem'),
+        'foot_problem': get_option_list('foot_problem'),
+        'megot': get_option_list('megot'),
+        'disease_pattern': get_option_list('disease_pattern'),
+        'test_data' : [1,2,3],'clinical_findings_data' : get_clinical_findings_dict(clinical_findings_data)
+    }
+
+    context = dict(cattle_info.items() + farmer_info.items() +option_dict.items())
 
     return render(request,'livestock/cattle_profile.html',context)
 
+def get_clinical_findings_dict(list_data):
+    dict = {}
+    for temp in list_data:
+        dict= {
+            'id' : temp['id'],
+            'complain_details' : temp['complain_details'],
+            'treatment_history' : temp['treatment_history'],
+            'same_sickness_other_cattle' : temp['same_sickness_other_cattle'],
+            'sick_cattle_affected_or_died' : temp['sick_cattle_affected_or_died'],
+            'deworming_history' : temp['deworming_history'],
+            'feeding_history' : temp['feeding_history'],
+            'wrong_feeding_last_days': temp['wrong_feeding_last_days_arr'],
+            'rumination' : temp['rumination'],
+            'lacrimation' : temp['lacrimation'],
+            'muzzle': temp['muzzle'],
+            'sickness_sign': temp['sickness_sign_arr'],
+            'behavioral_signs' : temp['behavioral_signs_arr'],
+            'mouth_digestion_sign' : temp['mouth_digestion_sign_arr'],
+            'stool_condition' : temp['stool_condition'],
+            'repiratory_sign' : temp['repiratory_sign_arr'],
+            'reproductive_problem' : temp['reproductive_problem_arr'],
+            'milking_problem' : temp['milking_problem_arr'],
+            'male_reproductive_problem' : temp['male_reproductive_problem_arr'],
+            'skin_problem' : temp['skin_problem_arr'],
+            'foot_problem': temp['foot_problem_arr'],
+            'megot' : temp['megot_arr'],
+            'disease_pattern': temp['disease_pattern'],
+            'tentative_diagnosis': temp['tentative_diagnosis']
+        }
+
+    return dict
 
 def get_cattle_info(id):
-    q = "select mobile,coalesce(round(cattle_weight::numeric,2)::text,'') cattleweight,AGE(current_date ,date(cattle_birth_date))::text cattle_age,coalesce(cattle_name,'') cattle_name,(select label from vwcattle_type where value = cattle_type limit 1) as cattletype,coalesce(calf_birth_weight,'') calf_birth_weight from cattle where cattle_system_id = " + str(id)
+    q = "select mobile,cattle_type,coalesce(round(cattle_weight::numeric,2)::text,'') cattleweight,AGE(current_date ,date(cattle_birth_date))::text cattle_age,coalesce(cattle_name,'') cattle_name,(select label from vwcattle_type where value = cattle_type limit 1) as cattletype,coalesce(calf_birth_weight,'') calf_birth_weight from cattle where cattle_system_id = " + str(id)
     dataset = __db_fetch_values_dict(q)
     cattle_dict = {}
     for temp in dataset:
-        cattle_dict = {'mobile' : temp['mobile'],'cattle_name' : temp['cattle_name'],'cattle_weight' : temp['cattleweight'],'cattle_age' : temp['cattle_age'],'cattle_type': temp['cattletype'], 'calf_birth_weight' : temp['calf_birth_weight']}
+        cattle_dict = {'cattle_type' : temp['cattle_type'],'mobile' : temp['mobile'],'cattle_name' : temp['cattle_name'],'cattle_weight' : temp['cattleweight'],'cattle_age' : temp['cattle_age'],'cattle_type_text': temp['cattletype'], 'calf_birth_weight' : temp['calf_birth_weight']}
     return cattle_dict
 
 
@@ -422,3 +482,76 @@ def get_farmer_info(mobile):
         farmer_dict = { 'id' : temp['id'],'farmer_name' : temp['farmer_name'], 'mobile' : temp['mobile'], 'registration_date' : temp['registration_date'],  'image_url' :  img_path
         }
     return farmer_dict
+
+
+def get_option_list(fieldname):
+    q = "select value_text as val,value_label as label from xform_extracted where xform_id = 604 and field_name = '"+fieldname+"'"
+    dataset = makeTableList(q)
+    return dataset
+
+
+def clinical_findings(request,appointment_id):
+    q = ""
+    if request.method == 'POST':
+        edit_id = request.POST.get('clinical_findings_id')
+        complain_details = request.POST.get('complain_details')
+        treatment_history = request.POST.get('treatment_history')
+        same_sickness_other_cattle = request.POST.get('same_sickness_other_cattle')
+        sick_cattle_affected_or_died = request.POST.get('sick_cattle_affected_or_died')
+        deworming_history = request.POST.get('deworming_history')
+        feeding_history = request.POST.get('feeding_history')
+        wrong_feeding_last_days = get_multiple_input_string(request.POST.getlist('wrong_feeding_last_days[]'))
+        rumination = request.POST.get('rumination')
+        lacrimation = request.POST.get('lacrimation')
+        muzzle = request.POST.get('muzzle')
+        sickness_sign = get_multiple_input_string(request.POST.getlist('sickness_sign[]'))
+        behavioral_signs = get_multiple_input_string(request.POST.getlist('behavioral_signs[]'))
+        mouth_digestion_sign = get_multiple_input_string(request.POST.getlist('mouth_digestion_sign[]'))
+        stool_condition = request.POST.get('stool_condition')
+        repiratory_sign = get_multiple_input_string(request.POST.getlist('repiratory_sign[]'))
+        reproductive_problem = get_multiple_input_string(request.POST.getlist('reproductive_problem[]'))
+        milking_problem = get_multiple_input_string(request.POST.getlist('milking_problem[]'))
+        male_reproductive_problem = get_multiple_input_string(request.POST.getlist('male_reproductive_problem[]'))
+        skin_problem = get_multiple_input_string(request.POST.getlist('skin_problem[]'))
+        foot_problem = get_multiple_input_string(request.POST.getlist('foot_problem[]'))
+        megot = get_multiple_input_string(request.POST.getlist('megot[]'))
+        disease_pattern = request.POST.get('disease_pattern')
+        tentative_diagnosis = request.POST.get('tentative_diagnosis')
+        if edit_id:
+            q="update public.clinical_findings set complain_details = '"+complain_details+"',sick_cattle_affected_or_died = "+str(sick_cattle_affected_or_died)+",same_sickness_other_cattle = "+str(same_sickness_other_cattle)+", treatment_history='"+treatment_history+"', deworming_history='"+deworming_history+"', feeding_history='"+feeding_history+"', wrong_feeding_last_days='"+wrong_feeding_last_days+"', rumination='"+rumination+"', lacrimation='"+lacrimation+"', muzzle='"+muzzle+"', sickness_sign='"+sickness_sign+"', behavioral_signs='"+behavioral_signs+"', mouth_digestion_sign='"+mouth_digestion_sign+"', stool_condition='"+stool_condition+"', repiratory_sign='"+repiratory_sign+"', reproductive_problem='"+reproductive_problem+"', milking_problem='"+milking_problem+"', male_reproductive_problem='"+male_reproductive_problem+"', skin_problem='"+skin_problem+"', foot_problem='"+foot_problem+"', megot='"+megot+"', disease_pattern='"+disease_pattern+"', tentative_diagnosis='"+tentative_diagnosis+"',updated_by="+str(request.user.id)+",updated_date=NOW()"
+            __db_commit_query(q)
+        else:
+            q = "INSERT INTO public.clinical_findings(id, appointment_id, complain_details, sick_cattle_affected_or_died, same_sickness_other_cattle, treatment_history, deworming_history, feeding_history, wrong_feeding_last_days, rumination, lacrimation, muzzle, sickness_sign, behavioral_signs, mouth_digestion_sign, stool_condition, repiratory_sign, reproductive_problem, milking_problem, male_reproductive_problem, skin_problem, foot_problem, megot, disease_pattern, tentative_diagnosis, created_by, created_date)VALUES (DEFAULT , "+str(appointment_id)+",'"+complain_details+"', "+str(sick_cattle_affected_or_died)+", "+str(same_sickness_other_cattle)+", '"+treatment_history+"', '"+deworming_history+"', '"+feeding_history+"', '"+wrong_feeding_last_days+"', '"+rumination+"', '"+lacrimation+"', "+muzzle+", '"+sickness_sign+"', '"+behavioral_signs+"', '"+mouth_digestion_sign+"', '"+stool_condition+"','"+repiratory_sign+"','"+reproductive_problem+"', '"+milking_problem+"', '"+male_reproductive_problem+"', '"+skin_problem+"', '"+foot_problem+"', '"+megot+"','"+disease_pattern+"', '"+tentative_diagnosis+"', "+str(request.user.id)+", NOW()) RETURNING id"
+            clinical_dignosis_id = __db_fetch_single_value(q)
+            update_q = "update appointment set status =1,clinical_diagnosis_id = "+str(clinical_dignosis_id)+" where id ="+str(appointment_id)
+            __db_commit_query(update_q)
+    print q
+    return HttpResponse(json.dumps("Clinical findings added"), content_type="application/json", status=200)
+
+
+
+
+def get_multiple_input_string(data_list):
+    input_str = ""
+    #  check the list is empty
+    if list(data_list):
+        # list converts to comma seperated string
+        input_str = ' , '.join(str(x) for x in list(data_list))
+    return input_str
+
+
+def get_diagnosis_name(request):
+    diagnosis_name = "%" + request.POST.get("diagnosis_name") + "%";
+    q = "select * from diagnosis where diagnosis_name like '"+diagnosis_name+"'"
+    data_list = __db_fetch_values_dict(q)
+    return HttpResponse(json.dumps(data_list, default=decimal_date_default), content_type="application/json", status=200)
+
+
+def advisory_list(request):
+    return render(request, 'livestock/advisory_list.html')
+
+def get_advisory_table(request):
+    q = "select * from appointment"
+    dataset = __db_fetch_values_dict(q)
+    return render(request, 'livestock/advisory_table.html',{'dataset': dataset})
+

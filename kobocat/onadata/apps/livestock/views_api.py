@@ -355,8 +355,8 @@ def get_cattle_list(request):
         data_dict['calf_age'] = temp['calf_age']
         data_dict['cattle_age'] = temp['cattle_age']
         data_dict['register_date'] = temp['register_date']
+        data_dict['cattle_birth_date'] = temp['cattle_birth_date']
         data_dict['weight'] = temp['calf_birth_weight']
-        data_dict['cattle_type'] = temp['cattle_type_text']
         data_dict['cattle_type'] = temp['cattle_type_text']
         data_dict['cattle_system_id'] = temp['cattle_system_id']
         img_path = None
@@ -389,11 +389,14 @@ def delete_farmer(request):
 
 @csrf_exempt
 def search_farmer(request):
+    farmerprofileupdate_form_owner_q = "select (select username from auth_user where id = logger_xform.user_id limit 1) as user_name from public.logger_xform where id_string = 'farmer_profile_update'"
+    farmerprofileupdate_form_owner = views.__db_fetch_single_value(farmerprofileupdate_form_owner_q)
     username = request.GET.get('username')
     farmer_id = request.GET.get('farmer_id')
     q = "select *,(select count(*) from cattle where mobile = farmer.mobile) as no_cattle,string_to_array(gps,' ') gps_list,date(submission_time)::text as s_date from farmer where mobile = '"+farmer_id+"' and deleted_at is null;"
     dataset = views.__db_fetch_values_dict(q)
     msg = ""
+    data_list = []
     if dataset:
         user_id = views.__db_fetch_single_value("select id from usermodule_usermoduleprofile where user_id = (select id from auth_user where username = '"+username+"')")
         farmer_id = views.__db_fetch_single_value("select id from farmer where mobile = '"+farmer_id+"'")
@@ -407,7 +410,31 @@ def search_farmer(request):
                 user_id) + ", " + str(farmer_id) + ");"
             views.__db_commit_query(insert_q)
             msg = "Assigned successfully"
+        for temp in dataset:
+            data_dict = {}
+            data_dict['id'] = temp['id']
+            data_dict['name'] = temp['farmer_name']
+            data_dict['phone'] = temp['mobile']
+            data_dict['no_of_cattle'] = temp['no_cattle']
+            data_dict['division'] = temp['division']
+            data_dict['district'] = temp['district']
+            data_dict['upzilla'] = temp['upazila']
+            data_dict['union'] = ''
+            data_dict['village'] = ''
+            if temp['gps_list']:
+                gps = str(temp['gps_list'][0]) + "," + str(temp['gps_list'][1])
+            else:
+                gps = ""
+            data_dict['gps'] = gps
+            data_dict['submission_date'] = temp['s_date']
+            img_path = None
+            if temp['image'] is not None:
+                img = temp['image']
+                img_path = "media/" + farmerprofileupdate_form_owner + "/attachments/" + img
+            data_dict['image_url'] = img_path
+            data_list.append(data_dict.copy())
+            data_dict.clear()
     else:
         msg = "No farmer exists."
     print(msg)
-    return HttpResponse(json.dumps(msg))
+    return HttpResponse(json.dumps(data_list))

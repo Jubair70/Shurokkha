@@ -24,6 +24,10 @@ urlpatterns = patterns('',
                         url(r'^get_diagnosis_name/$', views.get_diagnosis_name, name='get_diagnosis_name'),
                         url(r'^advisory_list/$', views.advisory_list, name='advisory_list'),
                         url(r'^get_advisory_table/$', views.get_advisory_table, name='get_advisory_table'),
+                       url(r'^submit_prescription/(?P<appointment_id>\d+)$', views.submit_prescription, name='submit_prescription'),
+                        url(r'^get_medicine_name/$', views.get_medicine_name, name='get_medicine_name'),
+                        url(r'^get_medicine_type/$', views.get_medicine_type, name='get_medicine_type'),
+                        url(r'^get_medicine_packsize/$', views.get_medicine_packsize, name='get_medicine_packsize'),
 
 
 

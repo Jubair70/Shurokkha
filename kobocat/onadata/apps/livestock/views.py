@@ -399,7 +399,7 @@ def cattle_profile(request,cattle_id,appointment_id):
         if ((appointment_type == 2) and (appointment_status == 1)):
             clinical_findings_id = temp['clinical_diagnosis_id']
             clinical_findings_data = __db_fetch_values_dict("select *, string_to_array(wrong_feeding_last_days,',')::int[] wrong_feeding_last_days_arr, string_to_array(sickness_sign,',')::int[] sickness_sign_arr, string_to_array(behavioral_signs,',')::int[] behavioral_signs_arr, string_to_array(mouth_digestion_sign,',')::int[] mouth_digestion_sign_arr, string_to_array(repiratory_sign,',')::int[] repiratory_sign_arr, string_to_array(reproductive_problem,',')::int[] reproductive_problem_arr, string_to_array(milking_problem,',')::int[] milking_problem_arr, string_to_array(male_reproductive_problem,',')::int[] male_reproductive_problem_arr, string_to_array(skin_problem,',')::int[] skin_problem_arr, string_to_array(foot_problem,',')::int[] foot_problem_arr, string_to_array(megot,',')::int[] megot_arr from clinical_findings where id = "+str(clinical_findings_id))
-            print clinical_findings_data
+            #print clinical_findings_data
     cattle_info = get_cattle_info(cattle_id)
     farmer_mobile = cattle_info.get('mobile')
     farmer_info= get_farmer_info(farmer_mobile)
@@ -491,6 +491,7 @@ def get_option_list(fieldname):
 
 
 def clinical_findings(request,appointment_id):
+    print "trigger clinical_findings"
     q = ""
     if request.method == 'POST':
         edit_id = request.POST.get('clinical_findings_id')
@@ -525,7 +526,7 @@ def clinical_findings(request,appointment_id):
             clinical_dignosis_id = __db_fetch_single_value(q)
             update_q = "update appointment set status =1,clinical_diagnosis_id = "+str(clinical_dignosis_id)+" where id ="+str(appointment_id)
             __db_commit_query(update_q)
-    print q
+    #print q
     return HttpResponse(json.dumps("Clinical findings added"), content_type="application/json", status=200)
 
 
@@ -550,8 +551,54 @@ def get_diagnosis_name(request):
 def advisory_list(request):
     return render(request, 'livestock/advisory_list.html')
 
+
 def get_advisory_table(request):
     q = "select * from appointment"
     dataset = __db_fetch_values_dict(q)
     return render(request, 'livestock/advisory_table.html',{'dataset': dataset})
 
+
+def submit_prescription(request,appointment_id):
+    if request.method == 'POST':
+        clinical_findings_id = request.POST.get('clinical_findings_id_prescription')
+        med_part_1 = request.POST.getlist('med_part_1[]')
+        med_part_2 = request.POST.getlist('med_part_2[]')
+        revisit = request.POST.get('revisit')
+        advice = request.POST.get('advice')
+        pres_q = "INSERT INTO public.prescription(id, appointment_id, clinical_findings_id, advice, created_by, created_date, next_appointment_after)VALUES (DEFAULT , "+str(appointment_id)+","+str(clinical_findings_id)+", '"+advice+"',"+str(request.user.id)+", NOW(), "+str(revisit)+") returning id;"
+        prescription_id = __db_fetch_single_value(pres_q)
+        for index, elem in enumerate(med_part_1):
+            pres_detail_q = "INSERT INTO public.prescription_details(id, prescription_id, medicine_part_1, medicine_part_2)VALUES (DEFAULT, " + str(
+                prescription_id) + ", '"+med_part_1[index]+"','"+med_part_2[index]+"');"
+            __db_commit_query(pres_detail_q)
+
+    return HttpResponse(json.dumps("Prescription added"), content_type="application/json", status=200)
+
+
+def get_medicine_name(request):
+    m_name = "%" + request.POST.get("m_name") + "%"
+    m_type = "%" + request.POST.get("m_type") + "%"
+    packsize = "%" + request.POST.get("packsize") + "%"
+    q = "select medicine_name from vwmedicine where medicine_name like '" + m_name + "' and m_type like '"+m_type+"' and packsize like '"+packsize+"'"
+    data_list = __db_fetch_values_dict(q)
+    return HttpResponse(json.dumps(data_list, default=decimal_date_default), content_type="application/json",
+                        status=200)
+
+def get_medicine_type(request):
+    m_name = "%" + request.POST.get("m_name") + "%"
+    m_type = "%" + request.POST.get("m_type") + "%"
+    packsize = "%" + request.POST.get("packsize") + "%"
+    q = "select DISTINCT m_type from vwmedicine where medicine_name like '" + m_name + "' and m_type like '"+m_type+"' and packsize like '"+packsize+"'"
+    data_list = __db_fetch_values_dict(q)
+    return HttpResponse(json.dumps(data_list, default=decimal_date_default), content_type="application/json",
+                        status=200)
+
+
+def get_medicine_packsize(request):
+    m_name = "%" + request.POST.get("m_name") + "%"
+    m_type = "%" + request.POST.get("m_type") + "%"
+    packsize = "%" + request.POST.get("packsize") + "%"
+    q = "select DISTINCT packsize from vwmedicine where medicine_name like '" + m_name + "' and m_type like '"+m_type+"' and packsize like '"+packsize+"'"
+    data_list = __db_fetch_values_dict(q)
+    return HttpResponse(json.dumps(data_list, default=decimal_date_default), content_type="application/json",
+                        status=200)

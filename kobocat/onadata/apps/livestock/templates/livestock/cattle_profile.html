@@ -21,6 +21,7 @@
     .thumbnail{
         border: 0;
     }
+    /*.ui-autocomplete { z-index:2147483647; }*/
     </style>
 
 {% endblock %}
@@ -457,8 +458,8 @@
       <div class="prescription" id ="prescription" style="display:none">
         <div class="date-block mt-3">
            <div class="date-btn float-right">
-                <a href="#" class="btn btn-warning p-3 ">Suggested Prescription</a>
-                <a href="#" class="btn btn-warning p-3">Add Medicine</a>
+                <button onclick="get_suggested_prescription()" class="btn btn-warning p-3 ">Suggested Prescription</button>
+                <button onclick="add_medicine()" class="btn btn-warning p-3">Add Medicine</button>
               </div>
               <p class="ml-3 mt-2">Enter Clinical findings</p>
         </div>
@@ -466,38 +467,43 @@
           <div class="row">
             <!--<div class=" ml-5 mr-3">1.</div>-->
             <div class="col-md-11">
-              <form action="">
+              <form  id ="prescription_form" method="post" action="/livestock/submit_prescription/{{ appointment_id }}"  onsubmit="return false;">
+                  {% csrf_token %}
+                  <input type="hidden" id ="clinical_findings_id_prescription" value="" name="clinical_findings_id_prescription">
                   <div id = "container_loop">
-                    <div class = "loop">
+                    <div id = "loop">
 
                       <div class="form-group">
-                        <input type="email" class="form-control lst" id="exampleFormControlInput1" placeholder="Medicine type, Name, Pack size, quantity:">
+                        <input type="text" required name = "med_part_1[]" class="form-control lst" id="med_p1" placeholder="Medicine type, Name, Pack size, quantity:">
                       </div>
                       <div class="form-group">
-                        <input type="email" class="form-control lst" id="exampleFormControlInput1" placeholder="Dose, Route days:">
+                        <input type="text" required name = "med_part_2[]" class="form-control lst" id="med_p2" placeholder="Dose, Route days:">
                       </div>
+                        <button class="btn btn-lg minus" onclick="delete_element(this)" type="button" >
+                                <span class="glyphicon glyphicon-minus"></span>
+                        </button>
 
-                    <div class="row">
+                    <!--<div class="row">
                     <div class="col-md-12">
                         <div class="form-group">
                             <!--<button class="btn btn-lg" type="button" id="plus">
                                 <span class="glyphicon glyphicon-plus"></span>
                             </button>-->
-                            <button class="btn btn-lg" type="button" class="minus">
+                            <!--<button class="btn btn-lg minus" onclick="delete_element()" type="button" >
                                 <span class="glyphicon glyphicon-minus"></span>
                             </button>
                         </div>
                     </div>
-                    </div>
+                    </div>-->
 </div><!--end loop div-->
 
                     </div> <!--end container loop div-->
 
               <div class="form-group">
                  <label for="exampleFormControlTextarea1">Advice</label>
-                 <textarea class="form-control" name="advice" id="exampleFormControlTextarea1" rows="3" placeholder="Suggestion box"></textarea>
+                 <textarea class="form-control" required name="advice" id="exampleFormControlTextarea1" rows="3" placeholder="Suggestion box"></textarea>
               </div>
-            </form>
+
             </div>
           </div>
 
@@ -505,19 +511,20 @@
             <div class="col-md-7">
               <div class="revisit">
                 Please see the doctor again after:
-                <select class="mb-3" name="revisit">
+                <!--<select class="mb-3" name="revisit">
                   <option selected>3</option>
                   <option value="1">4</option>
                   <option value="2">7</option>
                   <option value="3">10</option>
-                </select>
+                </select>--->
+                  <input class="mb-3" name="revisit" type="number">
                days
                </div>
             </div>
             <div class="col-md-5 ">
               <a href="#" class="btn btn-danger p-3">Cancel</a>
               <a href="#" class="btn btn-primary p-3">Save</a>
-              <a href="#" class="btn btn-success p-3">Submit</a>
+              <button type = "submit" class="btn btn-success p-3">Submit</button>
 
             </div>
           </div>
@@ -561,6 +568,64 @@
         </div>
       </div>
     </div>
+    <!--Add medicine modal -->
+    <div class="modal fade" id="add_medicine_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">Add Medicine</h5>
+            <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">×</span>
+            </button>
+          </div>
+          <div class="modal-body">
+
+             <div class="form-group ui-front">
+              <label for="exampleInputEmail1">Medicine Type</label>
+              <input class="form-control" id="m_type" name="rumination" aria-describedby="emailHelp" placeholder="">
+            </div>
+
+              <div class="form-group ui-front">
+              <label for="exampleInputEmail1"> Medicine Name</label>
+                <input class="form-control" id="m_name" name="rumination" aria-describedby="emailHelp" placeholder="">
+              </div>
+
+                <div class="form-group ui-front">
+              <label for="exampleInputEmail1">Pack Size</label>
+                <input  class="form-control" id="p_size" name="lacrimation" aria-describedby="emailHelp" placeholder="">
+            </div>
+            <div class="form-group">
+              <label for="exampleInputEmail1">Quantity</label>
+                <input  class="form-control" id="qty" name="lacrimation" aria-describedby="emailHelp" placeholder="">
+            </div>
+          <div class="form-group">
+              <label for="exampleInputEmail1">Dose</label>
+                <input  class="form-control" id="dose" name="lacrimation" aria-describedby="emailHelp" placeholder="">
+            </div>
+
+                <div class="form-group">
+              <label for="exampleInputEmail1">Route</label>
+              <select  class="form-control" id="route" name="muzzle" aria-describedby="emailHelp">
+                     {% for data in muzzle %}
+                    <option value="{{ data.1 }}">{{ data.1 }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+          <div class="form-group">
+              <label for="exampleInputEmail1">Days</label>
+                <input type="number" class="form-control" id="day" name="lacrimation" aria-describedby="emailHelp" placeholder="">
+            </div>
+
+
+
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="put_medicine()" type="button" data-dismiss="modal">Add Medicine</button>
+            <a class="btn btn-primary" href="login.html">Cancel</a>
+          </div>
+        </div>
+      </div>
+    </div>
 
   </div>
 {% endblock %}
@@ -594,6 +659,7 @@
         var appointment_type = {{ appointment_type }}
         if ((appointment_type == 2) && (appointment_status == 1)){
             if ('{{ clinical_findings_data }}'){
+                $('#clinical_findings_id_prescription').val('{{ clinical_findings_data.id }}')
                 $('#clinical_findings_id').val('{{ clinical_findings_data.id }}')
                 $('#complain_details').val('{{ clinical_findings_data.complain_details  | safe}}')
                 $('#treatment_history').val('{{ clinical_findings_data.treatment_history | safe}}')
@@ -682,54 +748,189 @@
                     $(this).autocomplete("search");
                 });
 
-            /*$('#plus').on('click',function () {
-                $("#loop").clone().appendTo("#container_loop").find("input").val("");
-            });*/
+            $("#m_name").autocomplete({
+                 source: function( request, response ) {
+                        var m_name = $("#m_name").val();
+                        var p_size = $("#p_size").val();
+                        var m_type = $("#m_type").val();
+                        var output = [];
+                        $.ajax({
+                                url: "/livestock/get_medicine_name/",
+                                data: {
+                                    'm_name' : m_name,'packsize' : p_size,'m_type' : m_type
+                                },
+                                type : "POST",
+                                success: function( data ) {
+                                    console.log(data)
+                                     $.each(data, function(i, item) {
+                                         output.push( item.medicine_name );
+                                     });
+                                    response(output);
+                                }
+                       });
 
-            $('.minus').on('click',function () {
-                if($('#container_loop').children().length!=1)
-                     $(this).parent('div').remove();
-                     //$(this).closest('.loop').remove();
+             },
+             minLength: 0,
+                }).focus(function () {
+                    $(this).autocomplete("search");
+                });
 
-                     //$(this).parent('div').remove();
-                    //$(this).siblings().remove();
+            $("#m_type").autocomplete({
+                 source: function( request, response ) {
+                        var m_name = $("#m_name").val();
+                        var p_size = $("#p_size").val();
+                        var m_type = $("#m_type").val();
+                        var output = [];
+                        $.ajax({
+                                url: "/livestock/get_medicine_type/",
+                                data: {
+                                    'm_name' : m_name,'packsize' : p_size,'m_type' : m_type
+                                },
+                                type : "POST",
+                                success: function( data ) {
+                                    console.log(data)
+                                     $.each(data, function(i, item) {
+                                         output.push( item.m_type );
+                                     });
+                                    response(output);
+                                }
+                       });
 
-                 //$('#container_loop').children().last().remove();
+             },
+             minLength: 0,
+                }).focus(function () {
+                    $(this).autocomplete("search");
+                });
 
-            });
+            $("#p_size").autocomplete({
+                 source: function( request, response ) {
+                        var m_name = $("#m_name").val();
+                        var p_size = $("#p_size").val();
+                        var m_type = $("#m_type").val();
+                        var output = [];
+                        $.ajax({
+                                url: "/livestock/get_medicine_packsize/",
+                                data: {
+                                    'm_name' : m_name,'packsize' : p_size,'m_type' : m_type
+                                },
+                                type : "POST",
+                                success: function( data ) {
+                                    console.log(data)
+                                     $.each(data, function(i, item) {
+                                         output.push( item.packsize );
+                                     });
+                                    response(output);
+                                }
+                       });
+
+             },
+             minLength: 0,
+                }).focus(function () {
+                    $(this).autocomplete("search");
+                });
+
+        /*  PREVENT FORM SUBMISSION BY HITTING ENTER   */
+        $(document).on('keyup keypress', 'form input[type="text"]', function(e) {
+          if(e.keyCode == 13) {
+            e.preventDefault();
+            return false;
+          }
+        });
 
         }); //ready function ended
 
         $(document).on('keyup', '.lst', function(e) {
               var code = (e.keyCode ? e.keyCode : e.which);
               if (code == 13) {
-                $(".loop").clone().appendTo("#container_loop").find("input").val("");
+                  e.preventDefault();
+                $("#loop").clone().appendTo("#container_loop").find("input").val("");
                 $(this).focus().select();
 
               }
             });
         $(document).on("submit", "#clinical_diagnosis_form", function (event) {
-        event.preventDefault();
-        form_url = $(this).attr('action');
-        var data = new FormData(this); // <-- 'this' is form element
-        //return formData;
-        $.ajax({
-            type: 'POST',
-            url: form_url,
-            contentType: false,
-            processData: false,
-            data: data,
-            success: function (data) {
-                alert(data);
-                //$('#success_msg_upload').html("");
-                //$('#success_msg_upload').html('<div class="alert alert-success fade in alert-dismissible"><strong>Success!</strong> Successfully uploaded</div>');
+            event.preventDefault();
+            form_url = $(this).attr('action');
+            var data = new FormData(this); // <-- 'this' is form element
+            //return formData;
+            $.ajax({
+                type: 'POST',
+                url: form_url,
+                contentType: false,
+                processData: false,
+                data: data,
+                success: function (data) {
+                    alert(data);
+                    //$('#success_msg_upload').html("");
+                    //$('#success_msg_upload').html('<div class="alert alert-success fade in alert-dismissible"><strong>Success!</strong> Successfully uploaded</div>');
 
-            },
-            error: function (xhr, status, error) {
-               // $('#error_msg_upload').html("<h5><strong>"+xhr.responseText+"</strong></h5>");
-            }
-        }); //ajax end
-    });
+                },
+                error: function (xhr, status, error) {
+                   // $('#error_msg_upload').html("<h5><strong>"+xhr.responseText+"</strong></h5>");
+                }
+            }); //ajax end
+        });
+
+        $(document).on("submit", "#prescription_form", function (event) {
+            console.log("trigger submit_prescription");
+            event.preventDefault();
+            form_url = $(this).attr('action');
+            console.log(form_url)
+            var data = new FormData(this); // <-- 'this' is form element
+            //return formData;
+            $.ajax({
+                type: 'POST',
+                url: form_url,
+                contentType: false,
+                processData: false,
+                data: data,
+                success: function (data) {
+                    alert(data);
+                    //$('#success_msg_upload').html("");
+                    //$('#success_msg_upload').html('<div class="alert alert-success fade in alert-dismissible"><strong>Success!</strong> Successfully uploaded</div>');
+
+                },
+                error: function (xhr, status, error) {
+                   // $('#error_msg_upload').html("<h5><strong>"+xhr.responseText+"</strong></h5>");
+                }
+            }); //ajax end
+        });
+
+
+    function delete_element(obj){
+        if($('#container_loop').children().length!=1){
+            $(obj).parent('div').remove();
+        }
+    }
+
+    function add_medicine() {
+        $('#add_medicine_modal').modal('show');
+    }
+
+    function put_medicine() {
+        var m_name = $("#m_name").val();
+        var p_size = $("#p_size").val();
+        var m_type = $("#m_type").val();
+        var qty = $("#qty").val();
+        var dose = $("#dose").val();
+        var route = $("#route").val();
+        var day = $("#day").val();
+        var m_p_1 = m_type+','+m_name+','+p_size+'*'+qty;
+        var m_p_2 = dose+','+route+','+day;
+        //console.log(m_p_1)
+        //console.log(m_p_2)
+        var arr = [m_p_1,m_p_2];
+        i=0;
+        $("#loop").clone().appendTo("#container_loop").find('input').each(function (e){
+            $(this).val(arr[i]);
+            i++;
+        });
+        $(this).focus().select();
+        $('#add_medicine_modal').modal('toggle');
+
+    }
+
+
 </script>
 
 {% endblock %}

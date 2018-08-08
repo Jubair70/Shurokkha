@@ -12,7 +12,8 @@
   <!-- Custom fonts for this template-->
   <link href="/static/bootstrap4/vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
   <!-- Custom styles for this template-->
-  <link href="/static/bootstrap4/css/sb-admin.css" rel="stylesheet">
+  <link href="/static/bootstrap4/css/sb-admin.min.css" rel="stylesheet">
+    <link href="/static/bootstrap4/css/sb-admin.css" rel="stylesheet">
     <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 
 
@@ -458,7 +459,7 @@
       <div class="prescription" id ="prescription" style="display:none">
         <div class="date-block mt-3">
            <div class="date-btn float-right">
-                <button onclick="get_suggested_prescription()" class="btn btn-warning p-3 ">Suggested Prescription</button>
+                <button onclick="get_suggested_prescription('{{ cattle_type }}','{{ cattle_weight }}','Arthritis')" class="btn btn-warning p-3 ">Suggested Prescription</button>
                 <button onclick="add_medicine()" class="btn btn-warning p-3">Add Medicine</button>
               </div>
               <p class="ml-3 mt-2">Enter Clinical findings</p>
@@ -471,7 +472,7 @@
                   {% csrf_token %}
                   <input type="hidden" id ="clinical_findings_id_prescription" value="" name="clinical_findings_id_prescription">
                   <div id = "container_loop">
-                    <div id = "loop">
+                    <div id = "loop" class="loop_class">
 
                       <div class="form-group">
                         <input type="text" required name = "med_part_1[]" class="form-control lst" id="med_p1" placeholder="Medicine type, Name, Pack size, quantity:">
@@ -501,7 +502,7 @@
 
               <div class="form-group">
                  <label for="exampleFormControlTextarea1">Advice</label>
-                 <textarea class="form-control" required name="advice" id="exampleFormControlTextarea1" rows="3" placeholder="Suggestion box"></textarea>
+                 <textarea class="form-control" required name="advice" id="advice" rows="3" placeholder="Suggestion box"></textarea>
               </div>
 
             </div>
@@ -621,7 +622,7 @@
           </div>
           <div class="modal-footer">
             <button class="btn btn-secondary" onclick="put_medicine()" type="button" data-dismiss="modal">Add Medicine</button>
-            <a class="btn btn-primary" href="login.html">Cancel</a>
+              <button class="btn btn-primary" type="button" data-dismiss="modal" aria-label="Close">Cancel</button>
           </div>
         </div>
       </div>
@@ -885,7 +886,7 @@
                 processData: false,
                 data: data,
                 success: function (data) {
-                    alert(data);
+                    console.log(data);
                     //$('#success_msg_upload').html("");
                     //$('#success_msg_upload').html('<div class="alert alert-success fade in alert-dismissible"><strong>Success!</strong> Successfully uploaded</div>');
 
@@ -917,8 +918,6 @@
         var day = $("#day").val();
         var m_p_1 = m_type+','+m_name+','+p_size+'*'+qty;
         var m_p_2 = dose+','+route+','+day;
-        //console.log(m_p_1)
-        //console.log(m_p_2)
         var arr = [m_p_1,m_p_2];
         i=0;
         $("#loop").clone().appendTo("#container_loop").find('input').each(function (e){
@@ -927,7 +926,57 @@
         });
         $(this).focus().select();
         $('#add_medicine_modal').modal('toggle');
+    }
 
+    function get_suggested_prescription(type,weight,diagnosis) {
+        console.log(type)
+        console.log(weight)
+        console.log(diagnosis)
+
+        $.ajax({
+                type: 'POST',
+                url: '/livestock/get_suggested_prescription/',
+                data: {'cattle_type' : type, 'weight' : weight, 'diagnosis' : diagnosis},
+                success: function (data) {
+                    console.log(data.a_data);
+                    console.log("*************************************");
+                    console.log(data.m_data);
+                    //$('.loop_class input[value=""]').remo()
+                     /*$('div.loop_class :input').filter('input:text[value=""]')
+                   .parent(':first')
+                   .addClass('first_empty');*/
+                    //$('.loop_class > input:text[value=""]').parent().addClass('first_empty');
+
+
+                    //$('div.loop_class input') .filter('input:text[value=""]') .filter(':first') .parent().css('background-color', 'green');
+                    if( data){
+                        $.each(data.m_data, function(i, item) {
+                            m_p_1 = item.mpart_1
+                            m_p_2 = item.mpart_2
+                            console.log(arr)
+                            var arr = [m_p_1, m_p_2];
+                            i=0;
+                            $("#loop").clone().appendTo("#container_loop").find('input').each(function (e){
+                                $(this).val(arr[i]);
+                                console.log(arr[i])
+                                i++;
+                            });
+                            $(this).focus().select();
+                            });
+
+                        $('#advice').val(data.a_data)
+                    }
+                    else{
+                        alert("No prescription suggested.")
+                    }
+                    //$('#success_msg_upload').html("");
+                    //$('#success_msg_upload').html('<div class="alert alert-success fade in alert-dismissible"><strong>Success!</strong> Successfully uploaded</div>');
+
+                },
+                error: function (xhr, status, error) {
+                   // $('#error_msg_upload').html("<h5><strong>"+xhr.responseText+"</strong></h5>");
+                }
+            }); //ajax end
     }
 
 

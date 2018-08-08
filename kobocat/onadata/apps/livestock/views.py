@@ -602,3 +602,48 @@ def get_medicine_packsize(request):
     data_list = __db_fetch_values_dict(q)
     return HttpResponse(json.dumps(data_list, default=decimal_date_default), content_type="application/json",
                         status=200)
+
+
+def get_suggested_prescription(request):
+    cattle_type =  request.POST.get("cattle_type")
+    weight = request.POST.get("weight")
+    diagnosis = request.POST.get("diagnosis")
+    q = "select * from diagnosis where cattle_type = "+str(cattle_type)+" and diagnosis_name = '"+diagnosis+"' and weight_from <= "+str(weight)+" and weight_to >= "+str(weight)
+    print q
+    dataset = __db_fetch_values_dict(q)
+    med_data = []
+    advice = ''
+    data=''
+    if dataset:
+        for temp in dataset:
+            diagnosis_id = temp['id']
+            diagnosis_medi_q = "select ( name || ',' || medicine_name || ',' ||packsize || '*' || quantity ) as mpart_1,( dose || ',' || route || ',' ||days  ) as mpart_2 from  vwdiagnosis_medicine where diagnosis_id="+str(diagnosis_id)
+            medicine_data = __db_fetch_values_dict(diagnosis_medi_q)
+            for tmp in medicine_data:
+                data_dict = {}
+                data_dict['mpart_1'] = tmp['mpart_1']
+                data_dict['mpart_2'] = tmp['mpart_2']
+                med_data.append(data_dict.copy())
+                data_dict.clear()
+            advice = __db_fetch_single_value("select advice from diagnosis_advice where diagnosis_id ="+str(diagnosis_id)+" limit 1" )
+        data = {
+            'm_data': med_data, 'a_data': advice
+        }
+
+    return HttpResponse(json.dumps(data, default=decimal_date_default), content_type="application/json",
+                        status=200)
+
+
+def get_prescription_data(request,id):
+    q = "with t as(select cattle_system_id,(select farmer_name from farmer where mobile = c.mobile) as farmer_name,mobile, case when cattle_birth_date is not null then EXTRACT(year from age(now()::date,cattle_birth_date::date))::text else cattle_age end as age_year, case when cattle_birth_date is not null then EXTRACT(month from age(now()::date,cattle_birth_date::date))::text else 0::text end as age_month, case when cattle_birth_date is not null then EXTRACT(day from age(now()::date,cattle_birth_date::date))::text else 0::text end as age_day from cattle c), n as(with m as(select p.id as prescription_id,a.cattle_system_id,p.advice,p.next_appointment_after,pd.medicine_part_1,pd.medicine_part_2,p.created_by,p.created_date from prescription p left join prescription_details pd on pd.prescription_id = p.id left join appointment a on a.id = p.appointment_id) select m.created_date,m.prescription_id,m.created_by,m.cattle_system_id,m.advice,m.next_appointment_after,string_agg(medicine_part_1 || ' ' ||medicine_part_2, ';') as rx from m group by m.advice,m.next_appointment_after,m.cattle_system_id,m.created_by,m.prescription_id,m.created_date) select t.cattle_system_id,t.farmer_name,t.mobile,t.age_year,t.age_month,t.age_day,n.created_date,n.prescription_id,n.created_by,n.cattle_system_id,n.advice,n.next_appointment_after,n.rx,(select first_name || last_name from auth_user where id = created_by) as prescribey_by, (select signature_img from users_additional_info where user_id = 288) as signature_img from t,n where t.cattle_system_id = n.cattle_system_id and n.prescription_id = 2"
+    data = __db_fetch_values_dict(q)
+    dict = {}
+    for temp in data:
+        rx_list = temp['rx'].split(';')
+        dict={
+            'farmer_name' : temp['farmer_name'],
+            'rx' : rx_list,'created_date' : temp['created_date'],'advice':temp['advice'],
+            'age_year' : temp['age_year'],'age_month' : temp['age_month'],'age_day' : temp['age_day'],'next_appointment_after' : temp['next_appointment_after']
+        }
+    return HttpResponse(json.dumps(dict, default=decimal_date_default), content_type="application/json",
+                        status=200)

@@ -28,6 +28,7 @@ urlpatterns = patterns('',
                         url(r'^get_medicine_name/$', views.get_medicine_name, name='get_medicine_name'),
                         url(r'^get_medicine_type/$', views.get_medicine_type, name='get_medicine_type'),
                         url(r'^get_medicine_packsize/$', views.get_medicine_packsize, name='get_medicine_packsize'),
+                        url(r'^get_suggested_prescription/$', views.get_suggested_prescription, name='get_suggested_prescription'),
 
 
                        ##############################

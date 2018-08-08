@@ -235,7 +235,7 @@ body.sidenav-toggled #mainNav.static-top #sidenavToggler i {
 }
  @media (min-width: 992px) {
 .content-wrapper {
-	margin-left: 250px;
+	/*margin-left: 250px;*/
 }
 }
 #sidenavToggler i {
@@ -370,21 +370,62 @@ body.sidenav-toggled .navbar-sidenav-tooltip.show {
 	background: #f5f5f5;
 	min-height: 600px;
 }
+.sick-title {
+	font-size: 25px;
+	line-height: 28px;
+}
+
+ @media (min-width: 320px) and (max-width:1660px ) {
+.sick-title {
+	padding-top:15px;
+}
+}
+
+ @media (min-width: 768px) and (max-width:1100px ) {
+.veterinarian-name img{
+	width: 100%;
+}
+}
+
 .veterinarian-box {
 	background: #fff;
-	min-height: 860px;
+	min-height: 800px;
 }
-.veterinarian-box .card-text{
+
+ @media (min-width: 310px) and (max-width:1200px ) {
+.veterinarian-box{
+	min-height: 600px;
+}
+}
+.veterinarian-name .card-text{
 	text-align: right;
 }
-.veterinarian-box .btn, .prescription .btn {
+.veterinarian-box .btn, .prescription .btn, .veterinarian-name .btn {
 	border-radius: 0;
+}
+.veterinarian-name .card{
+	min-height: 206px;
 }
 .date-block {
 	background: #d0d0d0;
+	min-height: 58px;
 }
 .date-btn, .date-block p {
 	display: inline-block;
+
+}
+ @media (min-width: 1198px) and (max-width:1380px ) {
+.date-btn, .date-block p {
+	font-size:11px;
+}
+}
+ @media (min-width: 300px) and (max-width:390px ) {
+.date-btn, .date-block p {
+	font-size:11px;
+}
+}
+.submit-button {
+	text-align: center;
 
 }
 .info-collapse a {
@@ -400,7 +441,7 @@ body.sidenav-toggled .navbar-sidenav-tooltip.show {
 
 .prescription .btn {
 	width: 200px;
-	height: 55px;
+	
 }
 .revisit {
 	text-align: right;

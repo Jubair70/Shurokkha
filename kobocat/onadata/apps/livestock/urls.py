@@ -30,6 +30,10 @@ urlpatterns = patterns('',
                         url(r'^get_medicine_packsize/$', views.get_medicine_packsize, name='get_medicine_packsize'),
 
 
+                       ##############################
+
+                       url(r'^getAdvisoryData/$', views.getAdvisoryData, name='getAdvisoryData'),
+
 
 
                        #******************   MOBILE API     ***********************************#

@@ -1,145 +1,426 @@
 {% extends 'base_test.html' %}
-
+{% load i18n %}
 {% block additional-headers %}
-
-
-    <link rel="stylesheet" type="text/css" media="all" href="/static/css/Date-Range-Picker-For-Twitter-Bootstrap/daterangepicker.css" />
-
-    <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}assets/plugins/select2/select2_metro.css"/>
-<link rel="stylesheet" href="{{STATIC_URL}}assets/plugins/data-tables/DT_bootstrap.css"/>
-
-
-
-    <style type="text/css">
-    .thumbnail{
-        border: 0;
-    }
-
-    </style>
-
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css">
+    <link href="https://cdn.datatables.net/buttons/1.4.2/css/buttons.dataTables.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/semantic-ui/2.2.10/semantic.min.css">
+    <link href="/static/css/calendar.min.css" rel="stylesheet" type="text/css"/>
 {% endblock %}
+
 
 
 {% block content %}
-    <div class ="col-md-12" style = "">
-    <div class="page-header align">
-        <h3>Advisory List</h3>
-    </div>
 
-
-    <div class="row">
-        <div class="col-md-3"><label class="control-label"> Date range</label><br>
-            <input class = "form-control" readonly type="text" name="reservation" id="date_range" />
+    <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption"><i class="fa fa-adn"></i>Advisory List</div>
         </div>
+        <div class="portlet-body">
+         <div class="row">
+                <div class="form-group col-md-2">
+                    <span class="control-label btn btn-primary" style="background-color:#5D5F5F" ><b>Advisory Queue</b></span>
+                </div>
 
-        <div class="col-md-2"><label class="control-label">Paravet/AI Technician </label><br>
-            <select class="form-control" id = "gender">
-            <option value="%">All</option>
-
-            </select>
-        </div>
-        <div class="col-md-3">
-            <label class="control-label"> </label><br>
-            <button id="filter_beneList" style="margin-top:8px;" class="btn red-custom btn-md"  data-original-title="" title="">Search</button>
-        </div>
-
-    </div>
-
-    </div>
-
-    <br>
-    <div class="portlet box red" style="margin-top:15px;">
-            <div class="portlet-title">
-                <div class="caption"><i class="fa fa-adn"></i></div>
+                <div class="form-group col-md-4">
+                    <span class="control-label btn btn-primary" id="num"></span>
+                </div>
             </div>
-            <div class="portlet-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label>From Date: </label>
+                        <div class="ui calendar" id="from_date">
+                            <input type="text" class="form-control"  name="from_date" readonly>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
 
-                <div id="advisory_table_block">
+                    <div class="form-group">
+                        <label>To Date: </label>
+                        <div class="ui calendar" id="to_date">
+                            <input type="text" class="form-control" name="to_date"   readonly>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
 
+                    <div class="form-group">
+                        <label >Paravet/AI Technician: </label>
+                        <select class="form-control" name="ai_paravet" id="ai_paravet">
+                            <option value="">Select One</option>
+                            {% for x,y in ai_paravets %}
+                                <option value="{{ x }}">{{ y}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+
+                    <div class="form-group">
+                        <label>Status: </label>
+                        <select class="form-control" name="status" id="status">
+                            <option value="">Select One</option>
+                                <option value="0">New</option>
+                            <option value="2">Prescribed</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <button class="btn btn-info pull-left" id="generate_report" name="generate_report"
+                                    data-original-title=""
+                                    title="">Generate Report</button>
+                    </div>
+                </div>
+            </div>
+            <br>
+        <div id="container"></div>
+            <table id="all_info_table" class="table table-bordered table-striped table-condensed flip-content nowrap">
+                <thead class="flip-content">
+                <tr>
+                    <th>Farmer Name</th>
+                    <th>Farmer Phone No</th>
+                    <th>Cattle Type</th>
+                    <th>Age</th>
+                    <th>Paravet/AI Technician</th>
+                    <th>Phone No</th>
+                    <th>Prescription Date & Time</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+                </thead>
+                <tbody>
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+    <div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel">Confirm Delete</h4>
+                </div>
+
+                <div class="modal-body">
+                    <p>You are about to delete a bank info, this procedure is irreversible.</p>
+                    <p>Do you want to proceed?</p>
+                    <p class="debug-url"></p>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <a href="#" class="btn btn-danger btn-ok">Delete</a>
                 </div>
             </div>
         </div>
+    </div>
 
-</div>
 {% endblock %}
-
 {% block additional-javascript %}
-
-
-
-    <!--datatable -->
-    <script type="text/javascript" src="{{STATIC_URL}}assets/plugins/data-tables/jquery.dataTables.js"></script>
-    <script type="text/javascript" src="{{STATIC_URL}}assets/plugins/data-tables/DT_bootstrap.js"></script>
-    <!--datatable ended-->
-     <script type="text/javascript" src="/static/js/Date-Range-Picker-For-Twitter-Bootstrap/date.js"></script>
-	<script type="text/javascript" src="/static/js/Date-Range-Picker-For-Twitter-Bootstrap/daterangepicker.js"></script>
-
-
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/dataTables.buttons.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.flash.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/pdfmake.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/vfs_fonts.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.html5.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.print.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/semantic-ui/2.2.10/semantic.min.js"></script>
+    <script type="text/javascript" src="/static/js/calendar.min.js"></script>
     <script>
-        var district = '%';
-        var upazila = '%';
-        var union = '%';
-        var ward = '%';
-        var gender = '%';
-        var start_date = '';
-        var end_date = '';
-        var youth_group_affliation = '%';
-        var train_id = '%';
-        $( ".datepicker" ).each(function() {
-            $(this).datepicker({autoclose:true  });
+
+
+        var num = {{ num |safe }};
+        $('#num').text(num);
+        if(num>0)
+            $('#num').css("background-color", "#e02222");
+        else $('#num').css("background-color", "#0B6623");
+
+
+        var tbody = '';
+        var advisory_list = {{ advisory_list|safe }};
+
+        for (var idx in advisory_list) {
+            if( advisory_list[idx].mobile !=  advisory_list[idx].submitted_by)
+            tbody += '<tr><td>' + advisory_list[idx].farmer_name + '</td><td>' + advisory_list[idx].mobile + '</td><td>' + advisory_list[idx].cattle_type + '</td><td>' + advisory_list[idx].cattle_age + '</td><td>' + advisory_list[idx].ai_paravet_name + '</td><td>' + advisory_list[idx].submitted_by + '</td><td>' + advisory_list[idx].prescription_date + '</td>';
+            else tbody += '<tr><td>' + advisory_list[idx].farmer_name + '</td><td>' + advisory_list[idx].mobile + '</td><td>' + advisory_list[idx].cattle_type + '</td><td>' + advisory_list[idx].cattle_age + '</td><td></td><td></td><td>' + advisory_list[idx].prescription_date + '</td>';
+            if(advisory_list[idx].status==0)
+                tbody += '<td><span class="control-label btn btn-primary" style="background-color:#e02222"><b>New</b></span></td>';
+            else if (advisory_list[idx].status==2)
+                tbody += '<td><span class="control-label btn btn-primary" style="background-color:#0B6623"><b>Prescribed</b></span></td>';
+            else tbody
+            tbody+='<td class="td-center"><a class="tooltips" data-container="body" data-placement="top" data-original-title="View" href="/livestock/cattle_profile/' + advisory_list[idx].cattle_system_id + '/'+advisory_list[idx].id +'"><i class="fa fa-2x fa-file-text"></i></a></td></tr>'
+
+        }
+
+        $("#all_info_table").find('tbody').html(tbody);
+
+        var table = $('#all_info_table').DataTable({
+            "scrollX": true, "ordering": false,
+            "searching": false,
+            deferRender: true
+{#            ,#}
+{#            dom: 'Bfrtip'#}
+{#            ,#}
+{#            buttons: [#}
+{#                {#}
+{#                    filename: "Score Card",#}
+{#                    title: "",#}
+{#                    text: "<strong>Export</strong>",#}
+{#                    extend: 'excel'#}
+{#                }#}
+{#            ]#}
+
         });
 
 
-        //  Page Loading First Time
+        $('#from_date').calendar({
+            type: 'date', endCalendar: $('#to_date'), endCalendar: $('#to_date'),
+            popupOptions: {
+                position: 'bottom right'
+            },
+            formatter: {
+                date: function (date, settings) {
+                    if (!date) return '';
 
-    $(document).ready(function () {
-        get_advisory_table()
-        $('#date_range').daterangepicker({ showDropdowns: true,maxDate: new Date()});
+                    var day = date.getDate();
+                    var month = date.getMonth() + 1;
+                    var year = date.getFullYear();
 
-    });
-
-    function getfilterCriteria(){
-        district = $('#district').val();
-        upazila = $('#upazila').val();
-        union = $('#union').val();
-    }
-
-    function get_advisory_table(){
-        $.ajax({
-            url: '/livestock/get_advisory_table/',
-            type: 'POST',
-            data:{
-                },
-
-            success: function (data) {
-                $("#advisory_table_block").html(data);
-                $('#advisory_table_id').dataTable({
-                            "retrieve": true,
-                            "bFilter": true,
-                            "paging": true,
-                            "scrollCollapse": true,
-                            select: true,
-                            // dom: 'Bfrtip',
-                            dom: 'Blfrtip',
-                            buttons: [{extend: 'excel', text: "Export to excel", title: 'Direct Beneficiary list'}],
-                            ordering: true,
-                            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
-                            "scrollX": true
-
-                        });
-
+                    if (day < 10) {
+                        day = '0' + day
+                    }
+                    if (month < 10) {
+                        month = '0' + month
+                    }
+                    return year + '-' + month + '-' + day;
+                }
             }
         });
-    //}
-    }
 
-     $(document).on("click", "#filter_beneList", function () {
-         console.log("trigger filter");
-         $('#benelist_table_id').DataTable().destroy()
-         getfilterCriteria();
-         getBeneListTable();
-     });
+        $('#to_date').calendar({
+            type: 'date',
+            popupOptions: {
+                position: 'bottom right'
+            },startCalendar: $('#from_date')
+            ,
+            formatter: {
+                date: function (date, settings) {
+                    if (!date) return '';
 
-</script>
+                    var day = date.getDate();
+                    var month = date.getMonth() + 1;
+                    var year = date.getFullYear();
 
+                    if (day < 10) {
+                        day = '0' + day
+                    }
+                    if (month < 10) {
+                        month = '0' + month
+                    }
+                    return year + '-' + month + '-' + day;
+                }
+            }
+        });
+        $('#from_date').calendar('set date',getDesiredDate(2));
+        $('#to_date').calendar('set date',getDesiredDate(1));
+
+{#        var today = new Date();#}
+{#            $('#rangestart').calendar({type: 'date', endCalendar: $('#rangeend')});#}
+{#            $('#rangestart').calendar("set date", new Date(today.getFullYear(), today.getMonth() - 1, today.getDate()));#}
+{#            $('#rangeend').calendar({type: 'date', startCalendar: $('#rangestart')});#}
+{#            $('#rangeend').calendar("set date", new Date(today.getFullYear(), today.getMonth(), today.getDate()));#}
+
+
+        $('#generate_report').on('click',function () {
+
+            table.destroy();
+            var from_date = $('#from_date').calendar('get date');
+            var to_date = $('#to_date').calendar('get date');
+            var ai_paravet = $('#ai_paravet option:selected').val();
+            var status = $('#status option:selected').val();
+
+            if(from_date != null)
+                from_date = getFormattedDate(from_date);
+            else from_date="";
+
+            if(to_date != null)
+                to_date = getFormattedDate(to_date);
+            else to_date = "";
+
+            if(ai_paravet==null)
+                ai_paravet="";
+
+            if(status==null)
+                status="";
+
+            $.ajax({
+                    url: '/livestock/getAdvisoryData/',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {'from_date': from_date
+                            ,'to_date': to_date
+                            ,'ai_paravet':ai_paravet
+                    , 'status':status},
+                    beforeSend: function () {
+                        $('#container').show();
+                    $("#container").html('<div class="ui active inverted dimmer">\n' +
+                            '    <div class="ui text loader">Loading</div>\n' +
+                            '  </div>');
+                    },
+                success: function (result) {
+                    console.log(result);
+                    $('#container').hide();
+                    var tbody = '';
+
+
+                    for (var idx in result) {
+                        if (result[idx].mobile != result[idx].submitted_by)
+                            tbody += '<tr><td>' + result[idx].farmer_name + '</td><td>' + result[idx].mobile + '</td><td>' + result[idx].cattle_type + '</td><td>' + result[idx].cattle_age + '</td><td>' + result[idx].ai_paravet_name + '</td><td>' + result[idx].submitted_by + '</td><td>' + result[idx].prescription_date + '</td>';
+                        else tbody += '<tr><td>' + result[idx].farmer_name + '</td><td>' + result[idx].mobile + '</td><td>' + result[idx].cattle_type + '</td><td>' + result[idx].cattle_age + '</td><td></td><td></td><td>' + result[idx].prescription_date + '</td>';
+                        if (result[idx].status == 0)
+                            tbody += '<td><span class="control-label btn btn-primary" style="background-color:#e02222"><b>New</b></span></td>';
+                        else if (result[idx].status == 2)
+                            tbody += '<td><span class="control-label btn btn-primary" style="background-color:#0B6623"><b>Prescribed</b></span></td>';
+                        else tbody
+                        tbody += '<td class="td-center"><a class="tooltips" data-container="body" data-placement="top" data-original-title="View" href="/livestock/cattle_profile/' + result[idx].cattle_system_id + '/' + result[idx].id + '"><i class="fa fa-2x fa-file-text"></i></a></td></tr>'
+
+                    }
+
+
+
+                    $("#all_info_table").find('tbody').html(tbody);
+                    table = datatable_reitialize();
+                }
+            });
+
+
+        })
+
+
+        $('.delete-item').on('click', function (e) {
+            var criteria_id = $(this).attr("data-href");
+            $('.btn-ok').attr("href", criteria_id);
+        });
+        if ($('.alert-block').is(':visible')) {
+            window.setTimeout(function () {
+                $(".alert-success").fadeTo(1500, 0).slideUp(500, function () {
+                    $(this).remove();
+                });
+            }, 5000);
+        }
+
+        function datatable_reitialize() {
+            return $('#all_info_table').DataTable({
+                "scrollX": true, "ordering": false
+{#                ,deferRender: true,#}
+{#                dom: 'Bfrtip',#}
+{#                buttons: [#}
+{#                    {#}
+{#                        filename: "Score Card",#}
+{#                        title: "",#}
+{#                        text: "<strong>Export</strong>",#}
+{#                        extend: 'excelHtml5'#}
+{#                    }#}
+{#                ]#}
+
+            });
+        }
+
+        function ajaxcall() {
+            $.ajaxSetup({
+                beforeSend: function (xhr, settings) {
+                    function getCookie(name) {
+                        var cookieValue = null;
+                        if (document.cookie && document.cookie != '') {
+                            var cookies = document.cookie.split(';');
+                            for (var i = 0; i < cookies.length; i++) {
+                                var cookie = jQuery.trim(cookies[i]);
+                                // Does this cookie string begin with the name we want?
+                                if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                    break;
+                                }
+                            }
+                        }
+                        return cookieValue;
+                    }
+
+                    if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+                        // Only send the token to relative URLs i.e. locally.
+                        xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                    }
+                }
+            });
+        }
+
+
+        function getFormattedDate(date) {
+                var yy = date.getFullYear();
+                var mm = date.getMonth() + 1;
+                var dd = date.getDate();
+                if (dd < 10) {
+                    dd = '0' + dd
+                }
+                if (mm < 10) {
+                    mm = '0' + mm
+                }
+                {#                formatted_date = yyyy + '-' + mm + '-' + dd;#}
+                formatted_date = yy + '-' + mm + '-' + dd;
+                return formatted_date;
+            }
+
+        function getToday(n)
+        {
+            var today = new Date();
+                var n_month_before_today = new Date(today);
+                n_month_before_today.setMonth((today.getMonth() + 1) - n);
+                var dd = n_month_before_today.getDate();
+                var mm = n_month_before_today.getMonth() + 1;
+
+                if (dd < 10) {
+                    dd = '0' + dd
+                }
+                if (mm < 10) {
+                    mm = '0' + mm
+                }
+                var yyyy = n_month_before_today.getFullYear();
+                {#                formatted_date = yyyy + '-' + mm + '-' + dd;#}
+                formatted_date =   yyyy+ '-' +mm+ '-' +dd   ;
+                return formatted_date;
+        }
+
+        function getDesiredDate(n) {
+
+                var today = new Date();
+                var n_month_before_today = new Date(today);
+                n_month_before_today.setMonth((today.getMonth() + 1) - n);
+                var dd = n_month_before_today.getDate();
+                var mm = n_month_before_today.getMonth() + 1;
+
+                if (dd < 10) {
+                    dd = '0' + dd
+                }
+                if (mm < 10) {
+                    mm = '0' + mm
+                }
+                var yyyy = n_month_before_today.getFullYear();
+                {#                formatted_date = yyyy + '-' + mm + '-' + dd;#}
+                formatted_date =   yyyy+ '-' +mm+ '-' +dd   ;
+                return formatted_date;
+
+            }
+
+
+
+    </script>
 {% endblock %}

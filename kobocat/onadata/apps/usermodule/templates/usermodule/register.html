@@ -96,6 +96,13 @@
                                 <span class="help-block">{{ profile_form.organisation_name.errors.as_text }}</span>
                             </div>
                         </div>
+                    <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ profile_form.contact_number.id_for_label }}">Contact Number (e.g: 01xxxxxxxxx):</label>
+                                <input type="text" value="{%  if profile_form.contact_number.value  %}{{ profile_form.contact_number.value }}{% endif %}" name="{{ profile_form.contact_number.name }}" class="form-control" pattern="^(?:\+88|01)?(?:\d{11}|\d{13})$">
+                                 <span class="help-block" hidden>{{ profile_form.contact_number.errors.as_text }}</span>
+                            </div>
+                        </div>
                         <!--<div class="col-md-6">
                             <div class="form-group">
                                 <label>Country:</label>
@@ -113,9 +120,14 @@
                     <div class="row" >
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label for="{{ profile_form.contact_number.id_for_label }}">Contact Number (e.g: 01xxxxxxxxx):</label>
-                                <input type="text" value="{%  if profile_form.contact_number.value  %}{{ profile_form.contact_number.value }}{% endif %}" name="{{ profile_form.contact_number.name }}" class="form-control" pattern="^(?:\+88|01)?(?:\d{11}|\d{13})$">
-                                 <span class="help-block" hidden>{{ profile_form.contact_number.errors.as_text }}</span>
+                                <label>Assign to (in case of Veterinarian):</label>
+                                <select id="supervisor"
+                                        name="supervisor" class="form-control">
+                                    <option value="">Select One</option>
+                                    {% for q,w in supervisors %}
+                                    <option value="{{ q }}" >{{ w }}</option>
+                                    {% endfor %}
+                                </select>
                             </div>
                         </div>
                         <!--<div class="col-md-6">
@@ -126,7 +138,77 @@
                             </div>
                         </div>-->
                     </div>
-                </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <div class="imageupload imageupload_img panel panel-default">
+                                    <div class="panel-heading clearfix">
+                                        <h3 class="panel-title pull-left">Upload Image(Optional)</h3>
+                                        <div class="btn-group pull-right hidden">
+                                            <button type="button" class="btn btn-default active">File</button>
+                                            <button type="button" class="btn btn-default">URL</button>
+                                        </div>
+                                    </div>
+                                    <div class="file-tab panel-body">
+                                        <label class="btn btn-default btn-file">
+                                            <span>Browse</span>
+                                            <!-- The file is stored here. -->
+                                            <input type="file" name="image-file">
+                                        </label>
+                                        <button type="button" class="btn btn-default">Remove</button>
+                                    </div>
+                                    <div class="url-tab panel-body">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control hasclear" placeholder="Image URL">
+                                            <div class="input-group-btn">
+                                                <button type="button" class="btn btn-default">Submit</button>
+                                            </div>
+                                        </div>
+                                        <button type="button" class="btn btn-default">Remove</button>
+                                        <!-- The URL is stored here. -->
+                                        <input type="hidden" name="image-url">
+                                    </div>
+                                </div>
+                            </div>
+                            </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <div class="imageupload imageupload_sig panel panel-default">
+                                    <div class="panel-heading clearfix">
+                                        <h3 class="panel-title pull-left">Digital Signature</h3>
+                                        <div class="btn-group pull-right hidden">
+                                            <button type="button" class="btn btn-default active">File</button>
+                                            <button type="button" class="btn btn-default">URL</button>
+                                        </div>
+                                    </div>
+                                    <div class="file-tab panel-body">
+                                        <label class="btn btn-default btn-file">
+                                            <span>Browse</span>
+                                            <!-- The file is stored here. -->
+                                            <input type="file" name="signature-file" required>
+                                        </label>
+                                        <button type="button" class="btn btn-default">Remove</button>
+                                    </div>
+                                    <div class="url-tab panel-body">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control hasclear" placeholder="Image URL">
+                                            <div class="input-group-btn">
+                                                <button type="button" class="btn btn-default">Submit</button>
+                                            </div>
+                                        </div>
+                                        <button type="button" class="btn btn-default">Remove</button>
+                                        <!-- The URL is stored here. -->
+                                        <input type="hidden" name="image-url">
+                                    </div>
+                                </div>
+                            </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+
                 <div class="form-actions">
                     <button type="submit" class="btn red pull-right">Submit</button>
                     <button onclick="history.go(-1);" style="margin-right:10px;" type="button" class="btn default pull-right">Cancel</button>
@@ -138,7 +220,7 @@
 {% endblock %}
 
 {% block additional-javascript %}
-
+<script src="{{ STATIC_URL }}js/bootstrap-imageupload.js"></script>
  <!-- <script type="text/javascript" src="/static/js/jquery.searchable-ie-1.1.0.min.js"></script> -->
  <!-- <script type="text/javascript" src="/static/js/usermodule_userprofile.js"></script>    -->
     <script>
@@ -169,11 +251,21 @@
         return false;
         }
     });
+
+
+
+{#            var $imageupload = $('.imageupload');#}
+{#            $imageupload.imageupload();#}
+
+            $('.imageupload_img').imageupload();
+            $('.imageupload_sig').imageupload();
     </script>
     
 {% endblock %}
 
 {% block additional-headers %}
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+     <link href="{{ STATIC_URL }}css/bootstrap-imageupload.css" rel="stylesheet">
 <head>
     <title>
         {% block title %} Register User {% endblock %}
@@ -197,6 +289,9 @@
         background-color: #ffff99;
     }
 
+    .imageupload {
+                margin: 20px 0;
+            }
     </style>
     
 {% endblock %}

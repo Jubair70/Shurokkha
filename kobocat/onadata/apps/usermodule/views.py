@@ -50,7 +50,7 @@ from collections import OrderedDict
 from django.core.files.storage import FileSystemStorage
 import string
 import random
-
+import pandas
 
 from django.core.mail import send_mail, BadHeaderError
 import smtplib
@@ -170,6 +170,38 @@ def register(request):
             main_user_profile = UserProfile(user = user)
             main_user_profile.save()
 
+
+            # users_additional_info
+
+            img_file_path=""
+            if 'image-file' in request.FILES:
+                myfile = request.FILES['image-file']
+                url = "onadata/media/uploaded_files/"
+                userName = request.user
+                fs = FileSystemStorage(location=url)
+                myfile.name = str(datetime.now().date()) + "_" + str(userName) + "_" + str(myfile.name)
+                filename = fs.save(myfile.name, myfile)
+                img_file_path = "onadata/media/uploaded_files/" + myfile.name
+
+            signature_file_path = ""
+            if 'signature-file' in request.FILES:
+                myfile = request.FILES['signature-file']
+                url = "onadata/media/uploaded_files/"
+                userName = request.user
+                fs = FileSystemStorage(location=url)
+                myfile.name = str(datetime.now().date()) + "_" + str(userName) + "_" + str(myfile.name)
+                filename = fs.save(myfile.name, myfile)
+                signature_file_path = "onadata/media/uploaded_files/" + myfile.name
+
+            supervisor = ""
+            if 'supervisor' in request.POST:
+                 supervisor = request.POST.get('supervisor')
+
+
+            insert_query = "INSERT INTO public.users_additional_info (user_id, signature_img, user_img, supervisor_id) VALUES("+str(user.id)+", '"+str(signature_file_path)+"', '"+str(img_file_path)+"', '"+str(supervisor)+"')"
+            __db_commit_query(insert_query)
+
+
             # Update our variable to tell the template registration was successful.
             registered = True
 
@@ -195,6 +227,12 @@ def register(request):
     # Not a HTTP POST, so we render our form using two ModelForm instances.
     # These forms will be blank, ready for user input.
     else:
+        query_for_supervisor = "select (select (select username from auth_user where id = user_id)user_id from usermodule_usermoduleprofile where id = t.user_id)user_id,(select (select first_name || ' ' || last_name from auth_user where id = user_id)user_id from usermodule_usermoduleprofile where id = t.user_id)username from usermodule_userrolemap t where role_id = 53"
+        df = pandas.DataFrame()
+        df = pandas.read_sql(query_for_supervisor,connection)
+        user_id = df.user_id.tolist()
+        username = df.username.tolist()
+        supervisors = zip(user_id,username)
         user_form = UserForm()
         # get request users org and the orgs he can see then pass it to model choice field
         org_id_list = get_organization_by_user(request.user)
@@ -209,7 +247,7 @@ def register(request):
     # Render the template depending on the context.
     return render_to_response(
             'usermodule/register.html',
-            {'user_form': user_form, 'profile_form': profile_form, 'registered': registered},
+            {'user_form': user_form, 'profile_form': profile_form, 'registered': registered,'supervisors':supervisors},
             context)
 
 

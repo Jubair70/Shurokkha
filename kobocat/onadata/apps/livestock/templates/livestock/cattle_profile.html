@@ -245,7 +245,9 @@
           <div class="veterinarian-box">
             <div class="card">
               <div class="card-body pb-4">
-                <img src="./img/veterinarian-img2.jpg" class="img-fluid"  alt="">
+                  {% for data in sickness_images %}
+                <img src="{{ data.picture_sinckness_sign }}" class="img-fluid"  alt="">
+                  {% endfor %}
                 <div class="card-text float-right">
                   <h4 class="mt-5">Sickness Image</h4>
                 </div>

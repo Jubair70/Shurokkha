@@ -34,6 +34,8 @@ urlpatterns = patterns('',
                        ##############################
 
                        url(r'^getAdvisoryData/$', views.getAdvisoryData, name='getAdvisoryData'),
+                       url(r'^sickness_list/$', views.sickness_list, name='sickness_list'),
+                       url(r'^getSicknessData/$', views.getSicknessData, name='getSicknessData'),
 
 
 

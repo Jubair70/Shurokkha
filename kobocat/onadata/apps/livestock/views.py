@@ -635,7 +635,7 @@ def get_suggested_prescription(request):
 
 
 def get_prescription_data(request,id):
-    q = "with t as(select cattle_system_id,(select farmer_name from farmer where mobile = c.mobile) as farmer_name,mobile, case when cattle_birth_date is not null then EXTRACT(year from age(now()::date,cattle_birth_date::date))::text else cattle_age end as age_year, case when cattle_birth_date is not null then EXTRACT(month from age(now()::date,cattle_birth_date::date))::text else 0::text end as age_month, case when cattle_birth_date is not null then EXTRACT(day from age(now()::date,cattle_birth_date::date))::text else 0::text end as age_day from cattle c), n as(with m as(select p.id as prescription_id,a.cattle_system_id,p.advice,p.next_appointment_after,pd.medicine_part_1,pd.medicine_part_2,p.created_by,p.created_date from prescription p left join prescription_details pd on pd.prescription_id = p.id left join appointment a on a.id = p.appointment_id) select m.created_date,m.prescription_id,m.created_by,m.cattle_system_id,m.advice,m.next_appointment_after,string_agg(medicine_part_1 || ' ' ||medicine_part_2, ';') as rx from m group by m.advice,m.next_appointment_after,m.cattle_system_id,m.created_by,m.prescription_id,m.created_date) select t.cattle_system_id,t.farmer_name,t.mobile,t.age_year,t.age_month,t.age_day,n.created_date,n.prescription_id,n.created_by,n.cattle_system_id,n.advice,n.next_appointment_after,n.rx,(select first_name || last_name from auth_user where id = created_by) as prescribey_by, (select signature_img from users_additional_info where user_id = 288) as signature_img from t,n where t.cattle_system_id = n.cattle_system_id and n.prescription_id = 2"
+    q = "with t as(select cattle_system_id,(select farmer_name from farmer where mobile = c.mobile) as farmer_name,mobile, case when cattle_birth_date is not null then EXTRACT(year from age(now()::date,cattle_birth_date::date))::text else cattle_age end as age_year, case when cattle_birth_date is not null then EXTRACT(month from age(now()::date,cattle_birth_date::date))::text else 0::text end as age_month, case when cattle_birth_date is not null then EXTRACT(day from age(now()::date,cattle_birth_date::date))::text else 0::text end as age_day from cattle c), n as(with m as(select p.id as prescription_id,a.cattle_system_id,p.advice,p.next_appointment_after,pd.medicine_part_1,pd.medicine_part_2,p.created_by,p.created_date from prescription p left join prescription_details pd on pd.prescription_id = p.id left join appointment a on a.id = p.appointment_id) select m.created_date,m.prescription_id,m.created_by,m.cattle_system_id,m.advice,m.next_appointment_after,string_agg(medicine_part_1 || ' ' ||medicine_part_2, ';') as rx from m group by m.advice,m.next_appointment_after,m.cattle_system_id,m.created_by,m.prescription_id,m.created_date) select t.cattle_system_id,t.farmer_name,t.mobile,t.age_year,t.age_month,t.age_day,n.created_date,n.prescription_id,n.created_by,n.cattle_system_id,n.advice,n.next_appointment_after,n.rx,(select first_name || last_name from auth_user where id = created_by) as prescribey_by, (select signature_img from users_additional_info where user_id = (select created_by from prescription where id ="+str(id)+")) as signature_img from t,n where t.cattle_system_id = n.cattle_system_id and n.prescription_id = "+str(id)+""
     data = __db_fetch_values_dict(q)
     dict = {}
     for temp in data:
@@ -647,3 +647,71 @@ def get_prescription_data(request,id):
         }
     return HttpResponse(json.dumps(dict, default=decimal_date_default), content_type="application/json",
                         status=200)
+
+#######################################################################
+#######################################################################
+#######################################################################
+import pandas
+def advisory_list(request):
+    query = "select count(*) num from appointment where status = 0 and appointment_type =any('{1,3}')"
+    df = pandas.DataFrame()
+    df = pandas.read_sql(query, connection)
+    num = df.num.tolist()[0]
+    query = "with t as( select (select user_id from usermodule_usermoduleprofile where id = p.user_id)user_id from usermodule_userrolemap p where role_id = any('{49,50}')) select (select username from auth_user where id = user_id)ai_paravet_id,(select first_name || ' '|| last_name from auth_user where id = user_id)ai_paravet_name from t"
+    df = pandas.DataFrame()
+    df = pandas.read_sql(query,connection)
+    ai_paravet_id = df.ai_paravet_id.tolist()
+    ai_paravet_name = df.ai_paravet_name.tolist()
+    ai_paravets = zip(ai_paravet_id,ai_paravet_name)
+    query = "with t as( select id,(select created_date from prescription where appointment_id = appointment.id) prescription_date,cattle_system_id,(select (json->>'cattle_type') cattle_type from logger_instance where id = healthrecord_sickness_system_id),(select (json->>'mobile') mobile from logger_instance where id = healthrecord_sickness_system_id),(select (json->>'_submitted_by') submitted_by from logger_instance where id = healthrecord_sickness_system_id),status from appointment where appointment_type =any('{1,3}')) select id,cattle_system_id,(select first_name || ' ' || last_name from auth_user where username = t.mobile) farmer_name,mobile,(select label from vwcattle_type where value = t.cattle_type) cattle_type,(select case when cattle_birth_date is null then cattle_age else AGE(current_date ,date(cattle_birth_date))::text end cattle_age from cattle where cattle_system_id = t.cattle_system_id),coalesce(substring(prescription_date::text from 0 for 20),'') prescription_date,(select first_name || ' ' || last_name from auth_user where username = t.mobile)ai_paravet_name,submitted_by,status from t where status  = any('{0,2}')"
+    advisory_list = json.dumps(__db_fetch_values_dict(query), default=decimal_date_default)
+    return render(request, 'livestock/advisory_list.html',{'advisory_list':advisory_list,'ai_paravets':ai_paravets,'num':num})
+
+def getAdvisoryData(request):
+    from_date = request.POST.get('from_date')
+    to_date = request.POST.get('to_date')
+    ai_paravet = request.POST.get('ai_paravet')
+    status = request.POST.get('status')
+    filter_query = ""
+    if from_date != "" and to_date != "":
+        filter_query += "and appointment_date::date between '" + str(from_date) + "' and '" + str(to_date) + "' "
+    if status != "":
+        filter_query += "and status = " + str(status) + " "
+    if ai_paravet != "":
+        filter_query += "and submitted_by = '" + str(ai_paravet) + "' "
+    query = "with t as( select id,created_date appointment_date,(select created_date from prescription where appointment_id = appointment.id) prescription_date,cattle_system_id,(select (json->>'cattle_type') cattle_type from logger_instance where id = healthrecord_sickness_system_id),(select (json->>'mobile') mobile from logger_instance where id = healthrecord_sickness_system_id),(select (json->>'_submitted_by') submitted_by from logger_instance where id = healthrecord_sickness_system_id),status from appointment where appointment_type =any('{1,3}')) select id,cattle_system_id,appointment_date::date,(select first_name || ' ' || last_name from auth_user where username = t.mobile) farmer_name,mobile,(select label from vwcattle_type where value = t.cattle_type) cattle_type,(select case when cattle_birth_date is null then cattle_age else AGE(current_date ,date(cattle_birth_date))::text end cattle_age from cattle where cattle_system_id = t.cattle_system_id),coalesce(substring(prescription_date::text from 0 for 20),'') prescription_date,(select first_name || ' ' || last_name from auth_user where username = t.mobile)ai_paravet_name,submitted_by,status from t where status = any('{0,2}') "+str(filter_query)
+    data = json.dumps(__db_fetch_values_dict(query), default=decimal_date_default)
+    return HttpResponse(data)
+
+
+def sickness_list(request):
+    query = "select count(*) num from appointment where status = 0 and appointment_type =2"
+    df = pandas.DataFrame()
+    df = pandas.read_sql(query, connection)
+    num = df.num.tolist()[0]
+    query = "with t as( select (select user_id from usermodule_usermoduleprofile where id = p.user_id)user_id from usermodule_userrolemap p where role_id = any('{49,50}')) select (select username from auth_user where id = user_id)ai_paravet_id,(select first_name || ' '|| last_name from auth_user where id = user_id)ai_paravet_name from t"
+    df = pandas.DataFrame()
+    df = pandas.read_sql(query,connection)
+    ai_paravet_id = df.ai_paravet_id.tolist()
+    ai_paravet_name = df.ai_paravet_name.tolist()
+    ai_paravets = zip(ai_paravet_id,ai_paravet_name)
+    query = "with t as( select id,(select created_date from prescription where appointment_id = appointment.id) prescription_date,cattle_system_id,(select (json->>'cattle_type') cattle_type from logger_instance where id = healthrecord_sickness_system_id),(select (json->>'mobile') mobile from logger_instance where id = healthrecord_sickness_system_id),(select (json->>'_submitted_by') submitted_by from logger_instance where id = healthrecord_sickness_system_id),status from appointment where appointment_type =2) select id,cattle_system_id,(select first_name || ' ' || last_name from auth_user where username = t.mobile) farmer_name,mobile,(select label from vwcattle_type where value = t.cattle_type) cattle_type,(select case when cattle_birth_date is null then cattle_age else AGE(current_date ,date(cattle_birth_date))::text end cattle_age from cattle where cattle_system_id = t.cattle_system_id),coalesce(substring(prescription_date::text from 0 for 20),'') prescription_date,(select first_name || ' ' || last_name from auth_user where username = t.mobile)ai_paravet_name,submitted_by,status from t where status  = any('{0,2}')"
+    sickness_list = json.dumps(__db_fetch_values_dict(query), default=decimal_date_default)
+    return render(request, 'livestock/sickness_list.html',{'sickness_list':sickness_list,'ai_paravets':ai_paravets,'num':num})
+
+def getSicknessData(request):
+    from_date = request.POST.get('from_date')
+    to_date = request.POST.get('to_date')
+    ai_paravet = request.POST.get('ai_paravet')
+    status = request.POST.get('status')
+    filter_query = ""
+    if from_date != "" and to_date != "":
+        filter_query += "and appointment_date::date between '" + str(from_date) + "' and '" + str(to_date) + "' "
+    if status != "":
+        filter_query += "and status = " + str(status) + " "
+    if ai_paravet != "":
+        filter_query += "and submitted_by = '" + str(ai_paravet) + "' "
+    query = "with t as( select id,created_date appointment_date,(select created_date from prescription where appointment_id = appointment.id) prescription_date,cattle_system_id,(select (json->>'cattle_type') cattle_type from logger_instance where id = healthrecord_sickness_system_id),(select (json->>'mobile') mobile from logger_instance where id = healthrecord_sickness_system_id),(select (json->>'_submitted_by') submitted_by from logger_instance where id = healthrecord_sickness_system_id),status from appointment where appointment_type = 2) select id,cattle_system_id,appointment_date::date,(select first_name || ' ' || last_name from auth_user where username = t.mobile) farmer_name,mobile,(select label from vwcattle_type where value = t.cattle_type) cattle_type,(select case when cattle_birth_date is null then cattle_age else AGE(current_date ,date(cattle_birth_date))::text end cattle_age from cattle where cattle_system_id = t.cattle_system_id),coalesce(substring(prescription_date::text from 0 for 20),'') prescription_date,(select first_name || ' ' || last_name from auth_user where username = t.mobile)ai_paravet_name,submitted_by,status from t where status = any('{0,2}') "+str(filter_query)
+    data = json.dumps(__db_fetch_values_dict(query), default=decimal_date_default)
+    return HttpResponse(data)
+

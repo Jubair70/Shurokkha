@@ -244,9 +244,10 @@
         <div class="col-xl-4 col-md-4 col-sm-12">
           <div class="veterinarian-box">
             <div class="card">
-              <div class="card-body pb-4">
+              <div class="card-body pb-4"  style="overflow:scroll;height: 121px;">
                   {% for data in sickness_images %}
-                <img src="{{ data.picture_sinckness_sign }}" class="img-fluid"  alt="">
+                <!--<img src="{{ data.picture_sinckness_sign }}" class="img-fluid"  alt="">-->
+                      <img src="{{ data.picture_sinckness_sign }}
                   {% endfor %}
                 <div class="card-text float-right">
                   <h4 class="mt-5">Sickness Image</h4>

@@ -477,3 +477,4 @@ body.sidenav-toggled footer.sticky-footer {
 }
 }
 .button-hight{height: 48px;}
+.carousel{ position:absolute !important;}

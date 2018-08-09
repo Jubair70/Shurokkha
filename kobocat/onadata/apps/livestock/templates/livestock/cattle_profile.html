@@ -537,6 +537,14 @@
 
     <!-- Prescription panel end-->
 
+    <!--old prescription load-->
+<div id = "old_prescription_div">
+
+
+</div>
+    </div>
+    <!--old prescription load-->
+
     </div>
     <!-- /.container-fluid-->
     <!-- /.content-wrapper-->
@@ -654,6 +662,7 @@
     <script type="text/javascript" src="{{ STATIC_URL }}js/clinical_findings.js"></script>
 
     <script>
+        var cattle_id = {{ cattle_id }}
         var appointment_id = {{ appointment_id }}
         var cattle_type = {{ cattle_type }}
         var appointment_status = {{ appointment_status }}
@@ -717,6 +726,7 @@
         }
 
         $(document).ready(function () {
+            get_old_prescription(cattle_id);
             $('.multiselect_class').multiselect({
                 onDropdownHidden: function(event) {
                 //alert('Dropdown closed.');
@@ -979,6 +989,20 @@
             }); //ajax end
     }
 
+
+    function get_old_prescription(cattle_id) {
+
+        $.ajax({
+                type: 'POST',
+                url: '/livestock/get_old_prescription/'+cattle_id+'/',
+                success: function (data) {
+                    $("#old_prescription_div").html(data);
+                },
+                error: function (xhr, status, error) {
+
+                }
+            }); //ajax end
+    }
 
 </script>
 

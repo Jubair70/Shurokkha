@@ -262,12 +262,12 @@ def save_user(request):
             mobile = data['phone']
             #if data['occupation'] == 'Farmer':
             insert_q = "INSERT INTO public.farmer(id, farmer_name, mobile,submission_time,submitted_by)VALUES (DEFAULT, '" + farmer_name + "','" + mobile + "', NOW()," + str(
-                auth_user_id) + " ) RETURNING ID;"
+                auth_user_id) + ") returning id;"
             ##print insert_q
-            f_id = views.__db_fetch_single_value(insert_q)
-            insert_q_map = "INSERT INTO public.user_farmer_map(id, user_id, farmer_id)VALUES (DEFAULT, " + str(
+            f_id = views.__db_commit_query(insert_q)
+            insert_q = "INSERT INTO public.user_farmer_map(id, user_id, farmer_id)VALUES (DEFAULT, " + str(
                 user_profile_id) + ", " + str(f_id) + ");"
-            views.__db_commit_query(insert_q_map)
+            views.__db_commit_query(insert_q)
             if data['occupation'] != 'Farmer':
                 approval_q = "INSERT INTO public.approval_queue(id,name, mobile, role_name, status, submitted_by, submission_time)VALUES (DEFAULT, '"+farmer_name+"','"+mobile+"', '"+data['occupation']+"', 0, "+str(auth_user_id)+", NOW());"
                 #print approval_q
@@ -312,8 +312,7 @@ def save_user(request):
 @csrf_exempt
 def get_farmer_list(request):
     username = request.GET.get('username')
-    q = "SELECT *,(SELECT count(*) FROM cattle WHERE mobile = farmer.mobile) AS no_cattle,string_to_array(gps,' ') gps_list,date(submission_time)::text AS s_date FROM farmer WHERE id in(with t1 AS (SELECT farmer_id FROM user_farmer_map WHERE user_id = (SELECT id FROM usermodule_usermoduleprofile WHERE user_id = (SELECT id FROM auth_user WHERE username = '"+username+"'))) SELECT * FROM t1)"
-    print q
+    q = "select *,(select count(*) from cattle where mobile = farmer.mobile) as no_cattle,string_to_array(gps,' ') gps_list,date(submission_time)::text as s_date from farmer where id in(with t1 as ((select id from farmer where submitted_by = (select id from auth_user where username='" + username + "')) union (select id from farmer where mobile = '" + username + "') union(select farmer_id from user_farmer_map where user_id = (select id from usermodule_usermoduleprofile where user_id = (select id from auth_user where username = '"+username+"')) ) )select * from t1) and deleted_at is null"
     dataset = views. __db_fetch_values_dict(q)
     data_list = []
     farmerprofileupdate_form_owner_q = "select (select username from auth_user where id = logger_xform.user_id limit 1) as user_name from public.logger_xform where id_string = 'farmer_profile_update'"
@@ -381,15 +380,14 @@ def get_cattle_list(request):
 @csrf_exempt
 def delete_farmer(request):
     username = request.GET.get('username')
-    user_id = views.__db_fetch_single_value("select id from usermodule_usermoduleprofile where user_id = (select id from auth_user where username = '" + username + "')")
+    user_id = views.__db_fetch_single_value("select id from auth_user where username = '" + username + "'")
     deleted_farmers = request.body
     deleted_farmer_list = json.loads(deleted_farmers)
     for temp in deleted_farmer_list:
         #farmer cannot be deleted by his/her own
         if username == temp:
             continue
-        farmer_id = views.__db_fetch_single_value("select id from farmer where  mobile = '" + temp + "'")
-        q = "delete from user_farmer_map     where farmer_id="+str(farmer_id)+" and user_id = "+str(user_id)+""
+        q = "update  farmer set deleted_at = NOW(),deleted_by = "+str(user_id)+"  where mobile='"+str(temp)+"'"
         views.__db_commit_query(q)
     return HttpResponse(json.dumps('Deleted successfully.'))
 

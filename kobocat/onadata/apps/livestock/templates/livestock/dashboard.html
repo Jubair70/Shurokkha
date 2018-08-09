@@ -1,0 +1,514 @@
+{% extends 'base_test.html' %}
+{% load i18n %}
+{% block additional-headers %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css">
+<link href="https://cdn.datatables.net/buttons/1.4.2/css/buttons.dataTables.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/semantic-ui/2.2.10/semantic.min.css">
+<link href="/static/css/calendar.min.css" rel="stylesheet" type="text/css"/>
+<link href="/static/bootstrap4/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+<!-- Custom fonts for this template-->
+<link href="/static/bootstrap4/vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+<!-- Custom styles for this template-->
+<link href="/static/bootstrap4/css/sb-admin.css" rel="stylesheet">
+
+
+{% endblock %}
+
+
+
+{% block content %}
+<div class="portlet box red">
+   <div class="portlet-title">
+      <div class="caption"><i class="fa fa-adn"></i>Dashboard</div>
+   </div>
+   {% csrf_token %}
+   <div class="portlet-body">
+     <!--  <div class="row">
+         <div class="col-md-4">
+            <div class="form-group">
+               <label >Division </label>
+               <select class="form-control" name="division" id="division">
+                  {% for div in division_dict %}
+                                                    <option value="{{ div.id }}">{{ div.name }}</option>
+                                                {% endfor %}
+                  
+               </select>
+            </div>
+         </div>
+         <div class="col-md-4">
+            <div class="form-group">
+               <label>District </label>
+               <select class="form-control" name="district" id="district">
+                  <option value="" selected>Select One</option>
+                  
+               </select>
+            </div>
+         </div>
+         <div class="col-md-4">
+            <div class="form-group">
+               <label>District </label>
+               <select class="form-control" name="upazila" id="upazila">
+                  <option value="" selected >Select One</option>
+                  
+               </select>
+            </div>
+         </div>
+      </div>
+      <div class="row">
+         <div class="col-md-3">
+            <div class="form-group">
+               <label>From Date: </label>
+               <div class="ui calendar" id="from_date">
+                  <input type="text" class="form-control"  name="from_date" readonly>
+               </div>
+            </div>
+         </div>
+         <div class="col-md-3">
+            <div class="form-group">
+               <label>To Date: </label>
+               <div class="ui calendar" id="to_date">
+                  <input type="text" class="form-control" name="to_date"   readonly>
+               </div>
+            </div>
+         </div>
+         <div class="col-md-4">
+            <div class="form-group">
+               <button class="btn btn-info pull-left" id="generate_report" name="generate_report"
+                  data-original-title=""
+                  title="">Generate Report</button>
+            </div>
+         </div>
+      </div> -->
+      <br>
+      <div class="container-fluid">
+         <div class="row">
+            <div class="col-xl-3 col-sm-6 mb-3">
+               <div class="card text-white bg-success o-hidden h-100">
+                  <div class="card-body">
+                     <div class="card-body-icon">
+                        <i class="fa fa-fw fa-male"></i>
+                     </div>
+                     <h2>{{farmer_count}}</h2>
+                     <div class="mr-5">Farmer</div>
+                  </div>
+               </div>
+            </div>
+            <div class="col-xl-3 col-sm-6 mb-3">
+               <div class="card text-white bg-primary o-hidden h-100">
+                  <div class="card-body">
+                     <div class="card-body-icon">
+                        <i class="fa fa-fw fa-user-md"></i>
+                     </div>
+                     <h2>{{paravet_count}}</h2>
+                     <div class="mr-5">Pare Vet</div>
+                  </div>
+               </div>
+            </div>
+            <div class="col-xl-3 col-sm-6 mb-3">
+               <div class="card text-white bg-secondary o-hidden h-100">
+                  <div class="card-body">
+                     <div class="card-body-icon">
+                        <i class="fa fa-fw fa-medkit"></i>
+                     </div>
+                     <h2>{{ai_count}}</h2>
+                     <div class="mr-5">Al Technician</div>
+                  </div>
+               </div>
+            </div>
+            <div class="col-xl-3 col-sm-6 mb-3">
+               <div class="card text-white bg-danger o-hidden h-100">
+                  <div class="card-body">
+                     <div class="card-body-icon">
+                        <i class="fa fa-fw fa-user-md"></i>
+                     </div>
+                     <h2>{{vet_count}}</h2>
+                     <div class="mr-5">Veterinarian</div>
+                  </div>
+               </div>
+            </div>
+            <div class="col-xl-3 col-sm-6 mb-3">
+               <div class="card text-white bg-warning o-hidden h-100">
+                  <div class="card-body">
+                     <div class="card-body-icon">
+                        <i class="fa fa-fw fa-envira"></i>
+                     </div>
+                     <h2>{{cattle_count}}</h2>
+                     <div class="mr-5">Cattle</div>
+                  </div>
+               </div>
+            </div>
+            <div class="col-xl-3 col-sm-6 mb-3">
+               <div class="card text-white bg-info o-hidden h-100">
+                  <div class="card-body">
+                     <div class="card-body-icon">
+                        <i class="fa fa-fw fa-github-alt"></i>
+                     </div>
+                     <h2>{{sickness_count}}</h2>
+                     <div class="mr-5">Total No of Sickness Cases</div>
+                  </div>
+               </div>
+            </div>
+            <div class="col-xl-3 col-sm-6 mb-3">
+               <div class="card text-white bg-primary o-hidden h-100">
+                  <div class="card-body">
+                     <div class="card-body-icon">
+                        <i class="fa fa-fw fa-globe"></i>
+                     </div>
+                     <h2>{{husbandry_count}}</h2>
+                     <div class="mr-5">Total No. of Husbandry</div>
+                  </div>
+               </div>
+            </div>
+            <!-- <div class="col-xl-3 col-sm-6 mb-3">
+               <div class="card text-white bg-secondary o-hidden h-100">
+                 <div class="card-body">
+                   <div class="card-body-icon">
+                     <i class="fa fa-fw fa-image"></i>
+                   </div>
+                   <h2>200</h2>
+                   <div class="mr-5">Total No. of Delivered</div>
+                 </div>
+               </div>
+               </div>
+               <div class="col-xl-3 col-sm-6 mb-3">
+               <div class="card text-white bg-success o-hidden h-100">
+                 <div class="card-body">
+                   <div class="card-body-icon">
+                     <i class="fa fa-fw fa-user-md"></i>
+                   </div>
+                   <h2>200</h2>
+                   <div class="mr-5">Total No. of All records kept</div>
+                 </div>
+               </div>
+               </div>
+               <div class="col-xl-3 col-sm-6 mb-3">
+               <div class="card text-white bg-warning o-hidden h-100">
+                 <div class="card-body">
+                   <div class="card-body-icon">
+                     <i class="fa fa-fw fa-comments"></i>
+                   </div>
+                   <h2>200</h2>
+                   <div class="mr-5">Total No. of Breed Idetification Service Delevered</div>
+                 </div>
+               </div>
+               </div> -->
+         </div>
+      </div>
+      <!-- /.container-fluid-->
+      <!-- /.content-wrapper-->
+      <!-- Scroll to Top Button-->
+      <!-- Bootstrap core JavaScript-->
+   </div>
+</div>
+
+{% endblock %}
+{% block additional-javascript %}
+<script type="text/javascript" src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/dataTables.buttons.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.flash.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/pdfmake.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/vfs_fonts.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.html5.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.print.min.js"></script>
+<script src="https://cdn.jsdelivr.net/semantic-ui/2.2.10/semantic.min.js"></script>
+<script type="text/javascript" src="/static/js/calendar.min.js"></script>
+   <!--  <script src="/static/bootstrap4/vendor/jquery/jquery.min.js"></script>
+    <script src="/static/bootstrap4/vendor/bootstrap/js/bootstrap.bundle.min.js"></script> -->
+    <!-- Core plugin JavaScript-->
+    <!-- <script src="/static/bootstrap4/vendor/jquery-easing/jquery.easing.min.js"></script> -->
+    <!-- Custom scripts for all pages-->
+    <!-- <script src="/static/bootstrap4/js/sb-admin.min.js"></script> -->
+    <script>
+
+
+        var division = {{ division_dict |safe }};
+        // $('#num').text(num);
+        // if(num>0)
+        //     $('#num').css("background-color", "#e02222");
+        // else $('#num').css("background-color", "#0B6623");
+
+
+        // var tbody = '';
+        // var advisory_list = {{ advisory_list|safe }};
+
+        // for (var idx in advisory_list) {
+        //     if( advisory_list[idx].mobile !=  advisory_list[idx].submitted_by)
+        //         tbody += '<tr><td>' + advisory_list[idx].farmer_name + '</td><td>' + advisory_list[idx].mobile + '</td><td>' + advisory_list[idx].cattle_type + '</td><td>' + advisory_list[idx].cattle_age + '</td><td>' + advisory_list[idx].ai_paravet_name + '</td><td>' + advisory_list[idx].submitted_by + '</td><td>' + advisory_list[idx].prescription_date + '</td>';
+        //     else tbody += '<tr><td>' + advisory_list[idx].farmer_name + '</td><td>' + advisory_list[idx].mobile + '</td><td>' + advisory_list[idx].cattle_type + '</td><td>' + advisory_list[idx].cattle_age + '</td><td></td><td></td><td>' + advisory_list[idx].prescription_date + '</td>';
+        //     if(advisory_list[idx].status==0)
+        //         tbody += '<td><span class="control-label btn btn-primary" style="background-color:#e02222"><b>New</b></span></td>';
+        //     else if (advisory_list[idx].status==2)
+        //         tbody += '<td><span class="control-label btn btn-primary" style="background-color:#0B6623"><b>Prescribed</b></span></td>';
+        //     else tbody
+        //         tbody+='<td class="td-center"><a class="tooltips" data-container="body" data-placement="top" data-original-title="View" href="/livestock/cattle_profile/' + advisory_list[idx].cattle_system_id + '/'+advisory_list[idx].id +'"><i class="fa fa-2x fa-file-text"></i></a></td></tr>'
+
+        // }
+
+        // $("#all_info_table").find('tbody').html(tbody);
+
+        // var table = $('#all_info_table').DataTable({
+        //     "scrollX": true, "ordering": false,
+        //     "searching": false,
+        //     deferRender: true
+        //     {#            ,#}
+        //     {#            dom: 'Bfrtip'#}
+        //     {#            ,#}
+        //     {#            buttons: [#}
+        //     {#                {#}
+        //     {#                    filename: "Score Card",#}
+        //     {#                    title: "",#}
+        //     {#                    text: "<strong>Export</strong>",#}
+        //     {#                    extend: 'excel'#}
+        //     {#                }#}
+        //     {#            ]#}
+
+        // });
+
+        onload();
+        $('#from_date').calendar({
+            type: 'date', endCalendar: $('#to_date'), endCalendar: $('#to_date'),
+            popupOptions: {
+                position: 'bottom right'
+            },
+            formatter: {
+                date: function (date, settings) {
+                    if (!date) return '';
+
+                    var day = date.getDate();
+                    var month = date.getMonth() + 1;
+                    var year = date.getFullYear();
+
+                    if (day < 10) {
+                        day = '0' + day
+                    }
+                    if (month < 10) {
+                        month = '0' + month
+                    }
+                    return year + '-' + month + '-' + day;
+                }
+            }
+        });
+       
+        $('#to_date').calendar({
+            type: 'date',
+            popupOptions: {
+                position: 'bottom right'
+            },startCalendar: $('#from_date')
+            ,
+            formatter: {
+                date: function (date, settings) {
+                    if (!date) return '';
+
+                    var day = date.getDate();
+                    var month = date.getMonth() + 1;
+                    var year = date.getFullYear();
+
+                    if (day < 10) {
+                        day = '0' + day
+                    }
+                    if (month < 10) {
+                        month = '0' + month
+                    }
+                    return year + '-' + month + '-' + day;
+                }
+            }
+        });
+        $('#from_date').calendar('set date',getDesiredDate(2));
+        $('#to_date').calendar('set date',getDesiredDate(1));
+
+        {#        var today = new Date();#}
+        {#            $('#rangestart').calendar({type: 'date', endCalendar: $('#rangeend')});#}
+        {#            $('#rangestart').calendar("set date", new Date(today.getFullYear(), today.getMonth() - 1, today.getDate()));#}
+        {#            $('#rangeend').calendar({type: 'date', startCalendar: $('#rangestart')});#}
+        {#            $('#rangeend').calendar("set date", new Date(today.getFullYear(), today.getMonth(), today.getDate()));#}
+
+
+        
+        function onload(){
+
+            ajaxcall();
+            var from_date = $('#from_date').calendar('get date');
+            var to_date = $('#to_date').calendar('get date');
+            var district = $('#district  option:selected').val();
+            var division = $('#division option:selected').val();
+            var upazila = $('#upazila option:selected').val();
+            if(from_date != null)
+                from_date = getFormattedDate(from_date);
+            else from_date="";
+
+            if(to_date != null)
+                to_date = getFormattedDate(to_date);
+            else to_date = "";
+            
+
+            $.ajax({
+                url: '/livestock/getfilterdata/',
+                type: 'POST',
+                dataType: 'json',
+                data: {'from_date': from_date
+                ,'to_date': to_date
+                ,'district':district
+                , 'division':division
+                , 'upazila' :upazila
+                },
+                beforeSend: function () {
+                    $('#container').show();
+                    $("#container").html('<div class="ui active inverted dimmer">\n' +
+                        '    <div class="ui text loader">Loading</div>\n' +
+                        '  </div>');
+                },
+                success: function (result) {
+                    consol.log(result);
+                    html_code += "<option  value=\"\">Select One</option>";
+                    for (i = 0; i < result.field_name.length; i++) {
+                        html_code += "<option value=\"" + result.field_id[i] + "\">" + result.field_name[i] + "</option>";
+                    }
+                    html_code += "</select>";
+                    // $(".field_parent").append(html_code);
+                }
+            });
+        }
+
+        $('.delete-item').on('click', function (e) {
+            var criteria_id = $(this).attr("data-href");
+            $('.btn-ok').attr("href", criteria_id);
+        });
+        if ($('.alert-block').is(':visible')) {
+            window.setTimeout(function () {
+                $(".alert-success").fadeTo(1500, 0).slideUp(500, function () {
+                    $(this).remove();
+                });
+            }, 5000);
+        }
+
+        function datatable_reitialize() {
+            return $('#all_info_table').DataTable({
+                "scrollX": true, "ordering": false
+                {#                ,deferRender: true,#}
+                {#                dom: 'Bfrtip',#}
+                {#                buttons: [#}
+                {#                    {#}
+                {#                        filename: "Score Card",#}
+                {#                        title: "",#}
+                {#                        text: "<strong>Export</strong>",#}
+                {#                        extend: 'excelHtml5'#}
+                {#                    }#}
+                {#                ]#}
+
+            });
+        }
+
+        function ajaxcall() {
+            $.ajaxSetup({
+                beforeSend: function (xhr, settings) {
+                    function getCookie(name) {
+                        var cookieValue = null;
+                        if (document.cookie && document.cookie != '') {
+                            var cookies = document.cookie.split(';');
+                            for (var i = 0; i < cookies.length; i++) {
+                                var cookie = jQuery.trim(cookies[i]);
+                                // Does this cookie string begin with the name we want?
+                                if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                    break;
+                                }
+                            }
+                        }
+                        return cookieValue;
+                    }
+
+                    if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+                        // Only send the token to relative URLs i.e. locally.
+                        xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                    }
+                }
+            });
+        }
+
+
+        function getFormattedDate(date) {
+            var yy = date.getFullYear();
+            var mm = date.getMonth() + 1;
+            var dd = date.getDate();
+            if (dd < 10) {
+                dd = '0' + dd
+            }
+            if (mm < 10) {
+                mm = '0' + mm
+            }
+            {#                formatted_date = yyyy + '-' + mm + '-' + dd;#}
+            formatted_date = yy + '-' + mm + '-' + dd;
+            return formatted_date;
+        }
+
+        function getToday(n)
+        {
+            var today = new Date();
+            var n_month_before_today = new Date(today);
+            n_month_before_today.setMonth((today.getMonth() + 1) - n);
+            var dd = n_month_before_today.getDate();
+            var mm = n_month_before_today.getMonth() + 1;
+
+            if (dd < 10) {
+                dd = '0' + dd
+            }
+            if (mm < 10) {
+                mm = '0' + mm
+            }
+            var yyyy = n_month_before_today.getFullYear();
+            {#                formatted_date = yyyy + '-' + mm + '-' + dd;#}
+            formatted_date =   yyyy+ '-' +mm+ '-' +dd   ;
+            return formatted_date;
+        }
+
+        function getDesiredDate(n) {
+
+            var today = new Date();
+            var n_month_before_today = new Date(today);
+            n_month_before_today.setMonth((today.getMonth() + 1) - n);
+            var dd = n_month_before_today.getDate();
+            var mm = n_month_before_today.getMonth() + 1;
+
+            if (dd < 10) {
+                dd = '0' + dd
+            }
+            if (mm < 10) {
+                mm = '0' + mm
+            }
+            var yyyy = n_month_before_today.getFullYear();
+            {#                formatted_date = yyyy + '-' + mm + '-' + dd;#}
+            formatted_date =   yyyy+ '-' +mm+ '-' +dd   ;
+            return formatted_date;
+
+        }
+     function ajaxcall() {
+            $.ajaxSetup({
+                beforeSend: function (xhr, settings) {
+                    function getCookie(name) {
+                        var cookieValue = null;
+                        if (document.cookie && document.cookie != '') {
+                            var cookies = document.cookie.split(';');
+                            for (var i = 0; i < cookies.length; i++) {
+                                var cookie = jQuery.trim(cookies[i]);
+                                // Does this cookie string begin with the name we want?
+                                if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                    break;
+                                }
+                            }
+                        }
+                        return cookieValue;
+                    }
+
+                    if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+                        // Only send the token to relative URLs i.e. locally.
+                        xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                    }
+                }
+            });
+        }
+
+
+    </script>
+    {% endblock %}

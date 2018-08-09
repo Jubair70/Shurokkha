@@ -196,7 +196,7 @@ def farmer_list(request):
 
 
 def get_farmer_table(request):
-    q = "select * from farmer where deleted_at is null"
+    q = "select * from farmer"
     dataset = __db_fetch_values_dict(q)
     return render(request,"livestock/farmer_table.html",{'dataset' : dataset})
 
@@ -750,4 +750,64 @@ def getSicknessData(request):
     query = "WITH t AS( SELECT id, created_date appointment_date, ( SELECT created_date FROM prescription WHERE appointment_id = appointment.id limit 1) prescription_date, cattle_system_id, ( SELECT (json->>'cattle_type') cattle_type FROM logger_instance WHERE id = healthrecord_sickness_system_id limit 1), ( SELECT (json->>'mobile') mobile FROM logger_instance WHERE id = healthrecord_sickness_system_id limit 1), ( SELECT (json->>'_submitted_by') submitted_by FROM logger_instance WHERE id = healthrecord_sickness_system_id limit 1), status FROM appointment WHERE appointment_type = 2) SELECT id, cattle_system_id, appointment_date::date, ( SELECT first_name || ' ' || last_name FROM auth_user WHERE username = t.mobile limit 1) farmer_name, mobile, ( SELECT label FROM vwcattle_type WHERE value = t.cattle_type limit 1) cattle_type, ( SELECT CASE WHEN cattle_birth_date IS NULL THEN cattle_age ELSE age(CURRENT_DATE ,date(cattle_birth_date))::text END cattle_age FROM cattle WHERE cattle_system_id = t.cattle_system_id limit 1), COALESCE(substring(prescription_date::text FROM 0 FOR 20),'') prescription_date, ( SELECT first_name || ' ' || last_name FROM auth_user WHERE username = t.mobile limit 1)ai_paravet_name, submitted_by, status FROM t WHERE status = ANY('{0,2}')"+str(filter_query)
     data = json.dumps(__db_fetch_values_dict(query), default=decimal_date_default)
     return HttpResponse(data)
+
+
+'''
+Dashboard
+
+'''
+
+
+@login_required
+def get_dashboard(request):
+    division_query = "select distinct division as name, div_code id from vwunion_code"
+    division_dict = json.dumps(__db_fetch_values_dict(division_query))
+    farmer_query = "select count (*) from vwuser_org_role where role = 'Farmer'"
+    paravet_query = "select count(*)from vwuser_org_role where role = 'Paravet'"
+    ai_query = "select count(*) from vwuser_org_role where role = 'AI Technicians'"
+    vet_query = "select count(*) from vwuser_org_role where role = 'Veterinary'"
+    cattle_query = "select count(*) from cattle"
+    sickness_query = "select count (*) from appointment where appointment_type ='2' "
+    husbandry_query = "select count (*) from appointment where appointment_type ='1' or appointment_type ='3'"
+    filter_query = ""
+    if request.method == 'POST':
+        from_date = request.POST.get('from_date')
+        to_date = request.POST.get('to_date')
+        division = request.POST.get('division')
+        district = request.POST.get('district')
+        upazila = request.POST.get('upazila')
+
+        if from_date != "" and to_date != "":
+            filter_query += "and appointment_date::date between '" + str(from_date) + "' and '" + str(to_date) + "' "
+
+    farmer_count = __db_fetch_single_value(farmer_query + filter_query)
+    paravet_count = __db_fetch_single_value(paravet_query + filter_query)
+    ai_count = __db_fetch_single_value(ai_query + filter_query)
+    vet_count = __db_fetch_single_value(vet_query + filter_query)
+    cattle_count = __db_fetch_single_value(cattle_query + filter_query)
+    sickness_count = __db_fetch_single_value(sickness_query + filter_query)
+    husbandry_count = __db_fetch_single_value(husbandry_query + filter_query)
+
+    return render(request, 'livestock/dashboard.html',
+                  {'division': division_dict, 'farmer_count': farmer_count, 'paravet_count': paravet_count,
+                   'ai_count': ai_count, 'vet_count': vet_count, 'cattle_count': cattle_count,
+                   'sickness_count': sickness_count, 'husbandry_count': husbandry_count})
+
+
+def cascade_filter(request):
+    division = request.POST.get('division')
+    district = request.POST.get('district')
+    upazila = request.POST.get('upazila')
+    filter_query = ''
+    division_query = "select distinct division as name, div_code id from vwunion_code"
+    district_query = "select distinct district as name, dist_code id from vwunion_code "
+    upazila_query = "select distinct upazila as name, up_code id from vwunion_code"
+    division_dict = __db_fetch_values_dict(division_query)
+    district_dict = __db_fetch_values_dict(district_query)
+    upazila_dict = __db_fetch_values_dict(upazila_query)
+
+    context = {'division': division_dict, 'district': district_dict, 'upazila': upazila_dict}
+
+    return HttpResponse(json.dumps(data, default=decimal_date_default), content_type="application/json", status=200)
+
 

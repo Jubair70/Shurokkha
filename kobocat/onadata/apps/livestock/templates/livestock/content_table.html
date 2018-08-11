@@ -1,0 +1,20 @@
+<table id ="content_table" class="table table-bordered table-hover table-fixed table-striped">
+        <thead>
+            <th> User role </th>
+            <th>Content Type</th>
+            <th> File</th>
+            <th>Action</th>
+            <!--<th>Action</th>-->
+        </thead>
+        <tbody>
+        {% for data in dataset %}
+        <tr>
+            <td>{{data.role}}</td>
+            <td>{{data.content_type_name }}</td>
+            <td> {{ data.file_name }}</td>
+            <td>
+                <button onclick="delete_entity('{{ data.id }}')" id = ""  class="btn btn-danger" data-original-title="" title="">Delete</button>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>

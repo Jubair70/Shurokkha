@@ -23,6 +23,7 @@ from django.core.mail import send_mail, BadHeaderError
 import smtplib
 from datetime import datetime as dt
 import time
+import os.path
 
 def __db_fetch_values(query):
     cursor = connection.cursor()
@@ -679,6 +680,67 @@ def get_old_prescription(request,cattle_id):
     return render(request, 'livestock/old_prescription.html',{'prescription_data_list' : data_list})
 
 
+
+
+'''
+    Content Upload
+'''
+
+@login_required
+def content_upload(request):
+    if request.method == 'POST':
+        content_role = request.POST.getlist("content_role")
+        content_type = request.POST.get("content_type")
+        file_type = request.POST.get("file_type")
+        if content_type == '1':
+            content_type_text = 'user_instruction'
+        if content_type == '2':
+            content_type_text = 'training_manual'
+        des = upload_shared_file(request.FILES['shared_file'], content_type_text)
+        insert_q = "INSERT INTO public.content(id, content_type, file_type, file_name, submitted_by, submission_time)VALUES (DEFAULT , '"+str(content_type)+"', '"+str(file_type)+"', '"+des+"', "+str(request.user.id)+",NOW()) RETURNING id;"
+        content_id = __db_fetch_single_value(insert_q)
+        if content_role:
+            for temp in content_role:
+                role_id = temp
+                q = "INSERT INTO public.role_content_map(id, content_id, role_id)VALUES (DEFAULT ,"+str(content_id)+", "+str(role_id)+");"
+                __db_commit_query(q)
+        return HttpResponse(simplejson.dumps("ok"), content_type="application/json")
+    return render(request, "livestock/content_upload.html")
+
+
+def upload_shared_file(file,title):
+    if file:
+        #get file extention from file name
+        file_extention =  os.path.splitext(file.name)[1]
+        millis = int(round(time.time() * 1000))
+        filePath = title+'_'+str(millis)+file_extention
+        destination = open('onadata/media/content/'+filePath, 'w+')
+        for chunk in file.chunks():
+            destination.write(chunk)
+        destination.close()
+
+    return filePath
+
+
+@login_required
+def content_list(request):
+    return render(request, "livestock/content_list.html")
+
+
+
+def get_content_table(request):
+    q = "with t1 as(select content_id,(select role from usermodule_organizationrole where id = role_id)as role from role_content_map), t2 as(select content_id,string_agg(role,',') role_name from t1 group by content_id) select id,file_name,(case when content_type='1' then 'User Instruction' when content_type='2' then 'Training Manual' else '' end) as content_type_name,(select role_name from t2 where content_id = content.id) as role from content order by id desc "
+    data = __db_fetch_values_dict(q)
+    return render(request, "livestock/content_table.html", {'dataset': data})
+
+
+@login_required
+def delete_content(request,id):
+    content_del_q = "delete from public.content where id = " + str(id)
+    map_del_q = "delete from public.role_content_map where content_id = " + str(id)
+    __db_commit_query(map_del_q)
+    __db_commit_query(content_del_q)
+    return HttpResponse(simplejson.dumps('ok'), content_type="application/json")
 
 
 

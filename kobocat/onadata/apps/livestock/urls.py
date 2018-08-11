@@ -31,6 +31,10 @@ urlpatterns = patterns('',
                         url(r'^get_suggested_prescription/$', views.get_suggested_prescription, name='get_suggested_prescription'),
                         url(r'^get_old_prescription/(?P<cattle_id>\d+)/$', views.get_old_prescription, name='get_old_prescription'),
                         url(r'^get_dashboard/$', views.get_dashboard, name='get_dashboard'),
+                        url(r'^content_upload/$', views.content_upload, name='content_upload'),
+                        url(r'^content_list/$', views.content_list, name='content_list'),
+                        url(r'^get_content_table/$', views.get_content_table, name='get_content_table'),
+                        url(r'^delete_content/(?P<id>\d+)/$', views.delete_content, name='delete_content'),
 
 
                        ##############################

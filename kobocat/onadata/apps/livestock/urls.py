@@ -35,6 +35,8 @@ urlpatterns = patterns('',
                         url(r'^content_list/$', views.content_list, name='content_list'),
                         url(r'^get_content_table/$', views.get_content_table, name='get_content_table'),
                         url(r'^delete_content/(?P<id>\d+)/$', views.delete_content, name='delete_content'),
+                        url(r'^get_district/$', views.get_district, name='get_district'),
+                        url(r'^get_upazila/$', views.get_upazila, name='get_upazila'),
 
 
                        ##############################

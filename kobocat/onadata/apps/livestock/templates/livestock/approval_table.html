@@ -13,7 +13,7 @@
             <td>{{data.mobile }}</td>
             <td> {{ data.role_name }}</td>
             <td> {%  if data.status == 0  %}
-                <button onclick="approve_entity('{{ data.id }}','{{ data.role_name }}','{{ data.mobile }}')" id = ""  class="btn btn-primary btn-md"  data-original-title="" title="">Approve</button>
+                <button onclick="approve_entity('{{ data.id }}','{{ data.role_name }}','{{ data.mobile }}','{{data.name}}')" id = ""  class="btn btn-primary btn-md"  data-original-title="" title="">Approve</button>
                 <button onclick="reject_entity('{{ data.id }}','{{ data.role_name }}','{{ data.mobile }}')" id = ""  class="btn btn-danger"  data-original-title="" title="">Reject</button>
 
                 {% elif data.status == 1 %}

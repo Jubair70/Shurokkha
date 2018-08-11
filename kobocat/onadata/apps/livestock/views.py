@@ -224,6 +224,7 @@ def get_approval_table(request):
 def approve(request,id):
     role_name = request.POST.get('role')
     mobile = request.POST.get('mobile')
+    name = request.POST.get('name')
     q = "update approval_queue set status = 1,approve_by = "+str(request.user.id)+",approval_date = NOW() where id  ="+str(id)
     __db_commit_query(q)
     role_list = []
@@ -231,6 +232,8 @@ def approve(request,id):
     user_roles = OrganizationRole.objects.filter(role__in=role_list)
     user = User.objects.filter(username=mobile).first()
     profile = user.usermoduleprofile
+    insert_q = "INSERT INTO public.paravet_aitechnician(id, name, mobile,user_type,submission_time,submitted_by)VALUES (DEFAULT, '" + name + "','" + mobile + "', '" + role_name + "',NOW()," + str(user.id) + " );"
+    __db_commit_query(insert_q)
     for role in user_roles:
         UserRoleMap(user=profile, role=role).save()
 
@@ -823,7 +826,7 @@ Dashboard
 @login_required
 def get_dashboard(request):
     division_query = "select distinct division as name, div_code id from vwunion_code"
-    division_dict = json.dumps(__db_fetch_values_dict(division_query))
+    division_dict = __db_fetch_values_dict(division_query)
     farmer_query = "select count (*) from vwuser_org_role where role = 'Farmer'"
     paravet_query = "select count(*)from vwuser_org_role where role = 'Paravet'"
     ai_query = "select count(*) from vwuser_org_role where role = 'AI Technicians'"
@@ -854,6 +857,25 @@ def get_dashboard(request):
                   {'division': division_dict, 'farmer_count': farmer_count, 'paravet_count': paravet_count,
                    'ai_count': ai_count, 'vet_count': vet_count, 'cattle_count': cattle_count,
                    'sickness_count': sickness_count, 'husbandry_count': husbandry_count})
+
+
+
+def get_district(request):
+    div_code = request.POST.get('div_code')
+    q = "select distinct district,dist_code from vwunion_code where div_code = '" + div_code+"'"
+    dist_list = makeTableList(q)
+    json_dist_list = json.dumps({'dist_list': dist_list}, default=decimal_date_default)
+    return HttpResponse(json_dist_list)
+
+
+def get_upazila(request):
+    dist_code = request.POST.get('dist_code')
+    q = "select distinct upazila,up_code from vwunion_code where dist_code = '" + dist_code+"'"
+    upz_list = makeTableList(q)
+    json_upz_list = json.dumps({'upz_list': upz_list}, default=decimal_date_default)
+    print json_upz_list
+    return HttpResponse(json_upz_list)
+
 
 
 def cascade_filter(request):

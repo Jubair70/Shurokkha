@@ -504,8 +504,8 @@ def get_content_list(request,username):
 # ---------------------------------- Shahin ------------------------------- #
 
 @csrf_exempt
-def get_prescription_list(request,cattle_id):
-    prescription_list = __db_fetch_values_dict("select p.id,p.created_date,cf.tentative_diagnosis,a.cattle_system_id from prescription p left join clinical_findings cf on cf.appointment_id = p.appointment_id left join appointment a on a.id = p.appointment_id where a.cattle_system_id ="+str(cattle_id))
+def get_prescription_list(request,username):
+    prescription_list = __db_fetch_values_dict("select p.id,p.created_date,cf.tentative_diagnosis,a.cattle_system_id, string_agg(pd.medicine_part_1, ', ') as prescription_title from prescription p left join clinical_findings cf on cf.appointment_id = p.appointment_id left join appointment a on a.id = p.appointment_id left join prescription_details pd on pd.prescription_id = p.id where a.cattle_system_id in(select cattle_system_id from cattle where mobile in (select mobile from farmer where submitted_by = (select id from auth_user where username = '"+str(username)+"'))) group by p.id,p.created_date,cf.tentative_diagnosis,a.cattle_system_id")
     return HttpResponse(json.dumps(prescription_list, default=decimal_date_default))
 
 

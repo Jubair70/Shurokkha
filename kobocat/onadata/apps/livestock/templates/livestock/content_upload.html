@@ -110,8 +110,6 @@
     <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-multiselect.js"></script>
         <script>
 
-
-
         $(document).ready(function () {
              $('.multiselect_class').multiselect({
                 onDropdownHidden: function(event) {
@@ -161,7 +159,7 @@
                 processData: false,
                 data: data,
                 success: function (data) {
-			$('#load').html('');
+			    $('#load').html('');
                     console.log("sucess uploaded");
                     //showAjaxConfirmationMessages(data);
                     $('#successModal').modal('show');
@@ -169,8 +167,7 @@
 
                 },
                 error: function (xhr, status, error) {
-                    $("#add_report_form_div").html(xhr.responseText);
-                    //load_OneToManyRelation();
+                    $('#load').html('File not uploaded.');
                 }
             }); //ajax end
         });

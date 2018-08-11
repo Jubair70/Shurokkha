@@ -52,6 +52,13 @@ urlpatterns = patterns('',
                         url(r"^get_cattle_list/$", views_api.get_cattle_list, name='get_cattle_list'),
                         url(r"^delete_farmer/$", views_api.delete_farmer, name='delete_farmer'),
                         url(r"^search_farmer/$", views_api.search_farmer, name='search_farmer'),
-                 url(r"^cattle_info$", views_api.cattle_info, name='cattle_info'),
+                       url(r"^cattle_info$", views_api.cattle_info, name='cattle_info'),
+                       url(r"^get_prescription_list/(?P<cattle_id>\d+)/$", views_api.get_prescription_list,
+                           name='get_prescription_list'),
+                       url(r"^get_prescription_details/(?P<prescription_id>\d+)/$", views_api.get_prescription_details,
+                           name='get_prescription_details'),
+
+                       url(r"^(?P<username>\w+)/get/user_contentlist/$", views_api.get_content_list,
+                           name='get_content_list'),
 
                        )

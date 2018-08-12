@@ -135,12 +135,12 @@
          get_approval_table();
      });
 
-     function approve_entity(id,role,mobile) {
+     function approve_entity(id,role,mobile,name) {
          console.log(id);
          if(confirm("Are you sure you want to approve this?")){
             $.ajax({
                 type : 'POST',
-                dataType : 'json',data:{'role' :role,'mobile' : mobile},
+                dataType : 'json',data:{'role' :role,'mobile' : mobile,'name' : name},
                 url : "/livestock/approve/"+id+"/",
                 success : function(data) {
                     //alert(data)

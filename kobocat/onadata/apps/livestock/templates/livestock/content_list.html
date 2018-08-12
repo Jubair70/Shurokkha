@@ -1,0 +1,118 @@
+{% extends 'base_test.html' %}
+
+{% block additional-headers %}
+
+
+    <link rel="stylesheet" type="text/css" media="all" href="/static/css/Date-Range-Picker-For-Twitter-Bootstrap/daterangepicker.css" />
+
+    <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}assets/plugins/select2/select2_metro.css"/>
+<link rel="stylesheet" href="{{STATIC_URL}}assets/plugins/data-tables/DT_bootstrap.css"/>
+
+
+
+    <style type="text/css">
+    .thumbnail{
+        border: 0;
+    }
+
+    </style>
+
+{% endblock %}
+
+
+{% block content %}
+    <div class ="col-md-12" style = "">
+    <div class="page-header align">
+        <h3>Content List</h3>
+    </div>
+
+
+
+    </div>
+
+    <br>
+    <a class="btn red pull-right" href="/livestock/content_upload/" style="margin-bottom:15px;">Add Content</a>
+    <div class="portlet box red" style="margin-top:10px;">
+            <div class="portlet-title">
+                <div class="caption"><i class="fa fa-adn"></i></div>
+            </div>
+            <div class="portlet-body">
+
+                <div id="content_table_block">
+
+                </div>
+            </div>
+        </div>
+
+</div>
+{% endblock %}
+
+{% block additional-javascript %}
+
+
+
+    <!--datatable -->
+    <script type="text/javascript" src="{{STATIC_URL}}assets/plugins/data-tables/jquery.dataTables.js"></script>
+    <script type="text/javascript" src="{{STATIC_URL}}assets/plugins/data-tables/DT_bootstrap.js"></script>
+    <!--datatable ended-->
+     <script type="text/javascript" src="/static/js/Date-Range-Picker-For-Twitter-Bootstrap/date.js"></script>
+	<script type="text/javascript" src="/static/js/Date-Range-Picker-For-Twitter-Bootstrap/daterangepicker.js"></script>
+
+
+    <script>
+
+        //  Page Loading First Time
+
+        $(document).ready(function () {
+            get_content_table()
+
+        });
+
+
+    function get_content_table(){
+        $.ajax({
+            url: '/livestock/get_content_table/',
+            type: 'POST',
+
+            success: function (data) {
+                $("#content_table_block").html(data);
+                $('#content_table').dataTable({
+                            "retrieve": true,
+                            "bFilter": true,
+                            "paging": true,
+                            "scrollCollapse": true,
+                            select: true,
+                            // dom: 'Bfrtip',
+                            dom: 'Blfrtip',
+                            buttons: [{extend: 'excel', text: "Export to excel", title: 'Direct Beneficiary list'}],
+                            ordering: true,
+                            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+                            "scrollX": true
+
+                        });
+
+            }
+        });
+    //}
+    }
+
+
+
+     function delete_entity(id) {
+         if(confirm("Are you sure you want to approve this?")){
+            $.ajax({
+                type : 'POST',
+                url : "/livestock/delete_content/"+id+"/",
+                success : function(data) {
+                    get_content_table();
+                }
+            }); //ajax end
+        }
+
+     }
+
+
+
+</script>
+
+{% endblock %}

@@ -25,6 +25,7 @@ from django.core.mail import send_mail, BadHeaderError
 import smtplib
 from datetime import datetime as dt
 import time
+import os.path
 
 def __db_fetch_values(query):
     cursor = connection.cursor()
@@ -198,7 +199,7 @@ def farmer_list(request):
 
 
 def get_farmer_table(request):
-    q = "select * from farmer where deleted_at is null"
+    q = "select * from farmer"
     dataset = __db_fetch_values_dict(q)
     return render(request,"livestock/farmer_table.html",{'dataset' : dataset})
 
@@ -225,6 +226,7 @@ def get_approval_table(request):
 def approve(request,id):
     role_name = request.POST.get('role')
     mobile = request.POST.get('mobile')
+    name = request.POST.get('name')
     q = "update approval_queue set status = 1,approve_by = "+str(request.user.id)+",approval_date = NOW() where id  ="+str(id)
     __db_commit_query(q)
     role_list = []
@@ -232,6 +234,8 @@ def approve(request,id):
     user_roles = OrganizationRole.objects.filter(role__in=role_list)
     user = User.objects.filter(username=mobile).first()
     profile = user.usermoduleprofile
+    insert_q = "INSERT INTO public.paravet_aitechnician(id, name, mobile,user_type,submission_time,submitted_by)VALUES (DEFAULT, '" + name + "','" + mobile + "', '" + role_name + "',NOW()," + str(user.id) + " );"
+    __db_commit_query(insert_q)
     for role in user_roles:
         UserRoleMap(user=profile, role=role).save()
 
@@ -688,6 +692,67 @@ def get_old_prescription(request,cattle_id):
 
 
 
+'''
+    Content Upload
+'''
+
+@login_required
+def content_upload(request):
+    if request.method == 'POST':
+        content_role = request.POST.getlist("content_role")
+        content_type = request.POST.get("content_type")
+        file_type = request.POST.get("file_type")
+        if content_type == '1':
+            content_type_text = 'user_instruction'
+        if content_type == '2':
+            content_type_text = 'training_manual'
+        des = upload_shared_file(request.FILES['shared_file'], content_type_text)
+        insert_q = "INSERT INTO public.content(id, content_type, file_type, file_name, submitted_by, submission_time)VALUES (DEFAULT , '"+str(content_type)+"', '"+str(file_type)+"', '"+des+"', "+str(request.user.id)+",NOW()) RETURNING id;"
+        content_id = __db_fetch_single_value(insert_q)
+        if content_role:
+            for temp in content_role:
+                role_id = temp
+                q = "INSERT INTO public.role_content_map(id, content_id, role_id)VALUES (DEFAULT ,"+str(content_id)+", "+str(role_id)+");"
+                __db_commit_query(q)
+        return HttpResponse(simplejson.dumps("ok"), content_type="application/json")
+    return render(request, "livestock/content_upload.html")
+
+
+def upload_shared_file(file,title):
+    if file:
+        #get file extention from file name
+        file_extention =  os.path.splitext(file.name)[1]
+        millis = int(round(time.time() * 1000))
+        filePath = title+'_'+str(millis)+file_extention
+        destination = open('onadata/media/content/'+filePath, 'w+')
+        for chunk in file.chunks():
+            destination.write(chunk)
+        destination.close()
+
+    return filePath
+
+
+@login_required
+def content_list(request):
+    return render(request, "livestock/content_list.html")
+
+
+
+def get_content_table(request):
+    q = "with t1 as(select content_id,(select role from usermodule_organizationrole where id = role_id)as role from role_content_map), t2 as(select content_id,string_agg(role,',') role_name from t1 group by content_id) select id,file_name,(case when content_type='1' then 'User Instruction' when content_type='2' then 'Training Manual' else '' end) as content_type_name,(select role_name from t2 where content_id = content.id) as role from content order by id desc "
+    data = __db_fetch_values_dict(q)
+    return render(request, "livestock/content_table.html", {'dataset': data})
+
+
+@login_required
+def delete_content(request,id):
+    content_del_q = "delete from public.content where id = " + str(id)
+    map_del_q = "delete from public.role_content_map where content_id = " + str(id)
+    __db_commit_query(map_del_q)
+    __db_commit_query(content_del_q)
+    return HttpResponse(simplejson.dumps('ok'), content_type="application/json")
+
+
 
 
 
@@ -757,4 +822,83 @@ def getSicknessData(request):
     query = "WITH t AS( SELECT id, created_date appointment_date, ( SELECT created_date FROM prescription WHERE appointment_id = appointment.id limit 1) prescription_date, cattle_system_id, ( SELECT (json->>'cattle_type') cattle_type FROM logger_instance WHERE id = healthrecord_sickness_system_id limit 1), ( SELECT (json->>'mobile') mobile FROM logger_instance WHERE id = healthrecord_sickness_system_id limit 1), ( SELECT (json->>'_submitted_by') submitted_by FROM logger_instance WHERE id = healthrecord_sickness_system_id limit 1), status FROM appointment WHERE appointment_type = 2) SELECT id, cattle_system_id, appointment_date::date, ( SELECT first_name || ' ' || last_name FROM auth_user WHERE username = t.mobile limit 1) farmer_name, mobile, ( SELECT label FROM vwcattle_type WHERE value = t.cattle_type limit 1) cattle_type, ( SELECT CASE WHEN cattle_birth_date IS NULL THEN cattle_age ELSE age(CURRENT_DATE ,date(cattle_birth_date))::text END cattle_age FROM cattle WHERE cattle_system_id = t.cattle_system_id limit 1), COALESCE(substring(prescription_date::text FROM 0 FOR 20),'') prescription_date, ( SELECT first_name || ' ' || last_name FROM auth_user WHERE username = t.mobile limit 1)ai_paravet_name, submitted_by, status FROM t WHERE status = ANY('{0,2}')"+str(filter_query)
     data = json.dumps(__db_fetch_values_dict(query), default=decimal_date_default)
     return HttpResponse(data)
+
+
+'''
+Dashboard
+
+'''
+
+
+@login_required
+def get_dashboard(request):
+    division_query = "select distinct division as name, div_code id from vwunion_code"
+    division_dict = __db_fetch_values_dict(division_query)
+    farmer_query = "select count (*) from vwuser_org_role where role = 'Farmer'"
+    paravet_query = "select count(*)from vwuser_org_role where role = 'Paravet'"
+    ai_query = "select count(*) from vwuser_org_role where role = 'AI Technicians'"
+    vet_query = "select count(*) from vwuser_org_role where role = 'Veterinary'"
+    cattle_query = "select count(*) from cattle"
+    sickness_query = "select count (*) from appointment where appointment_type ='2' "
+    husbandry_query = "select count (*) from appointment where appointment_type ='1' or appointment_type ='3'"
+    filter_query = ""
+    if request.method == 'POST':
+        from_date = request.POST.get('from_date')
+        to_date = request.POST.get('to_date')
+        division = request.POST.get('division')
+        district = request.POST.get('district')
+        upazila = request.POST.get('upazila')
+
+        if from_date != "" and to_date != "":
+            filter_query += "and appointment_date::date between '" + str(from_date) + "' and '" + str(to_date) + "' "
+
+    farmer_count = __db_fetch_single_value(farmer_query + filter_query)
+    paravet_count = __db_fetch_single_value(paravet_query + filter_query)
+    ai_count = __db_fetch_single_value(ai_query + filter_query)
+    vet_count = __db_fetch_single_value(vet_query + filter_query)
+    cattle_count = __db_fetch_single_value(cattle_query + filter_query)
+    sickness_count = __db_fetch_single_value(sickness_query + filter_query)
+    husbandry_count = __db_fetch_single_value(husbandry_query + filter_query)
+
+    return render(request, 'livestock/dashboard.html',
+                  {'division': division_dict, 'farmer_count': farmer_count, 'paravet_count': paravet_count,
+                   'ai_count': ai_count, 'vet_count': vet_count, 'cattle_count': cattle_count,
+                   'sickness_count': sickness_count, 'husbandry_count': husbandry_count})
+
+
+
+def get_district(request):
+    div_code = request.POST.get('div_code')
+    q = "select distinct district,dist_code from vwunion_code where div_code = '" + div_code+"'"
+    dist_list = makeTableList(q)
+    json_dist_list = json.dumps({'dist_list': dist_list}, default=decimal_date_default)
+    return HttpResponse(json_dist_list)
+
+
+def get_upazila(request):
+    dist_code = request.POST.get('dist_code')
+    q = "select distinct upazila,up_code from vwunion_code where dist_code = '" + dist_code+"'"
+    upz_list = makeTableList(q)
+    json_upz_list = json.dumps({'upz_list': upz_list}, default=decimal_date_default)
+    print json_upz_list
+    return HttpResponse(json_upz_list)
+
+
+
+def cascade_filter(request):
+    division = request.POST.get('division')
+    district = request.POST.get('district')
+    upazila = request.POST.get('upazila')
+    filter_query = ''
+    division_query = "select distinct division as name, div_code id from vwunion_code"
+    district_query = "select distinct district as name, dist_code id from vwunion_code "
+    upazila_query = "select distinct upazila as name, up_code id from vwunion_code"
+    division_dict = __db_fetch_values_dict(division_query)
+    district_dict = __db_fetch_values_dict(district_query)
+    upazila_dict = __db_fetch_values_dict(upazila_query)
+
+    context = {'division': division_dict, 'district': district_dict, 'upazila': upazila_dict}
+
+    return HttpResponse(json.dumps(data, default=decimal_date_default), content_type="application/json", status=200)
+
 

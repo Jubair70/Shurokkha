@@ -30,6 +30,13 @@ urlpatterns = patterns('',
                         url(r'^get_medicine_packsize/$', views.get_medicine_packsize, name='get_medicine_packsize'),
                         url(r'^get_suggested_prescription/$', views.get_suggested_prescription, name='get_suggested_prescription'),
                         url(r'^get_old_prescription/(?P<cattle_id>\d+)/$', views.get_old_prescription, name='get_old_prescription'),
+                        url(r'^get_dashboard/$', views.get_dashboard, name='get_dashboard'),
+                        url(r'^content_upload/$', views.content_upload, name='content_upload'),
+                        url(r'^content_list/$', views.content_list, name='content_list'),
+                        url(r'^get_content_table/$', views.get_content_table, name='get_content_table'),
+                        url(r'^delete_content/(?P<id>\d+)/$', views.delete_content, name='delete_content'),
+                        url(r'^get_district/$', views.get_district, name='get_district'),
+                        url(r'^get_upazila/$', views.get_upazila, name='get_upazila'),
 
 
                        ##############################
@@ -47,6 +54,13 @@ urlpatterns = patterns('',
                         url(r"^get_cattle_list/$", views_api.get_cattle_list, name='get_cattle_list'),
                         url(r"^delete_farmer/$", views_api.delete_farmer, name='delete_farmer'),
                         url(r"^search_farmer/$", views_api.search_farmer, name='search_farmer'),
-                 url(r"^cattle_info$", views_api.cattle_info, name='cattle_info'),
+                       url(r"^cattle_info$", views_api.cattle_info, name='cattle_info'),
+                       url(r"^get_prescription_list/(?P<cattle_id>\d+)/$", views_api.get_prescription_list,
+                           name='get_prescription_list'),
+                       url(r"^get_prescription_details/(?P<prescription_id>\d+)/$", views_api.get_prescription_details,
+                           name='get_prescription_details'),
+
+                       url(r"^(?P<username>\w+)/get/user_contentlist/$", views_api.get_content_list,
+                           name='get_content_list'),
 
                        )

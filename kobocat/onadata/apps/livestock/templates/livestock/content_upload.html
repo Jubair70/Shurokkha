@@ -1,0 +1,180 @@
+{% extends "base_test.html" %}
+{% block additional-headers %}
+    <link href="/static/css/datepicker.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="/static/js/DataTables/datatables.css">
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.29.0/mapbox-gl.css' rel='stylesheet'/>
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/bootstrap-multiselect.css" type="text/css"/>
+    <style type="text/css">
+
+
+    </style>
+{% endblock %}
+
+{% block content %}
+
+
+    <div class ="row"><div class = "col-md-12" style = ""></div></div>
+
+
+                 <form name="dynamic_form" id="shared_file_form" enctype="multipart/form-data"  method="post" action = "/livestock/content_upload/" novalidate>
+                    {% csrf_token %}
+
+                        <div class="page-header align">
+                            <h3>File sharing</h3>
+                        </div>
+                         <div class="col-md-12">
+                            <div class="col-md-6"><label class="control-label">User role </label><br>
+                                <select required class="form-control multiselect_class" multiple="multiple" id = "ngo" name ="content_role">
+                                    <option value ="49">Farmer</option>
+                                    <option value ="50">Paravet</option>
+                                    <option value ="51">AI Technician</option>
+                                </select>
+                             </div>
+                         </div>
+
+                        <div class="col-md-12">
+                            <div class="col-md-4"><label class="control-label">Content type </label><br>
+                                <select class="form-control" id = "content_type" name ="content_type">
+                                    <option value ="1">User Instruction</option>
+                                    <option value ="2">Training Manual</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="col-md-4"><label class="control-label">File type</label><br>
+                                <select class="form-control" id = "file_type" name ="file_type">
+                                    <option value ="1">pdf</option>
+                                    <option value ="2">video</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row" style = "margin-botttom:20px;">
+                            <div class="col-md-4"><label class="control-label">Upload File </label><br>
+                                <input required  accept="image/*|video/*" class="form-control" type ="file" name ="shared_file">
+                            </div>
+                        </div>
+
+
+                         <div class = "row" style = "margin-botttom:20px;"></div>
+                        <div class="col-md-12"><input class="btn btn-success red-custom" disabled id="uploadButton" type="submit" value="Submit"/></div>
+                 </form>
+
+
+
+
+		<div id = "load"></div>
+
+        </div>
+
+
+
+     <!-- data upload success modal-->
+    <div class="modal fade" id="successModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <button type="button" class="bootbox-close-button close" data-dismiss="modal" aria-hidden="true" style="margin-top: -10px;">×</button>
+                        <h4 class="modal-title" id="myModalLabel">Data has been uploaded successfully.</h4>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn  btn-success" data-dismiss="modal">Close</button>
+                        </button>
+                    </div>
+                </div>
+            </div>
+    </div>
+    <!--modal ended-->
+    <!-- data delete success modal-->
+    <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <button type="button" class="bootbox-close-button close" data-dismiss="modal" aria-hidden="true" style="margin-top: -10px;">×</button>
+                        <h4 class="modal-title" id="myModalLabel">Data has been deleted successfully.</h4>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn  btn-success" data-dismiss="modal">Close</button>
+                        </button>
+                    </div>
+                </div>
+            </div>
+    </div>
+    <!--modal ended-->
+{% endblock %}
+
+{% block additional-javascript %}
+    <script type="text/javascript" src="/static/js/bootstrap-datepicker.js"></script>
+    <script type="text/javascript" src="{{STATIC_URL}}assets/plugins/data-tables/jquery.dataTables.js"></script>
+    <!--<script type="text/javascript" src="/static/js/jquery.table2excel.js"></script>-->
+    <script src="//cdn.rawgit.com/rainabba/jquery-table2excel/1.1.0/dist/jquery.table2excel.min.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-multiselect.js"></script>
+        <script>
+
+        $(document).ready(function () {
+             $('.multiselect_class').multiselect({
+                onDropdownHidden: function(event) {
+                //alert('Dropdown closed.');
+                multiselect_class = $('.multiselect_class').val();
+                },
+                buttonWidth: '60%',
+                numberDisplayed: 1,
+                includeSelectAllOption: true,
+            });
+
+
+              $('INPUT[type="file"]').change(function () {
+                    var ext = this.value.match(/\.(.+)$/)[1];
+                    switch (ext) {
+                        case 'pdf':
+                        case 'mpg':
+                        case 'mp4':
+                        case 'mpeg':
+                        case 'wmv':
+                        case 'mov':
+                        case 'rm':
+                        case 'ram':
+                        case 'ogg':
+                        case 'webm':
+                            $('#uploadButton').attr('disabled', false);
+                            break;
+                        default:
+                            alert('This is not an allowed file type.');
+                            this.value = '';
+                    }
+                });
+            });
+
+
+    $(document).on("submit", "#shared_file_form", function (event) {
+        $('#load').append('<img style="height: 100px;width: 156px;" src="/static/images/loading_icon.gif">');
+            event.preventDefault();
+            form_url = $(this).attr('action');
+            var data = new FormData(this); // <-- 'this' is form element
+            console.log(data)
+            //return formData;
+            $.ajax({
+                type: 'POST',
+                url: form_url,
+                contentType: false,
+                processData: false,
+                data: data,
+                success: function (data) {
+			    $('#load').html('');
+                    console.log("sucess uploaded");
+                    //showAjaxConfirmationMessages(data);
+                    $('#successModal').modal('show');
+                    window.location.href = '/livestock/content_list';
+
+                },
+                error: function (xhr, status, error) {
+                    $('#load').html('File not uploaded.');
+                }
+            }); //ajax end
+        });
+
+
+
+
+
+    </script>
+{% endblock %}

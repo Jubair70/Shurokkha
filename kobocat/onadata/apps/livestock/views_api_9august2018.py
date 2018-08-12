@@ -12,7 +12,6 @@ from django.contrib.auth.models import User
 from datetime import date, timedelta, datetime
 # from django.utils import simplejson
 import json
-import decimal
 
 from django.db import (IntegrityError,transaction)
 from django.db.models import ProtectedError
@@ -32,11 +31,6 @@ from collections import OrderedDict
 from django.core.files.storage import FileSystemStorage
 import string
 import random
-import zipfile
-import time
-from django.conf import settings
-import os
-
 
 
 from django.core.mail import send_mail, BadHeaderError
@@ -268,12 +262,12 @@ def save_user(request):
             mobile = data['phone']
             #if data['occupation'] == 'Farmer':
             insert_q = "INSERT INTO public.farmer(id, farmer_name, mobile,submission_time,submitted_by)VALUES (DEFAULT, '" + farmer_name + "','" + mobile + "', NOW()," + str(
-                auth_user_id) + " ) RETURNING ID;"
+                auth_user_id) + ") returning id;"
             ##print insert_q
-            f_id = views.__db_fetch_single_value(insert_q)
-            insert_q_map = "INSERT INTO public.user_farmer_map(id, user_id, farmer_id)VALUES (DEFAULT, " + str(
+            f_id = views.__db_commit_query(insert_q)
+            insert_q = "INSERT INTO public.user_farmer_map(id, user_id, farmer_id)VALUES (DEFAULT, " + str(
                 user_profile_id) + ", " + str(f_id) + ");"
-            views.__db_commit_query(insert_q_map)
+            views.__db_commit_query(insert_q)
             if data['occupation'] != 'Farmer':
                 approval_q = "INSERT INTO public.approval_queue(id,name, mobile, role_name, status, submitted_by, submission_time)VALUES (DEFAULT, '"+farmer_name+"','"+mobile+"', '"+data['occupation']+"', 0, "+str(auth_user_id)+", NOW());"
                 #print approval_q
@@ -318,8 +312,7 @@ def save_user(request):
 @csrf_exempt
 def get_farmer_list(request):
     username = request.GET.get('username')
-    q = "SELECT *,(SELECT count(*) FROM cattle WHERE mobile = farmer.mobile) AS no_cattle,string_to_array(gps,' ') gps_list,date(submission_time)::text AS s_date FROM farmer WHERE id in(with t1 AS (SELECT farmer_id FROM user_farmer_map WHERE user_id = (SELECT id FROM usermodule_usermoduleprofile WHERE user_id = (SELECT id FROM auth_user WHERE username = '"+username+"'))) SELECT * FROM t1)"
-    print q
+    q = "select *,(select count(*) from cattle where mobile = farmer.mobile) as no_cattle,string_to_array(gps,' ') gps_list,date(submission_time)::text as s_date from farmer where id in(with t1 as ((select id from farmer where submitted_by = (select id from auth_user where username='" + username + "')) union (select id from farmer where mobile = '" + username + "') union(select farmer_id from user_farmer_map where user_id = (select id from usermodule_usermoduleprofile where user_id = (select id from auth_user where username = '"+username+"')) ) )select * from t1) and deleted_at is null"
     dataset = views. __db_fetch_values_dict(q)
     data_list = []
     farmerprofileupdate_form_owner_q = "select (select username from auth_user where id = logger_xform.user_id limit 1) as user_name from public.logger_xform where id_string = 'farmer_profile_update'"
@@ -387,15 +380,14 @@ def get_cattle_list(request):
 @csrf_exempt
 def delete_farmer(request):
     username = request.GET.get('username')
-    user_id = views.__db_fetch_single_value("select id from usermodule_usermoduleprofile where user_id = (select id from auth_user where username = '" + username + "')")
+    user_id = views.__db_fetch_single_value("select id from auth_user where username = '" + username + "'")
     deleted_farmers = request.body
     deleted_farmer_list = json.loads(deleted_farmers)
     for temp in deleted_farmer_list:
         #farmer cannot be deleted by his/her own
         if username == temp:
             continue
-        farmer_id = views.__db_fetch_single_value("select id from farmer where  mobile = '" + temp + "'")
-        q = "delete from user_farmer_map     where farmer_id="+str(farmer_id)+" and user_id = "+str(user_id)+""
+        q = "update  farmer set deleted_at = NOW(),deleted_by = "+str(user_id)+"  where mobile='"+str(temp)+"'"
         views.__db_commit_query(q)
     return HttpResponse(json.dumps('Deleted successfully.'))
 
@@ -484,77 +476,3 @@ def cattle_info(request):
         data = json.dumps(__db_fetch_values_dict(query), default=decimal_date_default)
     return HttpResponse(data)
 
-
-
-@csrf_exempt
-def get_content_list(request,username):
-
-    sql = "SELECT content_id, content_type, file_type, file_name,(SELECT role FROM usermodule_organizationrole where id=role_content_map.role_id) FROM content,role_content_map where content.id=role_content_map.content_id and role_content_map.role_id=any(select role_id FROM vwusermodule_userrolemap where auth_user_id = any (select id  FROM auth_user where username = '" + username + "'));"
-    print sql
-
-    main_df = pandas.read_sql(sql, connection)
-
-    j = main_df.to_json(orient='records')
-
-    return HttpResponse(j)
-
-
-
-
-# ---------------------------------- Shahin ------------------------------- #
-
-@csrf_exempt
-def get_prescription_list(request,username):
-    prescription_list = __db_fetch_values_dict("select p.id,p.created_date,cf.tentative_diagnosis,a.cattle_system_id, string_agg(pd.medicine_part_1, ', ') as prescription_title from prescription p left join clinical_findings cf on cf.appointment_id = p.appointment_id left join appointment a on a.id = p.appointment_id left join prescription_details pd on pd.prescription_id = p.id where a.cattle_system_id in(select cattle_system_id from cattle where mobile in (select mobile from farmer where submitted_by = (select id from auth_user where username = '"+str(username)+"'))) group by p.id,p.created_date,cf.tentative_diagnosis,a.cattle_system_id")
-    return HttpResponse(json.dumps(prescription_list, default=decimal_date_default))
-
-
-@csrf_exempt
-def get_prescription_details(request,prescription_id):
-    st = datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S')
-    prescription_data = __db_fetch_values_dict("with t as(select(select value_label from xform_extracted where xform_id = 597 and field_name = 'cattle_type' and value_text = c.cattle_type) as cattle_type,cattle_system_id,(select farmer_name from farmer where mobile = c.mobile) as farmer_name,mobile, case when cattle_birth_date is not null then EXTRACT(year from age(now()::date,cattle_birth_date::date))::text else cattle_age end as age_year, case when cattle_birth_date is not null then EXTRACT(month from age(now()::date,cattle_birth_date::date))::text else 0::text end as age_month, case when cattle_birth_date is not null then EXTRACT(day from age(now()::date,cattle_birth_date::date))::text else 0::text end as age_day from cattle c), n as(with m as(select p.id as prescription_id,a.cattle_system_id,p.advice,p.next_appointment_after,pd.medicine_part_1,pd.medicine_part_2,p.created_by,p.created_date from prescription p left join prescription_details pd on pd.prescription_id = p.id left join appointment a on a.id = p.appointment_id) select m.created_date,m.prescription_id,m.created_by,m.cattle_system_id,m.advice,m.next_appointment_after,string_agg(medicine_part_1 || '@@' ||medicine_part_2, '|| ') as rx from m group by m.advice,m.next_appointment_after,m.cattle_system_id,m.created_by,m.prescription_id,m.created_date) select t.cattle_type,t.cattle_system_id,t.farmer_name,t.mobile,t.age_year,t.age_month,t.age_day,to_char(n.created_date,'DD/MM/YYYY') as created_date,n.prescription_id,n.created_by,n.cattle_system_id,n.advice,n.next_appointment_after,n.rx, (select first_name || last_name from auth_user where id = created_by) as prescribey_by, (select signature_img from users_additional_info where user_id = 288) as signature_img from t,n where t.cattle_system_id = n.cattle_system_id and n.prescription_id = "+str(prescription_id))
-    farmer_name = prescription_data[0]['farmer_name']
-    created_date = prescription_data[0]['created_date']
-    cattle_type = prescription_data[0]['cattle_type']
-    age_year = prescription_data[0]['age_year']
-    age_month = prescription_data[0]['age_month']
-    age_day = prescription_data[0]['age_day']
-    advice = prescription_data[0]['advice']
-    next_appointment_after = prescription_data[0]['next_appointment_after']
-    prescribey_by = prescription_data[0]['prescribey_by']
-    signature_img = prescription_data[0]['signature_img'].split('/')[-1]
-    medicine_str = ''
-    medicines = prescription_data[0]['rx'].split('|| ')
-
-    c = 1
-    for m in medicines:
-        m = m.split('@@')
-        mstr = '<p>'+str(c)+'. '+m[0]+'</p><p>'+m[1]+'</p>'
-        c = c + 1
-        medicine_str = medicine_str + mstr
-
-    prescription_html = '<html><head> <title></title><link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css"></head><body> <div class="col-12"> <h3>Prescription:</h3> <p>খামারী : '+str(farmer_name.encode('utf-8'))+', তারিখ: '+str(created_date.encode('utf-8'))+'</p><p>গরু: '+str(cattle_type.encode('utf-8'))+', '+str(age_year.encode('utf-8'))+' বছর '+str(age_month.encode('utf-8'))+' মাস '+str(age_day.encode('utf-8'))+' দিন</p><h3>Rx:</h3> '+str(medicine_str.encode('utf-8'))+' </div><div class="col-12"> <h3>Advice:</h3> <p>'+str(advice.encode('utf-8'))+'</p><h4>'+str(next_appointment_after)+' দিন পর পুনরায় তথ্য পাঠিয়ে ডাক্তারের সাথে যোগাযোগ করুন</h4> </div><div class="col-md-2 col-sm-12" style=" text-align: center; padding-bottom: 100px; float: right"> <img src="'+str(signature_img)+'" width="200" height="74"> <br>'+str(prescribey_by.encode('utf-8'))+' </div><div class="col-md-12 col-sm-12" style=" text-align: center; padding: 50px; margin-top:150px;"> জরুরী প্রয়জনে ০১২৪৫৮৭৯৬৫২ নাম্বারে যোগাযোগ করুন </div></body></html>'
-
-
-    f = open('onadata/media/prescription.html', 'w')
-    f.write(prescription_html)
-    f.close()
-
-    lstFileNames = ['onadata/media/prescription.html',prescription_data[0]['signature_img']]
-
-    zip_subdir = os.path.join(settings.MEDIA_ROOT, "prescriptions_dir/prescriptions_"+str(request.user.username)+"_"+str(st))
-    zip_filename = "%s.zip" % zip_subdir
-    zf = zipfile.ZipFile(zip_filename, "w")
-
-    for fpath in lstFileNames:
-        if os.path.exists(fpath):
-            fdir, fname = os.path.split(fpath)
-            zf.write(fpath, fname, zipfile.ZIP_DEFLATED)
-
-    zf.close()
-
-    resp = {
-        'prescription_url': "http://" + request.META['HTTP_HOST'] + "/media/prescriptions_dir/prescriptions_"+str(request.user.username)+"_"+str(st)+".zip"
-    }
-
-    return HttpResponse(json.dumps(resp))

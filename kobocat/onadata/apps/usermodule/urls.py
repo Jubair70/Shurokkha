@@ -30,7 +30,7 @@ urlpatterns = patterns('',
     url(r'^make_tree/$', views.make_tree, name='make_tree'),
     url(r'^catchment_tree/(?P<user_id>\d+)/$', views.catchment_tree_test, name='catchment_tree_test'),
     url(r'^add_children/$', views.add_children, name='add_children'),
-
+    url(r'^delete_form/(?P<form_id>\d+)/$', views.delete_form, name='delete_form'),
 
 
     url(r'^edit/(?P<user_id>\d+)/$', views.edit_profile, name='edit_profile'),

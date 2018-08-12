@@ -109,7 +109,7 @@
                   </div>
 
                   <div id="hr-collapseOne" class="collapse" aria-labelledby="hr-headingOne" data-parent="#accordion">
-                    <div class="card-body" style="overflow-y: default; height: 100px" id="feeding_information">
+                    <div class="card-body" style="overflow-y: scroll; height: 150px" id="feeding_information">
                     </div>
                   </div>
                 </div>
@@ -122,7 +122,7 @@
                     </h5>
                   </div>
                   <div id="hr-collapseTwo" class="collapse" aria-labelledby="hr-headingTwo" data-parent="#accordion">
-                    <div class="card-body" style="overflow-y: scroll; height: 100px" id="milk_production">
+                    <div class="card-body" style="overflow-y: scroll; height: 150px" id="milk_production">
                     </div>
                   </div>
                 </div>
@@ -135,7 +135,7 @@
                     </h5>
                   </div>
                   <div id="hr-collapseThree" class="collapse" aria-labelledby="hr-headingThree" data-parent="#accordion">
-                    <div class="card-body" style="overflow-y: scroll; height: 100px" id="deworming_vaccination">
+                    <div class="card-body" style="overflow-y: scroll; height: 150px" id="deworming_vaccination">
                     </div>
                   </div>
                 </div>
@@ -194,7 +194,7 @@
               <p class="ml-2" id="sickness_date">Date: </p>
               <a id="sickness_right" class="btn btn-success p-3 pull-right"><i class="fa fa-angle-right"></i></a>
             </div>
-            <p class="px-3 py-3" id="sickness"></p>
+            <p class="px-3 py-3" id="sickness" style="overflow-y: scroll; height: 137px"></p>
 
 
             <!-- date bloc end-->
@@ -204,10 +204,10 @@
             <!-- date bloc start-->
 
             <div class="date-block pt-2">
-              <p class="ml-3 mt-2">Clinical Findings</p>
+              <p class="ml-3 mt-2" style=" padding-left: 90px;">Clinical Findings</p>
             </div>
-            <p class="px-3 py-3">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.</p>
-            <p class="px-3">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.</p>
+            <p class="px-3 py-3"  style="overflow-y: scroll; height: 371px" id="clinical_findings"></p>
+{#            <p class="px-3">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.</p>#}
 
             <!-- date bloc end-->
 
@@ -1082,6 +1082,18 @@
     {
         date_set(sickness_data,sickness_date,0);
         content_set(sickness_data,sickness,0);
+        ajaxcall();
+                   logger_id =  sickness_data[sickness_index].logger_id;
+
+                $.ajax({
+                    url: '/livestock/get_clinical_findings/',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {'logger_id': logger_id},
+                    success: function (result) {
+                         $('#clinical_findings').html(result)
+                    }
+                });
     }
     if(reproduction_data.length)
     {
@@ -1162,6 +1174,18 @@
             {
                 $('#sickness_date').text('Date: ' + sickness_data[sickness_index].rpt_date);
                 content_set(sickness_data, sickness, sickness_index);
+                ajaxcall();
+                   logger_id =  sickness_data[sickness_index].logger_id;
+
+                $.ajax({
+                    url: '/livestock/get_clinical_findings/',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {'logger_id': logger_id},
+                    success: function (result) {
+                        $('#clinical_findings').html(result)
+                    }
+                });
             }
         });
 
@@ -1173,11 +1197,48 @@
             {
                 $('#sickness_date').text('Date: ' + sickness_data[sickness_index].rpt_date);
                    content_set(sickness_data, sickness, sickness_index);
+                   ajaxcall();
+                   logger_id =  sickness_data[sickness_index].logger_id;
+
+                $.ajax({
+                    url: '/livestock/get_clinical_findings/',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {'logger_id': logger_id},
+                    success: function (result) {
+                         $('#clinical_findings').html(result)
+                    }
+                });
             }
         });
 
 
+    function ajaxcall() {
+            $.ajaxSetup({
+                beforeSend: function (xhr, settings) {
+                    function getCookie(name) {
+                        var cookieValue = null;
+                        if (document.cookie && document.cookie != '') {
+                            var cookies = document.cookie.split(';');
+                            for (var i = 0; i < cookies.length; i++) {
+                                var cookie = jQuery.trim(cookies[i]);
+                                // Does this cookie string begin with the name we want?
+                                if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                    break;
+                                }
+                            }
+                        }
+                        return cookieValue;
+                    }
 
+                    if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+                        // Only send the token to relative URLs i.e. locally.
+                        xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                    }
+                }
+            });
+        }
 </script>
 
 {% endblock %}

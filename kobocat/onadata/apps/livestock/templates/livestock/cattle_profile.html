@@ -176,7 +176,7 @@
           <div class="veterinarian-box">
             <div class="card">
               <div class="card-body pb-4">
-                <img src="./img/veterinarian-img1.jpg" class="img-fluid"  alt="">
+                <img width="140px" src="{{ cattle_img }}" class="img-fluid"  alt="">
                 <div class="card-text float-right">
                   <p>Cattle Name: {{ cattle_name }}<br>
                      Cattle type: {{ cattle_type_text }}<br>
@@ -224,7 +224,7 @@
               <div class="card-body pb-4"  style="overflow:scroll;height: 121px;">
                   {% for data in sickness_images %}
                 <!--<img src="{{ data.picture_sinckness_sign }}" class="img-fluid"  alt="">-->
-                      <img src="{{ data.picture_sinckness_sign }}">
+                      <img height="100px" width="280px" src="{{ data.picture_sinckness_sign }}">
                   {% endfor %}
                 <div class="card-text float-right">
                   <h4 class="mt-5">Sickness Image</h4>
@@ -439,7 +439,7 @@
       <div class="prescription" id ="prescription" style="display:none">
         <div class="date-block mt-3">
            <div class="date-btn float-right">
-                <button onclick="get_suggested_prescription('{{ cattle_type }}','{{ cattle_weight }}','Arthritis')" class="btn btn-warning p-3 ">Suggested Prescription</button>
+                <button onclick="get_suggested_prescription('3','{{ cattle_weight }}','Arthritis')" class="btn btn-warning p-3 ">Suggested Prescription</button>
                 <button onclick="add_medicine()" class="btn btn-warning p-3">Add Medicine</button>
               </div>
               <p class="ml-3 mt-2">Enter Clinical findings</p>
@@ -498,7 +498,7 @@
                   <option value="2">7</option>
                   <option value="3">10</option>
                 </select>--->
-                  <input class="mb-3" name="revisit" type="number">
+                  <input class="mb-3" required name="revisit" type="number">
                days
                </div>
             </div>
@@ -629,7 +629,7 @@
           <div class="modal-body">
 
 
-            <form id="add_loc_form" method = "post" action="/livestock/add_location/{{ id }}/"></form>
+            <!--<form id="add_loc_form" method = "post" action="/livestock/add_location/{{ id }}">-->
           {% csrf_token %}
               <div class="form-group">
               <label for="exampleInputEmail1">Division</label>
@@ -659,10 +659,11 @@
 
           </div>
           <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="" type="submit" data-dismiss="modal">Save</button>
+            <!--<button class="btn btn-secondary"  type="submit" >Save</button>-->
+              <button type="button" class="btn btn-secondary" value="Save" onclick="add_location('{{ id }}')">
               <button class="btn btn-primary" type="button" data-dismiss="modal" aria-label="Close">Cancel</button>
           </div>
-        </form>
+
         </div>
       </div>
     </div>
@@ -963,6 +964,7 @@
         }
     }
 
+
     function add_medicine() {
         $('#add_medicine_modal').modal('show');
     }
@@ -983,6 +985,11 @@
             $(this).val(arr[i]);
             i++;
         });
+        $('.lst').each(function(i, obj) {
+                           if (!$(this).val()){
+                               $(this).parent().parent().remove();
+                           }
+                       });
         $(this).focus().select();
         $('#add_medicine_modal').modal('toggle');
     }
@@ -1023,7 +1030,12 @@
                             $(this).focus().select();
                             });
 
-                        $('#advice').val(data.a_data)
+                        $('#advice').val(data.a_data);
+                        $('.lst').each(function(i, obj) {
+                           if (!$(this).val()){
+                               $(this).parent().parent().remove();
+                           }
+                       });
                     }
                     else{
                         alert("No prescription suggested.")
@@ -1058,16 +1070,17 @@
     }
 
 
-    $(document).on("submit", "#add_loc_form", function (event) {
-        console.log("trigger loc")
-        event.preventDefault();
-        form_url = $(this).attr('action');
-        var data = new FormData(this); // <-- 'this' is form element
-        //return formData;
+
+   function add_location(id){
+        division = $('#division').val();
+        district = $('#district').val();
+        upazila = $('#upazila').val();
         $.ajax({
-            type: 'POST',
-            url: form_url,
-            data: data,
+            type: 'GET',
+            url: ' /livestock/add_location/'+id+'/',
+            data: {
+                'division' : division,'district':district,'upazila' : upazila
+            },
             success: function (data) {
                 console.log(data)
                 $('#add_loc_modal').modal('toggle');
@@ -1078,7 +1091,10 @@
                // $('#error_msg_upload').html("<h5><strong>"+xhr.responseText+"</strong></h5>");
             }
         }); //ajax end
-    });
+
+    }
+
+
 
     /*geo hierarchy loading*/
          $(document).on("change", "#division", function () {

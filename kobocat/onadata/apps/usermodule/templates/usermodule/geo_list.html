@@ -40,10 +40,10 @@
                         <td>{{ each.2 }}</td>
                         <td>{{ each.3 }}</td>
                        <td class="td-center">
-                    <a class="tooltips" data-placement="top" data-original-title="Edit"
-                       href="/usermodule/edit_form/{{ each.0 }}"><i
-                            class="fa fa-2x fa-pencil-square-o"></i></a>
-                    <a class="delete-item tooltips .delete-item"  onclick="load({{ each.0}})" data-placement="top" data-original-title="Delete"  href="#" data-href="/usermodule/delete_form/{{ each.0}}" data-toggle="modal"
+{#                    <a class="tooltips" data-placement="top" data-original-title="Edit"#}
+{#                       href="/usermodule/edit_form/{{ each.0 }}"><i#}
+{#                            class="fa fa-2x fa-pencil-square-o"></i></a>#}
+                    <a class="delete-item tooltips .delete-item"  data-placement="top" data-original-title="Delete"  href="#" data-href="/usermodule/delete_form/{{ each.0}}" data-toggle="modal"
                        data-target="#confirm-delete"><i class="fa fa-2x fa-trash-o"></i></a>
                         </td>
                         </tr>
@@ -58,12 +58,22 @@
          aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
+
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                     <h4 class="modal-title" id="myModalLabel">Confirm Delete</h4>
                 </div>
-                <div class="modal-body"></div>
-                <div class="modal-footer"></div>
+
+                <div class="modal-body">
+                    <p>You are about to delete a geo info, this procedure is irreversible.</p>
+                    <p>Do you want to proceed?</p>
+                    <p class="debug-url"></p>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <a href="#" class="btn btn-danger btn-ok">Delete</a>
+                </div>
             </div>
         </div>
     </div>
@@ -84,7 +94,7 @@
     <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.print.min.js"></script>
     <script>
 
-    $(document).ready(function () {
+{#    $(document).ready(function () {#}
 {#        var tbody = '';#}
 {#        var geo_def_data = {{ geo_def_data|safe }};#}
 {##}
@@ -98,6 +108,11 @@
                 "scrollX": true, "ordering": true
             });
 
+        $('.delete-item').on('click', function(e) {
+                    var criteria_id = $(this).attr("data-href");
+                    $('.btn-ok').attr("href",criteria_id);
+                });
+
         if ($('.alert-block').is(':visible')) {
             window.setTimeout(function () {
                 $(".alert-success").fadeTo(1500, 0).slideUp(500, function () {
@@ -106,7 +121,7 @@
             }, 5000);
         }
 
-    });
+{#    });#}
 
 
 
@@ -130,7 +145,7 @@
                    }
                    else if(result.dependency ==1 )
                    {
-                       html_code="<p>Geo data already assigned to "+result.extra_info+". Cannot be deleted.</p>\n";
+                       html_code="<p>Geo data already assigned to <strong>"+result.extra_info+"</strong>. Cannot be deleted.</p>\n";
                        $('.modal-footer').html('<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>');
 
 

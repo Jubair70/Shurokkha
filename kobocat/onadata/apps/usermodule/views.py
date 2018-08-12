@@ -1602,14 +1602,57 @@ def geo_def_list(request):
         'geo_def_data': geo_def_data
     })
 
+def __db_fetch_values(query):
+    """
+        Fetch database result set as list of tuples
+
+        Args:
+            query (str): raw query string
+
+        Returns:
+            str: Returns database result set as list of tuples
+    """
+    cursor = connection.cursor()
+    cursor.execute(query)
+    fetch_val = cursor.fetchall()
+    cursor.close()
+    data_list = []
+    for each_val in fetch_val:
+        data_list.append(list(each_val))
+    return data_list
 
 @login_required
 def geo_list(request):
     query = "select id,field_name,geocode,(select node_name from geo_definition where id = field_type_id) as field_type from geo_data"
-    geo_def_data = json.dumps(__db_fetch_values_dict(query))
+    geo_def_data = __db_fetch_values(query)
     return render(request, 'usermodule/geo_list.html', {
         'geo_def_data': geo_def_data
     })
+
+@login_required
+def delete_form(request,form_id):
+    delete_child(int(form_id))
+    return HttpResponseRedirect("/usermodule/geo_list/")
+
+
+def delete_child(form_id):
+    query = "select * from geo_data where field_parent_id = "+str(form_id)+""
+    df = pandas.DataFrame()
+    df = pandas.read_sql(query, connection)
+    id = df.id.tolist()
+    query = "select * from geo_data where id = " + str(form_id) + ""
+    df = pandas.DataFrame()
+    df = pandas.read_sql(query, connection)
+    id = df.id.tolist()
+    uploaded_file_path = df.uploaded_file_path.tolist()
+    if len(uploaded_file_path) and uploaded_file_path[0] != "cd":
+        os.remove(uploaded_file_path[0])
+    delete_query = "delete from geo_data where id = "+str(form_id)+""
+    database(delete_query)
+    delete_from_catchment_area = "delete from usermodule_catchment_area where geoid = "+str(form_id)+""
+    database(delete_from_catchment_area)
+    for each in id:
+        delete_child(each)
 
 
 @login_required

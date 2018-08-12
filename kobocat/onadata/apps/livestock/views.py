@@ -413,6 +413,8 @@ def get_accoridian_dict(cattle_id):
     return data
 
 def cattle_profile(request,cattle_id,appointment_id):
+    division_q = "select distinct division as name, div_code id from vwunion_code"
+    div_list = makeTableList(division_q)
     q = "select * from appointment where id="+str(appointment_id)
     data = __db_fetch_values_dict(q)
     clinical_findings_data = []
@@ -428,6 +430,7 @@ def cattle_profile(request,cattle_id,appointment_id):
     farmer_info= get_farmer_info(farmer_mobile)
 
     option_dict = {
+        'div_list' : div_list,
         'appointment_id' : appointment_id,'appointment_status' : appointment_status,'appointment_type' : appointment_type,'cattle_id':cattle_id,
         'wrong_feeding_last_days' : get_option_list('wrong_feeding_last_days'),
         'muzzle': get_option_list('muzzle'),'same_sickness_other_cattle' : get_option_list('same_sickness_other_cattle'),
@@ -528,6 +531,18 @@ def get_option_list(fieldname):
     q = "select value_text as val,value_label as label from xform_extracted where xform_id = 604 and field_name = '"+fieldname+"'"
     dataset = makeTableList(q)
     return dataset
+
+
+def add_location(request,farmer_id):
+    if request.method == 'POST':
+        division = request.POST.get('division')
+        district = request.POST.get('district')
+        upazila = request.POST.get('upazila')
+        q = "update farmer set division = '"+division+"',district = '"+district+"',upazila = '"+upazila+"' where id = "+str(farmer_id)
+        __db_commit_query(q)
+        print q
+    return HttpResponse(json.dumps("Location added"), content_type="application/json", status=200)
+
 
 
 def clinical_findings(request,appointment_id):

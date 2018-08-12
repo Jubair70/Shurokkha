@@ -77,7 +77,7 @@
                   <p>Registration Date:{{ registration_date }}<br>
                   Name: {{ farmer_name }}<br>
                   Mobile Number: {{ mobile }}</p>
-                  <button onclick(add_loc({{ id }})) href="#" class="btn btn-success  mt-4">Add Location</button>
+                  <button onclick="add_loc('{{ id }}')" href="#" class="btn btn-success  mt-4">Add Location</button>
                 </div>
               </div>
             </div>
@@ -224,7 +224,7 @@
               <div class="card-body pb-4"  style="overflow:scroll;height: 121px;">
                   {% for data in sickness_images %}
                 <!--<img src="{{ data.picture_sinckness_sign }}" class="img-fluid"  alt="">-->
-                      <img src="{{ data.picture_sinckness_sign }}
+                      <img src="{{ data.picture_sinckness_sign }}">
                   {% endfor %}
                 <div class="card-text float-right">
                   <h4 class="mt-5">Sickness Image</h4>
@@ -615,7 +615,76 @@
         </div>
       </div>
     </div>
+    <!--Add Farmer location modal -->
+     <!--Add medicine modal -->
+    <div class="modal fade" id="add_loc_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">Add Location</h5>
+            <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">×</span>
+            </button>
+          </div>
+          <div class="modal-body">
 
+
+            <form id="add_loc_form" method = "post" action="/livestock/add_location/{{ id }}/"></form>
+          {% csrf_token %}
+              <div class="form-group">
+              <label for="exampleInputEmail1">Division</label>
+              <select  required class="form-control" id="division" name="division" aria-describedby="emailHelp">
+                    <option value = "">Select</option>
+                     {% for data in div_list %}
+                    <option value="{{ data.1 }}">{{ data.0 }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+          <div class="form-group">
+              <label for="exampleInputEmail1">District</label>
+              <select required class="form-control" name="district" id="district">
+                  <option value="" selected>Select One</option>
+
+               </select>
+            </div>
+          <div class="form-group">
+              <label for="exampleInputEmail1">Upazila</label>
+              <select required class="form-control" name="upazila" id="upazila">
+                  <option value="" selected >Select One</option>
+
+               </select>
+            </div>
+
+
+
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="" type="submit" data-dismiss="modal">Save</button>
+              <button class="btn btn-primary" type="button" data-dismiss="modal" aria-label="Close">Cancel</button>
+          </div>
+        </form>
+        </div>
+      </div>
+    </div>
+    <!--End modal-->
+
+
+    <!-- DELETE SUCCESS MODAL-->
+    <div class="modal fade" id="addModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <button type="button" class="bootbox-close-button close" data-dismiss="modal" aria-hidden="true" style="margin-top: -10px;">×</button>
+                        <h4 class="modal-title" id="myModalLabel">Location added successfully.</h4>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn  btn-success" data-dismiss="modal">Close</button>
+                        </button>
+                    </div>
+                </div>
+            </div>
+    </div>
+<!--modal ended-->
   </div>
 {% endblock %}
 
@@ -983,6 +1052,82 @@
                 }
             }); //ajax end
     }
+
+    function add_loc(id){
+        $('#add_loc_modal').modal('show');
+    }
+
+
+    $(document).on("submit", "#add_loc_form", function (event) {
+        console.log("trigger loc")
+        event.preventDefault();
+        form_url = $(this).attr('action');
+        var data = new FormData(this); // <-- 'this' is form element
+        //return formData;
+        $.ajax({
+            type: 'POST',
+            url: form_url,
+            data: data,
+            success: function (data) {
+                console.log(data)
+                $('#add_loc_modal').modal('toggle');
+                $('#addModal').modal('show');
+
+            },
+            error: function (xhr, status, error) {
+               // $('#error_msg_upload').html("<h5><strong>"+xhr.responseText+"</strong></h5>");
+            }
+        }); //ajax end
+    });
+
+    /*geo hierarchy loading*/
+         $(document).on("change", "#division", function () {
+            division = $(this).val()
+
+            $.ajax({
+                type: 'POST',
+                url: '/livestock/get_district/',
+                data: {
+
+                    'div_code': division,
+                },
+                success: function (data) {
+                   list = JSON.parse(data)
+
+                    $('#district').find('option').remove()
+                    $('#district').append('<option value = "%">All</option>')
+                    for (var i = 0 ; i < list.dist_list.length ; i++){
+                         $('#district').append('<option value = '+list.dist_list[i][1]+'>'+list.dist_list[i][0]+'</option>')
+                    }
+                }
+
+            });
+
+        });
+        $(document).on("change", "#district", function () {
+            district = $(this).val()
+                        $.ajax({
+                type: 'POST',
+                url: '/livestock/get_upazila/',
+                data: {
+
+                    'dist_code': district,
+                },
+                success: function (data) {
+                   list = JSON.parse(data)
+                    console.log(list)
+                    $('#upazila').find('option').remove()
+                    $('#upazila').append('<option value = "%">All </option>')
+
+                    for (var i = 0 ; i < list.upz_list.length ; i++){
+                         $('#upazila').append('<option value = '+list.upz_list[i][1]+'>'+list.upz_list[i][0]+'</option>')
+                    }
+                }
+
+            });
+
+        });
+
 
 
 

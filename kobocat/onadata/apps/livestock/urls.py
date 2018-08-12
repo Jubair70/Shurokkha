@@ -38,6 +38,7 @@ urlpatterns = patterns('',
                         url(r'^get_district/$', views.get_district, name='get_district'),
                         url(r'^get_upazila/$', views.get_upazila, name='get_upazila'),
                         url(r'^get_dashboard_content/$', views.get_dashboard_content, name='get_dashboard_content'),
+                        url(r'^add_location/(?P<farmer_id>\d+)/$', views.add_location, name='add_location'),
 
 
                        ##############################

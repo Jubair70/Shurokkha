@@ -195,13 +195,25 @@ def edit_medicine(request,id):
 
 @login_required
 def farmer_list(request):
-    return render(request,"livestock/farmer_list.html")
+    q= "select (select  id from auth_user where username = mobile) user_id,name from paravet_aitechnician"
+    paravet_ai_list = makeTableList(q)
+    return render(request,"livestock/farmer_list.html",{'paravet_ai_list' : paravet_ai_list})
 
 
 def get_farmer_table(request):
-    q = "select * from farmer"
+    user_id = request.POST.get('user_id')
+    date_range = request.POST.get('date_range')
+    if date_range == '':
+        start_date = '01/01/2010'
+        end_date = '12/28/2021'
+    else:
+        dates = get_dates(str(date_range))
+        start_date = dates.get('start_date')
+        end_date = dates.get('end_date')
+    q = "select *,(select first_name || last_name from auth_user where id= submitted_by ) as user_name from farmer where date(submission_time) between '"+start_date+"' and '"+end_date+"' and submitted_by ::text like '"+str(user_id)+"'"
     dataset = __db_fetch_values_dict(q)
     return render(request,"livestock/farmer_table.html",{'dataset' : dataset})
+
 
 @login_required
 def approval_list(request):
@@ -408,6 +420,8 @@ def get_clinical_findings(request):
     return HttpResponse(content)
 
 def cattle_profile(request,cattle_id,appointment_id):
+    division_q = "select distinct division as name, div_code id from vwunion_code"
+    div_list = makeTableList(division_q)
     q = "select * from appointment where id="+str(appointment_id)
     data = __db_fetch_values_dict(q)
     clinical_findings_data = []
@@ -423,6 +437,7 @@ def cattle_profile(request,cattle_id,appointment_id):
     farmer_info= get_farmer_info(farmer_mobile)
 
     option_dict = {
+        'div_list' : div_list,
         'appointment_id' : appointment_id,'appointment_status' : appointment_status,'appointment_type' : appointment_type,'cattle_id':cattle_id,
         'wrong_feeding_last_days' : get_option_list('wrong_feeding_last_days'),
         'muzzle': get_option_list('muzzle'),'same_sickness_other_cattle' : get_option_list('same_sickness_other_cattle'),
@@ -523,6 +538,18 @@ def get_option_list(fieldname):
     q = "select value_text as val,value_label as label from xform_extracted where xform_id = 604 and field_name = '"+fieldname+"'"
     dataset = makeTableList(q)
     return dataset
+
+
+def add_location(request,farmer_id):
+    if request.method == 'POST':
+        division = request.POST.get('division')
+        district = request.POST.get('district')
+        upazila = request.POST.get('upazila')
+        q = "update farmer set division = '"+division+"',district = '"+district+"',upazila = '"+upazila+"' where id = "+str(farmer_id)
+        __db_commit_query(q)
+        print q
+    return HttpResponse(json.dumps("Location added"), content_type="application/json", status=200)
+
 
 
 def clinical_findings(request,appointment_id):
@@ -874,6 +901,40 @@ def get_dashboard(request):
 
 
 
+def get_dashboard_content(request):
+    date_range = request.POST.get('date_range')
+    if date_range == '':
+        start_date = '01/01/2010'
+        end_date = '12/28/2021'
+    else:
+        dates = get_dates(str(date_range))
+        start_date = dates.get('start_date')
+        end_date = dates.get('end_date')
+    division = request.POST.get('division')
+    district = request.POST.get('district')
+    upazila = request.POST.get('upazila')
+    farmer_query = "select count (*) from farmer  where coalesce(division::text,'') like '"+division+"' and coalesce(district::text,'') like '"+district+"' and  coalesce(upazila::text,'') like '"+upazila+"' and date(submission_time) BETWEEN '"+start_date+"' and '"+end_date+"'"
+    paravet_query = "select count(*)from paravet_aitechnician where user_type = 'Paravet' and coalesce(division::text,'') like '"+division+"' and coalesce(district::text,'') like '"+district+"' and  coalesce(upazila::text,'') like '"+upazila+"' and date(submission_time) BETWEEN '"+start_date+"' and '"+end_date+"'"
+    ai_query = "select count(*) from paravet_aitechnician where user_type = 'AI Technicians' and coalesce(division::text,'') like '"+division+"' and coalesce(district::text,'') like '"+district+"' and  coalesce(upazila::text,'') like '"+upazila+"' and date(submission_time) BETWEEN '"+start_date+"' and '"+end_date+"'"
+    vet_query = "select count(*) from vwuser_org_role where role = 'Veterinary'"
+    cattle_query = "select count(*) from cattle where date(created_date) BETWEEN '"+start_date+"' and '"+end_date+"'"
+    sickness_query = "select count (*) from appointment where appointment_type ='2' and date(created_date) BETWEEN '"+start_date+"' and '"+end_date+"'"
+    husbandry_query = "select count (*) from appointment where appointment_type ='1' or appointment_type ='3'  and date(created_date) BETWEEN '"+start_date+"' and '"+end_date+"'"
+
+    farmer_count = __db_fetch_single_value(farmer_query )
+    paravet_count = __db_fetch_single_value(paravet_query )
+    ai_count = __db_fetch_single_value(ai_query )
+    vet_count = __db_fetch_single_value(vet_query )
+    cattle_count = __db_fetch_single_value(cattle_query)
+    sickness_count = __db_fetch_single_value(sickness_query )
+    husbandry_count = __db_fetch_single_value(husbandry_query)
+
+    return render(request, 'livestock/dashboard_content.html',
+                  { 'farmer_count': farmer_count, 'paravet_count': paravet_count,
+                   'ai_count': ai_count, 'vet_count': vet_count, 'cattle_count': cattle_count,
+                   'sickness_count': sickness_count, 'husbandry_count': husbandry_count})
+
+
 def get_district(request):
     div_code = request.POST.get('div_code')
     q = "select distinct district,dist_code from vwunion_code where div_code = '" + div_code+"'"
@@ -887,7 +948,6 @@ def get_upazila(request):
     q = "select distinct upazila,up_code from vwunion_code where dist_code = '" + dist_code+"'"
     upz_list = makeTableList(q)
     json_upz_list = json.dumps({'upz_list': upz_list}, default=decimal_date_default)
-    print json_upz_list
     return HttpResponse(json_upz_list)
 
 
@@ -909,3 +969,10 @@ def cascade_filter(request):
     return HttpResponse(json.dumps(data, default=decimal_date_default), content_type="application/json", status=200)
 
 
+
+def get_dates(daterange):
+    date_list = daterange.split('-')
+    data = {
+        'start_date': date_list[0], 'end_date': date_list[1]
+    }
+    return data

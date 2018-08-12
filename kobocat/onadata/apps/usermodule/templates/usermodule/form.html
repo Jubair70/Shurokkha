@@ -123,8 +123,8 @@
         list = [];
         j = 0;
         var response, objet;
-        var division_id = {{ division_id |safe }};
-        console.log(division_id);
+{#        var division_id = {{ division_id |safe }};#}
+{#        console.log(division_id);#}
 
         function load1(obj) {
             ajaxcall();
@@ -138,8 +138,8 @@
                     response = result.response_record
                     $("#parent_id").val(result.parent_id);
                     $(".field_parent").html("");
-                    if ($('#field_type option:selected').val() == division_id)
-                        geocode = division_geocode;
+{#                    if ($('#field_type option:selected').val() == division_id)#}
+{#                        geocode = division_geocode;#}
                     if (Object.keys(response).length)
                         load(parseInt(Object.keys(response)[0]));
 
@@ -213,8 +213,8 @@
 
         var geocode=[];
         var parent_geocode="";
-        var division_geocode = {{ division_geocode|safe }};
-        geocode = division_geocode
+{#        var division_geocode = {{ division_geocode|safe }};#}
+{#        geocode = division_geocode#}
         console.log(geocode);
         $('#alert_geocode').hide();
         $('#geocode').on('keyup',function () {

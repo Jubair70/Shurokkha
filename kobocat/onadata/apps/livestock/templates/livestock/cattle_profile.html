@@ -23,6 +23,35 @@
         border: 0;
     }
     /*.ui-autocomplete { z-index:2147483647; }*/
+    body
+    {
+        font-size: 14px;
+    }
+    #health_date,#reproduction_date,#sickness_date,.btn-link
+    {
+        font-size: 13px;
+    }
+    #health_date,#reproduction_date,#sickness_date
+    {
+        padding-left: 63px;
+    }
+
+
+    .date-block
+    {
+        min-height: 39px;
+    }
+    .date-block p {
+    font-size: 13px;
+
+    }
+
+    #health_left
+    {
+
+    }
+
+
     </style>
 
 {% endblock %}
@@ -54,14 +83,14 @@
             </div>
 
             <!-- date bloc start-->
-
+              <span class="control-label btn btn-primary" style="cursor: default;background-color: #00b755; margin-top: 10px;width: 100%; font-size: 14px;" data-original-title="" title=""><b>Health Records</b></span>
             <div class="date-block mt-3">
-              <div class="date-btn">
-                <a href="#" class="btn btn-success p-3 "><i class="fa fa-angle-left"></i></a>
-                <a href="#" class="btn btn-success p-3"><i class="fa fa-angle-right"></i></a>
-              </div>
-              <p class="ml-2">Date: 10/03/2018</p>
-              <p class="float-right mr-3 mt-3">Health Records</p>
+
+                <a id="health_left" class="btn btn-success p-3 "><i class="fa fa-angle-left"></i></a>
+
+              <p class="ml-2" id="health_date" >Date: </p>
+                <a id="health_right" class="btn btn-success p-3 pull-right"><i class="fa fa-angle-right"></i></a>
+{#                <p class="float-right mr-3 mt-3">Health Records</p>#}
             </div>
 
             <!-- date bloc end-->
@@ -80,8 +109,7 @@
                   </div>
 
                   <div id="hr-collapseOne" class="collapse" aria-labelledby="hr-headingOne" data-parent="#accordion">
-                    <div class="card-body">
-                      Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.
+                    <div class="card-body" style="overflow-y: default; height: 100px" id="feeding_information">
                     </div>
                   </div>
                 </div>
@@ -94,8 +122,7 @@
                     </h5>
                   </div>
                   <div id="hr-collapseTwo" class="collapse" aria-labelledby="hr-headingTwo" data-parent="#accordion">
-                    <div class="card-body">
-                      Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.
+                    <div class="card-body" style="overflow-y: scroll; height: 100px" id="milk_production">
                     </div>
                   </div>
                 </div>
@@ -108,8 +135,7 @@
                     </h5>
                   </div>
                   <div id="hr-collapseThree" class="collapse" aria-labelledby="hr-headingThree" data-parent="#accordion">
-                    <div class="card-body">
-                      Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.
+                    <div class="card-body" style="overflow-y: scroll; height: 100px" id="deworming_vaccination">
                     </div>
                   </div>
                 </div>
@@ -119,67 +145,21 @@
             <!-- info collapse end-->
 
             <!-- date bloc start-->
-
+            <span class="control-label btn btn-primary" style="cursor: default;background-color: #00b755; margin-top: 10px;width: 100%; font-size: 14px;" data-original-title="" title=""><b>Reproduction</b></span>
             <div class="date-block mt-3">
-              <div class="date-btn">
-                <a href="#" class="btn btn-success p-3 "><i class="fa fa-angle-left"></i></a>
-                <a href="#" class="btn btn-success p-3"><i class="fa fa-angle-right"></i></a>
-              </div>
-              <p class="ml-2">Date: 10/03/2018</p>
-              <p class="float-right mr-3 mt-3">Reproduction</p>
-            </div>
 
+                <a id="reproduction_left" class="btn btn-success p-3 "><i class="fa fa-angle-left"></i></a>
+
+
+              <p class="ml-2" id="reproduction_date">Date: </p>
+                  <a id="reproduction_right" class="btn btn-success p-3 pull-right"><i class="fa fa-angle-right"></i></a>
+            </div>
+              <p class="px-3 py-3" id="reproduction"></p>
             <!-- date bloc end-->
 
              <!-- info collapse start-->
 
-            <div class="info-collapse">
-              <div id="accordion">
-                <div class="card">
-                  <div class="card-header" id="re-headingOne">
-                    <h5 class="mb-0">
-                      <a class="btn btn-link" data-toggle="collapse" data-target="#re-collapseOne" aria-expanded="true" aria-controls="re-collapseOne">
-                        Feeding Information <span>+</span>
-                      </a>
-                    </h5>
-                  </div>
 
-                  <div id="re-collapseOne" class="collapse" aria-labelledby="re-headingOne" data-parent="#accordion">
-                    <div class="card-body">
-                      Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.
-                    </div>
-                  </div>
-                </div>
-                <div class="card">
-                  <div class="card-header" id="re-headingTwo">
-                    <h5 class="mb-0">
-                      <a class="btn btn-link collapsed" data-toggle="collapse" data-target="#re-collapseTwo" aria-expanded="false" aria-controls="re-collapseTwo">
-                        Milk Production <span>+</span>
-                      </a>
-                    </h5>
-                  </div>
-                  <div id="re-collapseTwo" class="collapse" aria-labelledby="re-headingTwo" data-parent="#accordion">
-                    <div class="card-body">
-                      Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.
-                    </div>
-                  </div>
-                </div>
-                <div class="card">
-                  <div class="card-header" id="re-headingThree">
-                    <h5 class="mb-0">
-                      <a class="btn btn-link collapsed" data-toggle="collapse" data-target="#re-collapseThree" aria-expanded="false" aria-controls="re-collapseThree">
-                        Deworming Vaccination <span>+</span>
-                      </a>
-                    </h5>
-                  </div>
-                  <div id="re-collapseThree" class="collapse" aria-labelledby="re-headingThree" data-parent="#accordion">
-                    <div class="card-body">
-                      Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
 
             <!-- info collapse end-->
 
@@ -208,16 +188,13 @@
             </div>
 
             <!-- date bloc start-->
-
+            <span class="control-label btn btn-primary" style="cursor: default;background-color: #00b755; margin-top: 10px;width: 100%; font-size: 14px;" data-original-title="" title=""><b>Sickness</b></span>
             <div class="date-block mt-3">
-              <div class="date-btn">
-                <a href="#" class="btn btn-success p-3 "><i class="fa fa-angle-left"></i></a>
-                <a href="#" class="btn btn-success p-3"><i class="fa fa-angle-right"></i></a>
-              </div>
-              <p class="ml-2">Date: 10/03/2018</p>
-              <p class="float-right mr-3 mt-3">Sickness</p>
+              <a id="sickness_left" class="btn btn-success p-3 "><i class="fa fa-angle-left"></i></a>
+              <p class="ml-2" id="sickness_date">Date: </p>
+              <a id="sickness_right" class="btn btn-success p-3 pull-right"><i class="fa fa-angle-right"></i></a>
             </div>
-            <p class="px-3 py-3">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.</p>
+            <p class="px-3 py-3" id="sickness"></p>
 
 
             <!-- date bloc end-->
@@ -1006,6 +983,200 @@
                 }
             }); //ajax end
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    /* Health Records */
+
+
+
+    var feeding_information_index = 0;
+    var milk_production_index = 0;
+    var deworming_vaccination_index = 0;
+    var sickness_index = 0;
+    var health_dates_index = 0;
+    var reproduction_index = 0;
+    var feeding_information_data = [];
+    var milk_production_data = [];
+    var deworming_vaccination_data = [];
+    var sickness_data = [];
+    var reproduction_data = [];
+    var health_dates = [];
+
+    var data = {{ data |safe }};
+
+    for(idx in data)
+    {
+        if(data[idx].title=='feeding_information')
+        {
+            if(!health_dates.includes(data[idx].rpt_date))
+                health_dates.push(data[idx].rpt_date);
+            feeding_information_data.push(data[idx]);
+        }
+        else if( data[idx].title=='milk_production' )
+        {
+            if(!health_dates.includes(data[idx].rpt_date))
+                health_dates.push(data[idx].rpt_date);
+            milk_production_data.push(data[idx]);
+        }
+        else if(data[idx].title=='deworming_vaccination')
+        {
+            if(!health_dates.includes(data[idx].rpt_date))
+                health_dates.push(data[idx].rpt_date);
+            deworming_vaccination_data.push(data[idx]);
+        }
+        else if (data[idx].title=='sickness')
+        {
+            sickness_data.push(data[idx]);
+        }
+        else if(data[idx].title=='reproduction')
+        {
+            reproduction_data.push(data[idx]);
+        }
+    }
+
+
+    // sorting date in descending order
+        health_dates.sort(function (a, b) {
+            return new Date(b) - new Date(a);
+    });
+    health_dates = JSON.parse(JSON.stringify(health_dates));
+
+
+
+    function date_set(g_data,id,index) {
+        $(id).text('Date: '+g_data[index].rpt_date)
+    }
+
+    function content_set(g_data,id,index) {
+        $(id).html(g_data[index].content)
+    }
+
+
+    if(health_dates.length){
+        $('#health_date').text('Date: '+health_dates[0]);
+    }
+     if(feeding_information_data.length && feeding_information_data[0].rpt_date==health_dates[0])
+        content_set(feeding_information_data,feeding_information,0);
+     if(milk_production_data.length && milk_production_data[0].rpt_date==health_dates[0])
+        content_set(milk_production_data,milk_production,0);
+     if(deworming_vaccination_data.length && deworming_vaccination_data[0].rpt_date==health_dates[0])
+        content_set(deworming_vaccination_data,deworming_vaccination,0);
+
+    if(sickness_data.length)
+    {
+        date_set(sickness_data,sickness_date,0);
+        content_set(sickness_data,sickness,0);
+    }
+    if(reproduction_data.length)
+    {
+        date_set(reproduction_data,reproduction_date,0);
+        content_set(reproduction_data,reproduction,0);
+    }
+
+
+        $('#health_left').on('click', function () {
+            if (feeding_information_index > 0)
+                feeding_information_index--;
+            if (milk_production_index > 0)
+                milk_production_index--;
+            if (deworming_vaccination_index > 0)
+                deworming_vaccination_index--;
+            if (health_dates_index > 0)
+                health_dates_index--;
+
+            if (health_dates.length)
+                $('#health_date').text('Date: ' + health_dates[health_dates_index]);
+
+            if (feeding_information_data.length && feeding_information_data[feeding_information_index].rpt_date == health_dates[health_dates_index])
+                content_set(feeding_information_data, feeding_information, feeding_information_index);
+            if (milk_production_data.length && milk_production_data[milk_production_index].rpt_date == health_dates[health_dates_index])
+                content_set(milk_production_data, milk_production, milk_production_index);
+            if (deworming_vaccination_data.length && deworming_vaccination_data[deworming_vaccination_index].rpt_date == health_dates[health_dates_index])
+                content_set(deworming_vaccination_data, deworming_vaccination, deworming_vaccination_index);
+        });
+
+        $('#health_right').on('click', function () {
+            if (feeding_information_index < feeding_information_data.length - 1)
+                feeding_information_index++;
+            if (milk_production_index < milk_production_data.length - 1)
+                milk_production_index++;
+            if (deworming_vaccination_index < deworming_vaccination_data.length - 1)
+                deworming_vaccination_index++;
+            if (health_dates_index < health_dates.length - 1)
+                health_dates_index = health_dates_index + 1;
+            if (health_dates.length)
+                $('#health_date').text('Date: ' + health_dates[health_dates_index]);
+
+            if (feeding_information_data.length && feeding_information_data[feeding_information_index].rpt_date == health_dates[health_dates_index])
+                content_set(feeding_information_data, feeding_information, feeding_information_index);
+            if (milk_production_data.length && milk_production_data[milk_production_index].rpt_date == health_dates[health_dates_index])
+                content_set(milk_production_data, milk_production, milk_production_index);
+            if (deworming_vaccination_data.length && deworming_vaccination_data[deworming_vaccination_index].rpt_date == health_dates[health_dates_index])
+                content_set(deworming_vaccination_data, deworming_vaccination, deworming_vaccination_index);
+        });
+
+
+        $('#reproduction_left').on('click', function () {
+            if (reproduction_index > 0)
+                reproduction_index--;
+
+            if (reproduction_data.length)
+            {
+                $('#reproduction_date').text('Date: ' + reproduction_data[reproduction_index].rpt_date);
+                content_set(reproduction_data, reproduction, reproduction_index);
+            }
+        });
+
+        $('#reproduction_right').on('click', function () {
+            if (reproduction_index < reproduction_data.length - 1)
+                reproduction_index++;
+
+            if (reproduction_data.length)
+            {
+                $('#reproduction_date').text('Date: ' + reproduction_data[reproduction_index].rpt_date);
+                   content_set(reproduction_data, reproduction, reproduction_index);
+            }
+        });
+
+        $('#sickness_left').on('click', function () {
+            if (sickness_index > 0)
+                sickness_index--;
+
+            if (sickness_data.length)
+            {
+                $('#sickness_date').text('Date: ' + sickness_data[sickness_index].rpt_date);
+                content_set(sickness_data, sickness, sickness_index);
+            }
+        });
+
+        $('#sickness_right').on('click', function () {
+            if (sickness_index < sickness_data.length - 1)
+                sickness_index++;
+
+            if (sickness_data.length)
+            {
+                $('#sickness_date').text('Date: ' + sickness_data[sickness_index].rpt_date);
+                   content_set(sickness_data, sickness, sickness_index);
+            }
+        });
+
+
 
 </script>
 

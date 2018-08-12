@@ -259,25 +259,27 @@ def save_user(request):
             passwordHistory.save()
             submitted_data['user'] = profile.id
 
-            for role in user_roles:
-                UserRoleMap(user=profile, role=role).save()
+
             # insert into farmer
             auth_user_id = user.id
             user_profile_id = profile.id
             farmer_name = data['name'][0].upper() + data['name'][1:]
             mobile = data['phone']
-            #if data['occupation'] == 'Farmer':
-            insert_q = "INSERT INTO public.farmer(id, farmer_name, mobile,submission_time,submitted_by)VALUES (DEFAULT, '" + farmer_name + "','" + mobile + "', NOW()," + str(
-                auth_user_id) + " ) RETURNING ID;"
-            ##print insert_q
-            f_id = views.__db_fetch_single_value(insert_q)
-            insert_q_map = "INSERT INTO public.user_farmer_map(id, user_id, farmer_id)VALUES (DEFAULT, " + str(
-                user_profile_id) + ", " + str(f_id) + ");"
-            views.__db_commit_query(insert_q_map)
-            if data['occupation'] != 'Farmer':
-                approval_q = "INSERT INTO public.approval_queue(id,name, mobile, role_name, status, submitted_by, submission_time)VALUES (DEFAULT, '"+farmer_name+"','"+mobile+"', '"+data['occupation']+"', 0, "+str(auth_user_id)+", NOW());"
-                #print approval_q
-                views.__db_commit_query(approval_q)
+            #Duplicate FARMER/PARAVET/AI checking
+            if check_duplicate_farmer == 0:
+                for role in user_roles:
+                    UserRoleMap(user=profile, role=role).save()
+                insert_q = "INSERT INTO public.farmer(id, farmer_name, mobile,submission_time,submitted_by)VALUES (DEFAULT, '" + farmer_name + "','" + mobile + "', NOW()," + str(
+                    auth_user_id) + " ) RETURNING ID;"
+                ##print insert_q
+                f_id = views.__db_fetch_single_value(insert_q)
+                insert_q_map = "INSERT INTO public.user_farmer_map(id, user_id, farmer_id)VALUES (DEFAULT, " + str(
+                    user_profile_id) + ", " + str(f_id) + ");"
+                views.__db_commit_query(insert_q_map)
+                if data['occupation'] != 'Farmer':
+                    approval_q = "INSERT INTO public.approval_queue(id,name, mobile, role_name, status, submitted_by, submission_time)VALUES (DEFAULT, '"+farmer_name+"','"+mobile+"', '"+data['occupation']+"', 0, "+str(auth_user_id)+", NOW());"
+                    #print approval_q
+                    views.__db_commit_query(approval_q)
 
                 ## Sending notification mail ----------- (Start) // we have imported (from django.core.mail import send_mail)
 
@@ -313,6 +315,14 @@ def save_user(request):
         fail_silently=False
     )
     return HttpResponse(json.dumps({'password': password}), status=200)
+
+
+def check_duplicate_farmer(mobile):
+    q = "select * from farmer where mobile = '"+mobile+"'"
+    data = __db_fetch_values_dict(q)
+    data_length = len(data)
+    return data_length
+
 
 
 @csrf_exempt

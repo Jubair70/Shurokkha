@@ -195,13 +195,25 @@ def edit_medicine(request,id):
 
 @login_required
 def farmer_list(request):
-    return render(request,"livestock/farmer_list.html")
+    q= "select (select  id from auth_user where username = mobile) user_id,name from paravet_aitechnician"
+    paravet_ai_list = makeTableList(q)
+    return render(request,"livestock/farmer_list.html",{'paravet_ai_list' : paravet_ai_list})
 
 
 def get_farmer_table(request):
-    q = "select * from farmer"
+    user_id = request.POST.get('user_id')
+    date_range = request.POST.get('date_range')
+    if date_range == '':
+        start_date = '01/01/2010'
+        end_date = '12/28/2021'
+    else:
+        dates = get_dates(str(date_range))
+        start_date = dates.get('start_date')
+        end_date = dates.get('end_date')
+    q = "select *,(select first_name || last_name from auth_user where id= submitted_by ) as user_name from farmer where date(submission_time) between '"+start_date+"' and '"+end_date+"' and submitted_by ::text like '"+str(user_id)+"'"
     dataset = __db_fetch_values_dict(q)
     return render(request,"livestock/farmer_table.html",{'dataset' : dataset})
+
 
 @login_required
 def approval_list(request):

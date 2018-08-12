@@ -46,7 +46,7 @@ urlpatterns = patterns('',
                        url(r'^getAdvisoryData/$', views.getAdvisoryData, name='getAdvisoryData'),
                        url(r'^sickness_list/$', views.sickness_list, name='sickness_list'),
                        url(r'^getSicknessData/$', views.getSicknessData, name='getSicknessData'),
-url(r'^get_clinical_findings/$', views.get_clinical_findings, name='get_clinical_findings'),
+                    url(r'^get_clinical_findings/$', views.get_clinical_findings, name='get_clinical_findings'),
 
 
                        #******************   MOBILE API     ***********************************#

@@ -437,6 +437,8 @@ def cattle_profile(request,cattle_id,appointment_id):
     farmer_mobile = cattle_info.get('mobile')
     farmer_info= get_farmer_info(farmer_mobile)
 
+
+
     option_dict = {
         'div_list' : div_list,
         'appointment_id' : appointment_id,'appointment_status' : appointment_status,'appointment_type' : appointment_type,'cattle_id':cattle_id,
@@ -460,6 +462,7 @@ def cattle_profile(request,cattle_id,appointment_id):
 
     data = {'data':get_accoridian_dict(cattle_id)}
     context = dict(cattle_info.items() + farmer_info.items() +option_dict.items() +data.items())
+    # print context
     return render(request,'livestock/cattle_profile.html',context)
 
 
@@ -528,16 +531,21 @@ def get_cattle_info(id):
 def get_farmer_info(mobile):
     farmerprofileupdate_form_owner_q = "select (select username from auth_user where id = logger_xform.user_id limit 1) as user_name from public.logger_xform where id_string = 'farmer_profile_update'"
     farmerprofileupdate_form_owner = __db_fetch_single_value(farmerprofileupdate_form_owner_q)
-    q = "select id, coalesce(farmer_name,'') farmer_name,mobile,date(submission_time)::text registration_date,image from farmer where mobile = '"+mobile+"'"
+    q = "select id, coalesce(farmer_name,'') farmer_name,mobile,date(submission_time)::text registration_date,image,division,district,upazila from farmer where mobile = '"+mobile+"'"
     dataset = __db_fetch_values_dict(q)
     farmer_dict = {}
     img_path = ''
+    stat = 1
     for temp in dataset:
         if temp['image'] is not None:
             img = temp['image']
             img_path = "media/" + farmerprofileupdate_form_owner + "/attachments/" + img
-        farmer_dict = { 'id' : temp['id'],'farmer_name' : temp['farmer_name'], 'mobile' : temp['mobile'], 'registration_date' : temp['registration_date'],  'image_url' :  img_path
-        }
+        print("TEMP "+str(temp['division']))
+        if temp['division'] == None:
+            stat = 0
+
+        farmer_dict = { 'id' : temp['id'],'farmer_name' : temp['farmer_name'], 'mobile' : temp['mobile'], 'registration_date' : temp['registration_date'],  'image_url' :  img_path,
+        'div_id':temp['division'],'dist_id':temp['district'],'upz_id':temp['upazila'],'stat':stat   }
     return farmer_dict
 
 
@@ -548,10 +556,10 @@ def get_option_list(fieldname):
 
 
 def add_location(request,farmer_id):
-    if request.method == 'POST':
-        division = request.POST.get('division')
-        district = request.POST.get('district')
-        upazila = request.POST.get('upazila')
+    if request.method == 'GET':
+        division = request.GET.get('division')
+        district = request.GET.get('district')
+        upazila = request.GET.get('upazila')
         q = "update farmer set division = '"+division+"',district = '"+district+"',upazila = '"+upazila+"' where id = "+str(farmer_id)
         __db_commit_query(q)
         print q
@@ -706,7 +714,7 @@ def get_suggested_prescription(request):
 
 def get_prescription_data(id):
     q = "with t as(select cattle_system_id,(select farmer_name from farmer where mobile = c.mobile) as farmer_name,mobile, case when cattle_birth_date is not null then EXTRACT(year from age(now()::date,cattle_birth_date::date))::text else cattle_age end as age_year, case when cattle_birth_date is not null then EXTRACT(month from age(now()::date,cattle_birth_date::date))::text else 0::text end as age_month, case when cattle_birth_date is not null then EXTRACT(day from age(now()::date,cattle_birth_date::date))::text else 0::text end as age_day from cattle c), n as(with m as(select p.id as prescription_id,a.cattle_system_id,p.advice,p.next_appointment_after,pd.medicine_part_1,pd.medicine_part_2,p.created_by,p.created_date from prescription p left join prescription_details pd on pd.prescription_id = p.id left join appointment a on a.id = p.appointment_id) select m.created_date,m.prescription_id,m.created_by,m.cattle_system_id,m.advice,m.next_appointment_after,string_agg(medicine_part_1 || '\n' ||medicine_part_2, ';') as rx from m group by m.advice,m.next_appointment_after,m.cattle_system_id,m.created_by,m.prescription_id,m.created_date) select t.cattle_system_id,(select label from vwcattle_type where value =(select cattle_type from cattle where cattle_system_id =  t.cattle_system_id)) as cattle_type,t.farmer_name,t.mobile,t.age_year,t.age_month,t.age_day,n.created_date,n.prescription_id,n.created_by,n.cattle_system_id,n.advice,n.next_appointment_after,n.rx,(select first_name || last_name from auth_user where id = created_by) as prescribey_by, (select signature_img from users_additional_info where user_id = (select created_by from prescription where id ="+str(id)+")) as signature_img from t,n where t.cattle_system_id = n.cattle_system_id and n.prescription_id = "+str(id)+""
-    print q
+    # print q
     data = __db_fetch_values_dict(q)
     dict = {}
     for temp in data:
@@ -730,7 +738,7 @@ def get_old_prescription(request,cattle_id):
         }
         data_list.append(dict.copy())
         dict.clear()
-    print data_list
+    # print data_list
     return render(request, 'livestock/old_prescription.html',{'prescription_data_list' : data_list})
 
 
@@ -943,6 +951,7 @@ def get_dashboard_content(request):
                   { 'farmer_count': farmer_count, 'paravet_count': paravet_count,
                    'ai_count': ai_count, 'vet_count': vet_count, 'cattle_count': cattle_count,
                    'sickness_count': sickness_count, 'husbandry_count': husbandry_count})
+
 
 
 def get_district(request):

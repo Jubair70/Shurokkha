@@ -596,10 +596,17 @@
                 <div class="form-group">
               <label for="exampleInputEmail1">Route</label>
               <select  class="form-control" id="route" name="muzzle" aria-describedby="emailHelp">
-                     {% for data in muzzle %}
-                    <option value="{{ data.1 }}">{{ data.1 }}</option>
-                    {% endfor %}
-                </select>
+                    <option value="">select</option>
+                    <option value="মাংস পেশিতে">মাংস পেশিতে</option>
+                    <option value="চামড়ার নিচে">চামড়ার নিচে</option>
+                    <option value="শিরায়">শিরায়</option>
+                    <option value="খাওয়ান">খাওয়ান</option>
+                    <option value="i/v">i/v</option>
+                    <option value="i/m">i/m</option>
+                    <option value="s/c">s/c</option>
+                    <option value="oral">oral</option>
+                    <option value="topical">topical</option>
+                    <option value="others">others</option></select>
             </div>
           <div class="form-group">
               <label for="exampleInputEmail1">Days</label>

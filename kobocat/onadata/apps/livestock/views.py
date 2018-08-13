@@ -628,7 +628,10 @@ def get_advisory_table(request):
 
 def submit_prescription(request,appointment_id):
     if request.method == 'POST':
-        clinical_findings_id = request.POST.get('clinical_findings_id_prescription')
+        if(request.POST.get('clinical_findings_id_prescription')):
+            clinical_findings_id = request.POST.get('clinical_findings_id_prescription')
+        else:
+            clinical_findings_id =0
         med_part_1 = request.POST.getlist('med_part_1[]')
         med_part_2 = request.POST.getlist('med_part_2[]')
         revisit = request.POST.get('revisit')
@@ -639,7 +642,7 @@ def submit_prescription(request,appointment_id):
             pres_detail_q = "INSERT INTO public.prescription_details(id, prescription_id, medicine_part_1, medicine_part_2)VALUES (DEFAULT, " + str(
                 prescription_id) + ", '"+med_part_1[index]+"','"+med_part_2[index]+"');"
             __db_commit_query(pres_detail_q)
-        __db_commit_query("update appointment set prescription_id="+str(prescription_id)+" where id = "+str(appointment_id)+"")
+        __db_commit_query("update appointment set status = 2,prescription_id="+str(prescription_id)+" where id = "+str(appointment_id)+"")
     return HttpResponse(json.dumps("Prescription added"), content_type="application/json", status=200)
 
 

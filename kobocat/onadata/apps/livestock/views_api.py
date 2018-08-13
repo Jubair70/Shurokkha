@@ -162,7 +162,8 @@ def save_user(request):
     submitted_data = {}
     submitted_data['username'] = data['phone']
     user = User.objects.filter(username=data['phone']).first()
-    password = id_generator()
+    #password = id_generator()
+    password = 'VYXTSZ16'
     # when login
     if user is not None:
         # password = id_generator()

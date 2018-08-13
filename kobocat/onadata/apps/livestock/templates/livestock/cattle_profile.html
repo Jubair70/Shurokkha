@@ -82,7 +82,8 @@
           <div class="veterinarian-box">
             <div class="card">
               <div class="card-body pb-4">
-                <img src="{{ image_url }}" class="img-fluid"  alt="">
+                <img src="{{ image_url }}" width="80px"
+    height="120px" class="img-fluid"  alt="">
                 <div class="card-text float-right">
                   <p>Registration Date:{{ registration_date }}<br>
                   Name: {{ farmer_name }}<br>
@@ -606,10 +607,17 @@
                 <div class="form-group">
               <label for="exampleInputEmail1">Route</label>
               <select  class="form-control" id="route" name="muzzle" aria-describedby="emailHelp">
-                     {% for data in muzzle %}
-                    <option value="{{ data.1 }}">{{ data.1 }}</option>
-                    {% endfor %}
-                </select>
+                    <option value="">select</option>
+                    <option value="মাংস পেশিতে">মাংস পেশিতে</option>
+                    <option value="চামড়ার নিচে">চামড়ার নিচে</option>
+                    <option value="শিরায়">শিরায়</option>
+                    <option value="খাওয়ান">খাওয়ান</option>
+                    <option value="i/v">i/v</option>
+                    <option value="i/m">i/m</option>
+                    <option value="s/c">s/c</option>
+                    <option value="oral">oral</option>
+                    <option value="topical">topical</option>
+                    <option value="others">others</option></select>
             </div>
           <div class="form-group">
               <label for="exampleInputEmail1">Days</label>
@@ -958,9 +966,7 @@
                 data: data,
                 success: function (data) {
                     alert(data);
-                    //$('#success_msg_upload').html("");
-                    //$('#success_msg_upload').html('<div class="alert alert-success fade in alert-dismissible"><strong>Success!</strong> Successfully uploaded</div>');
-
+                    location.reload();
                 },
                 error: function (xhr, status, error) {
                    // $('#error_msg_upload').html("<h5><strong>"+xhr.responseText+"</strong></h5>");
@@ -969,12 +975,12 @@
         });
 
         $(document).on("submit", "#prescription_form", function (event) {
-            console.log("trigger submit_prescription");
             event.preventDefault();
             form_url = $(this).attr('action');
             console.log(form_url)
             var data = new FormData(this); // <-- 'this' is form element
             //return formData;
+            if(confirm("Are you sure  to submit the prescription?")){
             $.ajax({
                 type: 'POST',
                 url: form_url,
@@ -982,18 +988,17 @@
                 processData: false,
                 data: data,
                 success: function (data) {
-                    console.log(data);
                     get_old_prescription(cattle_id);
                     $('#prescription').hide()
                     $('#clinical_findings_div').hide();
-                    //$('#success_msg_upload').html("");
-                    //$('#success_msg_upload').html('<div class="alert alert-success fade in alert-dismissible"><strong>Success!</strong> Successfully uploaded</div>');
 
                 },
                 error: function (xhr, status, error) {
-                   // $('#error_msg_upload').html("<h5><strong>"+xhr.responseText+"</strong></h5>");
+                    // $('#error_msg_upload').html("<h5><strong>"+xhr.responseText+"</strong></h5>");
                 }
             }); //ajax end
+
+        }
         });
 
 

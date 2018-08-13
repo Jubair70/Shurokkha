@@ -336,7 +336,7 @@
 
                 <div class="form-group">
               <label for="exampleInputEmail1">পায়খানার অবস্থা:</label>
-              <select  class="form-control" id="stool_condition" name = "stool_condition" aria-describedby="emailHelp">
+              <select  class="form-control" id="stool_condition" name = "stool_condition" aria-describedby="emailHelp" required>
                      {% for data in stool_condition %}
                     <option value="{{ data.0 }}">{{ data.1 }}</option>
                     {% endfor %}
@@ -354,7 +354,7 @@
 
                 <div class="form-group " id="q_reproductive_problem"  style="display: none">
               <label for="exampleInputEmail1">বর্তমানে প্রজনন সংক্রান্ত কি সমস্যা আছে?:</label>
-              <select  class="form-control multiselect_class" multiple="multiple"  name="reproductive_problem[]" id="reproductive_problem" aria-describedby="emailHelp">
+              <select  class="form-control multiselect_class" multiple="multiple"  name="reproductive_problem[]" id="reproductive_problem" aria-describedby="emailHelp" required>
                      {% for data in reproductive_problem %}
                     <option value="{{ data.0 }}">{{ data.1 }}</option>
                     {% endfor %}
@@ -363,7 +363,7 @@
 
                 <div class="form-group" id="q_milking_problem"  style="display: none">
               <label for="exampleInputEmail1">দুধ উৎপাদন সম্পর্কিত কোন সমস্যা আছে? থাকলে কি কি ?:</label>
-              <select  class="form-control multiselect_class" multiple="multiple" name ="milking_problem[]" id="milking_problem" aria-describedby="emailHelp">
+              <select  class="form-control multiselect_class" multiple="multiple" name ="milking_problem[]" id="milking_problem" aria-describedby="emailHelp" required>
                      {% for data in milking_problem %}
                     <option value="{{ data.0 }}">{{ data.1 }}</option>
                     {% endfor %}
@@ -409,7 +409,7 @@
 
                 <div class="form-group">
               <label for="exampleInputEmail1">রোগ সংক্রমণের ধরণ কি রকম?:</label>
-              <select  class="form-control" id="disease_pattern" aria-describedby="emailHelp" name="disease_pattern">
+              <select  class="form-control" id="disease_pattern" aria-describedby="emailHelp" name="disease_pattern" required>
                      {% for data in disease_pattern %}
                          <option value="{{ data.0 }}">{{ data.1 }}</option>
                     {% endfor %}
@@ -418,7 +418,7 @@
 
             <div class="form-group">
               <label for="exampleInputEmail1">Tentative Diagnosis</label>
-                <input type="text" class="form-control" name="tentative_diagnosis" id="diagnosis_name" aria-describedby="emailHelp" placeholder="">
+                <input type="text" class="form-control" name="tentative_diagnosis" id="diagnosis_name" aria-describedby="emailHelp" placeholder="" required>
             </div>
             <div class="form-group">
               <input type="submit">

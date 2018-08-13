@@ -1631,6 +1631,9 @@ def geo_list(request):
 
 @login_required
 def delete_form(request,form_id):
+
+
+
     delete_child(int(form_id))
     return HttpResponseRedirect("/usermodule/geo_list/")
 

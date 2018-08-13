@@ -236,7 +236,7 @@
             <div id = "clinical_findings_div">
 
             <div class="date-block mt-3">
-              <p class="ml-3 mt-2">Enter Clinical findings</p>
+              <p class="ml-3 mt-2"> Clinical findings</p>
             </div>
             <!-- date bloc end-->
 
@@ -433,14 +433,14 @@
         <!-- veterinarian block 3 end-->
 
       </div>
-
+</div>
     <!-- Veterinarian panel end-->
 
     <!-- Prescription panel start-->
       <div class="prescription" id ="prescription" style="display:none">
         <div class="date-block mt-3">
            <div class="date-btn float-right">
-                <button onclick="get_suggested_prescription('3','{{ cattle_weight }}','Arthritis')" class="btn btn-warning p-3 ">Suggested Prescription</button>
+                <div id="suggest_prescription_button_div"><button onclick="get_suggested_prescription('3','{{ cattle_weight }}','Arthritis')" class="btn btn-warning p-3 ">Suggested Prescription</button></div>
                 <button onclick="add_medicine()" class="btn btn-warning p-3">Add Medicine</button>
               </div>
               <p class="ml-3 mt-2">Prescription</p>
@@ -519,11 +519,11 @@
     <!-- Prescription panel end-->
 
     <!--old prescription load-->
-<div id = "old_prescription_div">
+<div id = "old_prescription_div" style="overflow-y: scroll; height: 606px">
 
 
 </div>
-    </div>
+
     <!--old prescription load-->
 
     </div>
@@ -718,39 +718,62 @@
         var cattle_type = {{ cattle_type }}
         var appointment_status = {{ appointment_status }}
         var appointment_type = {{ appointment_type }}
-        if ((appointment_type == 2) && (appointment_status == 1)){
-            if ('{{ clinical_findings_data }}'){
-                $('#clinical_findings_id_prescription').val('{{ clinical_findings_data.id }}')
-                $('#clinical_findings_id').val('{{ clinical_findings_data.id }}')
-                $('#complain_details').val('{{ clinical_findings_data.complain_details  | safe}}')
-                $('#treatment_history').val('{{ clinical_findings_data.treatment_history | safe}}')
-                $('#same_sickness_other_cattle').val({{ clinical_findings_data.same_sickness_other_cattle  | safe}} )
-                $('#sick_cattle_affected_or_died').val('{{ clinical_findings_data.sick_cattle_affected_or_died | safe}}')
-                $('#deworming_history').val('{{ clinical_findings_data.deworming_history | safe}}')
-                $('#feeding_history').val('{{ clinical_findings_data.feeding_history | safe}}')
-                $('#wrong_feeding_last_days').val({{ clinical_findings_data.wrong_feeding_last_days | safe}})
-                $('#rumination').val('{{ clinical_findings_data.rumination | safe}}')
-                $('#lacrimation').val('{{ clinical_findings_data.lacrimation | safe}}')
-                $('#muzzle').val({{ clinical_findings_data.muzzle | safe}})
-                $('#sickness_sign').val({{ clinical_findings_data.sickness_sign | safe}})
-                $('#behavioral_signs').val({{ clinical_findings_data.behavioral_signs | safe}})
-                $('#mouth_digestion_sign').val({{ clinical_findings_data.mouth_digestion_sign | safe}})
-                $('#stool_condition').val('{{ clinical_findings_data.stool_condition | safe}}')
-                $('#repiratory_sign').val({{ clinical_findings_data.repiratory_sign | safe}})
-                $('#reproductive_problem').val({{ clinical_findings_data.reproductive_problem | safe}})
-                $('#milking_problem').val({{ clinical_findings_data.milking_problem | safe}})
-                $('#male_reproductive_problem').val({{ clinical_findings_data.male_reproductive_problem | safe}})
-                $('#skin_problem').val({{ clinical_findings_data.skin_problem | safe}})
-                $('#foot_problem').val({{ clinical_findings_data.foot_problem | safe}})
-                $('#megot').val({{ clinical_findings_data.megot|safe }})
-                $('#disease_pattern').val('{{ clinical_findings_data.disease_pattern | safe}}')
-                $('#diagnosis_name').val('{{ clinical_findings_data.tentative_diagnosis | safe}}')
+        if ((appointment_type == 2)){
+            if(appointment_status == 1){
+                $('#clinical_findings_div').show();
+                $('#prescription').hide();
+            }
+            if(appointment_status == 1){
+                if ('{{ clinical_findings_data }}'){
+                    $('#clinical_findings_id_prescription').val('{{ clinical_findings_data.id }}')
+                    $('#clinical_findings_id').val('{{ clinical_findings_data.id }}')
+                    $('#complain_details').val('{{ clinical_findings_data.complain_details  | safe}}')
+                    $('#treatment_history').val('{{ clinical_findings_data.treatment_history | safe}}')
+                    $('#same_sickness_other_cattle').val({{ clinical_findings_data.same_sickness_other_cattle  | safe}} )
+                    $('#sick_cattle_affected_or_died').val('{{ clinical_findings_data.sick_cattle_affected_or_died | safe}}')
+                    $('#deworming_history').val('{{ clinical_findings_data.deworming_history | safe}}')
+                    $('#feeding_history').val('{{ clinical_findings_data.feeding_history | safe}}')
+                    $('#wrong_feeding_last_days').val({{ clinical_findings_data.wrong_feeding_last_days | safe}})
+                    $('#rumination').val('{{ clinical_findings_data.rumination | safe}}')
+                    $('#lacrimation').val('{{ clinical_findings_data.lacrimation | safe}}')
+                    $('#muzzle').val({{ clinical_findings_data.muzzle | safe}})
+                    $('#sickness_sign').val({{ clinical_findings_data.sickness_sign | safe}})
+                    $('#behavioral_signs').val({{ clinical_findings_data.behavioral_signs | safe}})
+                    $('#mouth_digestion_sign').val({{ clinical_findings_data.mouth_digestion_sign | safe}})
+                    $('#stool_condition').val('{{ clinical_findings_data.stool_condition | safe}}')
+                    $('#repiratory_sign').val({{ clinical_findings_data.repiratory_sign | safe}})
+                    $('#reproductive_problem').val({{ clinical_findings_data.reproductive_problem | safe}})
+                    $('#milking_problem').val({{ clinical_findings_data.milking_problem | safe}})
+                    $('#male_reproductive_problem').val({{ clinical_findings_data.male_reproductive_problem | safe}})
+                    $('#skin_problem').val({{ clinical_findings_data.skin_problem | safe}})
+                    $('#foot_problem').val({{ clinical_findings_data.foot_problem | safe}})
+                    $('#megot').val({{ clinical_findings_data.megot|safe }})
+                    $('#disease_pattern').val('{{ clinical_findings_data.disease_pattern | safe}}')
+                    $('#diagnosis_name').val('{{ clinical_findings_data.tentative_diagnosis | safe}}')
+
+                }
+                $('#prescription').show();
+            }
+            if(appointment_status == 2){
+                $('#clinical_findings_div').hide();
+                $('#prescription').hide();
 
             }
-            $('#prescription').show();
         }
-        if (((appointment_type == 1) || (appointment_type == 3)) && (appointment_status == 0)){
-            $('#prescription').show();
+        if (((appointment_type == 1) || (appointment_type == 3))){
+            if(appointment_status == 0){
+                $('#clinical_findings_div').hide();
+                $('#prescription').show();
+                $('#suggest_prescription_button_div').hide();
+            }
+            if(appointment_status == 2){
+                $('#clinical_findings_div').hide();
+                $('#suggest_prescription_button_div').hide();
+                $('#prescription').hide();
+            }
+
+
+
         }
         //বকনা	:1,গাভী:2,ষাঁড়/দামড়া:3,বাছুর:4
 
@@ -948,6 +971,9 @@
                 data: data,
                 success: function (data) {
                     console.log(data);
+                    get_old_prescription(cattle_id);
+                    $('#prescription').hide()
+                    $('#clinical_findings_div').hide();
                     //$('#success_msg_upload').html("");
                     //$('#success_msg_upload').html('<div class="alert alert-success fade in alert-dismissible"><strong>Success!</strong> Successfully uploaded</div>');
 

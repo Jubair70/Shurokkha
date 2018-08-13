@@ -26,6 +26,8 @@ import smtplib
 from datetime import datetime as dt
 import time
 import os.path
+from datetime import date, timedelta, datetime
+
 
 def __db_fetch_values(query):
     cursor = connection.cursor()
@@ -535,7 +537,7 @@ def get_farmer_info(mobile):
     for temp in dataset:
         if temp['image'] is not None:
             img = temp['image']
-            img_path = "media/" + farmerprofileupdate_form_owner + "/attachments/" + img
+            img_path = "/media/" + farmerprofileupdate_form_owner + "/attachments/" + img
         farmer_dict = { 'id' : temp['id'],'farmer_name' : temp['farmer_name'], 'mobile' : temp['mobile'], 'registration_date' : temp['registration_date'],  'image_url' :  img_path
         }
     return farmer_dict
@@ -643,7 +645,46 @@ def submit_prescription(request,appointment_id):
                 prescription_id) + ", '"+med_part_1[index]+"','"+med_part_2[index]+"');"
             __db_commit_query(pres_detail_q)
         __db_commit_query("update appointment set status = 2,prescription_id="+str(prescription_id)+" where id = "+str(appointment_id)+"")
+        pres_html = get_prescription(prescription_id)
+        send_mail(
+            'User LogIn One Time Password',
+            pres_html,
+            'mpowersocial2018@gmail.com',
+            ['mpowersocialent@gmail.com'],
+            fail_silently=False
+        )
+
+
     return HttpResponse(json.dumps("Prescription added"), content_type="application/json", status=200)
+
+
+def get_prescription(prescription_id):
+    st = datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S')
+    prescription_data = __db_fetch_values_dict("with t as(select(select value_label from xform_extracted where xform_id = 597 and field_name = 'cattle_type' and value_text = c.cattle_type) as cattle_type,cattle_system_id,(select farmer_name from farmer where mobile = c.mobile) as farmer_name,mobile, case when cattle_birth_date is not null then EXTRACT(year from age(now()::date,cattle_birth_date::date))::text else cattle_age end as age_year, case when cattle_birth_date is not null then EXTRACT(month from age(now()::date,cattle_birth_date::date))::text else 0::text end as age_month, case when cattle_birth_date is not null then EXTRACT(day from age(now()::date,cattle_birth_date::date))::text else 0::text end as age_day from cattle c), n as(with m as(select p.id as prescription_id,a.cattle_system_id,p.advice,p.next_appointment_after,pd.medicine_part_1,pd.medicine_part_2,p.created_by,p.created_date from prescription p left join prescription_details pd on pd.prescription_id = p.id left join appointment a on a.id = p.appointment_id) select m.created_date,m.prescription_id,m.created_by,m.cattle_system_id,m.advice,m.next_appointment_after,string_agg(medicine_part_1 || '@@' ||medicine_part_2, '|| ') as rx from m group by m.advice,m.next_appointment_after,m.cattle_system_id,m.created_by,m.prescription_id,m.created_date) select t.cattle_type,t.cattle_system_id,t.farmer_name,t.mobile,t.age_year,t.age_month,t.age_day,to_char(n.created_date,'DD/MM/YYYY') as created_date,n.prescription_id,n.created_by,n.cattle_system_id,n.advice,n.next_appointment_after,n.rx, (select first_name || last_name from auth_user where id = created_by) as prescribey_by, (select signature_img from users_additional_info where user_id = 288) as signature_img from t,n where t.cattle_system_id = n.cattle_system_id and n.prescription_id = "+str(prescription_id))
+    farmer_name = prescription_data[0]['farmer_name']
+    created_date = prescription_data[0]['created_date']
+    cattle_type = prescription_data[0]['cattle_type']
+    age_year = prescription_data[0]['age_year']
+    age_month = prescription_data[0]['age_month']
+    age_day = prescription_data[0]['age_day']
+    advice = prescription_data[0]['advice']
+    next_appointment_after = prescription_data[0]['next_appointment_after']
+    prescribey_by = prescription_data[0]['prescribey_by']
+    signature_img = prescription_data[0]['signature_img'].split('/')[-1]
+    medicine_str = ''
+    medicines = prescription_data[0]['rx'].split('|| ')
+
+    c = 1
+    for m in medicines:
+        m = m.split('@@')
+        mstr = '<p>'+str(c)+'. '+m[0]+'</p><p>'+m[1]+'</p>'
+        c = c + 1
+        medicine_str = medicine_str + mstr
+
+    prescription_html = ' <h3>Prescription:</h3>\n <p>খামারী : '+str(farmer_name.encode('utf-8'))+', তারিখ: '+str(created_date.encode('utf-8'))+'</p>\n<p>গরু: '+str(cattle_type.encode('utf-8'))+', '+str(age_year.encode('utf-8'))+' বছর '+str(age_month.encode('utf-8'))+' মাস '+str(age_day.encode('utf-8'))+' দিন</p>\n<h3>Rx:</h3> '+str(medicine_str.encode('utf-8'))+' \n<h3>Advice:</h3> <p>'+str(advice.encode('utf-8'))+'</p>\n<h4>'+str(next_appointment_after)+' দিন পর পুনরায় তথ্য পাঠিয়ে ডাক্তারের সাথে যোগাযোগ করুন</h4> <img src="'+str(signature_img)+'" width="200" height="74"> <br>'+str(prescribey_by.encode('utf-8'))+' \n জরুরী প্রয়জনে ০১২৪৫৮৭৯৬৫২ নাম্বারে যোগাযোগ করুন '
+
+
+    return prescription_html
 
 
 def get_medicine_name(request):

@@ -419,6 +419,7 @@ def get_clinical_findings(request):
     print content
     return HttpResponse(content)
 
+@login_required
 def cattle_profile(request,cattle_id,appointment_id):
     division_q = "select distinct division as name, div_code id from vwunion_code"
     div_list = makeTableList(division_q)

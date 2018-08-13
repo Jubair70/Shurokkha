@@ -954,9 +954,7 @@
                 data: data,
                 success: function (data) {
                     alert(data);
-                    //$('#success_msg_upload').html("");
-                    //$('#success_msg_upload').html('<div class="alert alert-success fade in alert-dismissible"><strong>Success!</strong> Successfully uploaded</div>');
-
+                    location.reload();
                 },
                 error: function (xhr, status, error) {
                    // $('#error_msg_upload').html("<h5><strong>"+xhr.responseText+"</strong></h5>");
@@ -965,12 +963,12 @@
         });
 
         $(document).on("submit", "#prescription_form", function (event) {
-            console.log("trigger submit_prescription");
             event.preventDefault();
             form_url = $(this).attr('action');
             console.log(form_url)
             var data = new FormData(this); // <-- 'this' is form element
             //return formData;
+            if(confirm("Are you sure  to submit the prescription?")){
             $.ajax({
                 type: 'POST',
                 url: form_url,
@@ -978,18 +976,17 @@
                 processData: false,
                 data: data,
                 success: function (data) {
-                    console.log(data);
                     get_old_prescription(cattle_id);
                     $('#prescription').hide()
                     $('#clinical_findings_div').hide();
-                    //$('#success_msg_upload').html("");
-                    //$('#success_msg_upload').html('<div class="alert alert-success fade in alert-dismissible"><strong>Success!</strong> Successfully uploaded</div>');
 
                 },
                 error: function (xhr, status, error) {
-                   // $('#error_msg_upload').html("<h5><strong>"+xhr.responseText+"</strong></h5>");
+                    // $('#error_msg_upload').html("<h5><strong>"+xhr.responseText+"</strong></h5>");
                 }
             }); //ajax end
+
+        }
         });
 
 

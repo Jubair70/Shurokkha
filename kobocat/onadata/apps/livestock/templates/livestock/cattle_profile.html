@@ -22,11 +22,21 @@
     .thumbnail{
         border: 0;
     }
+    select.form-control:not([size]):not([multiple]) {
+   height: calc(2.9rem + 2px);
+}
+   
     /*.ui-autocomplete { z-index:2147483647; }*/
     body
     {
         font-size: 14px;
     }
+.form-control,.form-group
+    {
+        font-size: 13px;
+    }
+
+
     #health_date,#reproduction_date,#sickness_date,.btn-link
     {
         font-size: 13px;
@@ -73,12 +83,12 @@
             <div class="card">
               <div class="card-body pb-4">
                 <img src="{{ image_url }}" width="80px"
-    height="120px" class="img-fluid"  alt="">
+    height="107px" class="img-fluid"  alt="">
                 <div class="card-text float-right">
                   <p>Registration Date:{{ registration_date }}<br>
                   Name: {{ farmer_name }}<br>
                   Mobile Number: {{ mobile }}</p>
-                  <button onclick="add_loc('{{ id }}')" href="#" class="btn btn-success  mt-4">Add Location</button>
+                  <button style="width: 100%; font-size:14px;" onclick="add_loc('{{ id }}')" href="#" class="btn btn-success  mt-4" id="add_location_btn">{% if stat == 0 %}Add Location{% else %} Edit Location {% endif %}</button>
                 </div>
               </div>
             </div>
@@ -626,9 +636,9 @@
     </div>
     <!--Add Farmer location modal -->
      <!--Add medicine modal -->
-    <div class="modal fade" id="add_loc_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal fade"  id="add_loc_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
       <div class="modal-dialog" role="document">
-        <div class="modal-content">
+        <div class="modal-content" >
           <div class="modal-header">
             <h5 class="modal-title" id="exampleModalLabel">Add Location</h5>
             <button class="close" type="button" data-dismiss="modal" aria-label="Close">
@@ -645,21 +655,21 @@
               <select  required class="form-control" id="division" name="division" aria-describedby="emailHelp">
                     <option value = "">Select</option>
                      {% for data in div_list %}
-                    <option value="{{ data.1 }}">{{ data.0 }}</option>
+                    <option value="{{ data.1 }}" {% if data.1 == div_id %} selected{% endif %}>{{ data.0 }}</option>
                     {% endfor %}
                 </select>
             </div>
           <div class="form-group">
               <label for="exampleInputEmail1">District</label>
               <select required class="form-control" name="district" id="district">
-                  <option value="" selected>Select One</option>
+                  <option value="">Select One</option>
 
                </select>
             </div>
           <div class="form-group">
               <label for="exampleInputEmail1">Upazila</label>
               <select required class="form-control" name="upazila" id="upazila">
-                  <option value="" selected >Select One</option>
+                  <option value=""  >Select One</option>
 
                </select>
             </div>
@@ -669,7 +679,7 @@
           </div>
           <div class="modal-footer">
             <!--<button class="btn btn-secondary"  type="submit" >Save</button>-->
-              <button type="button" class="btn btn-secondary" value="Save" onclick="add_location('{{ id }}')">
+              <button type="button" class="btn btn-secondary" value="Save" onclick="add_location('{{ id }}')">Save</button>
               <button class="btn btn-primary" type="button" data-dismiss="modal" aria-label="Close">Cancel</button>
           </div>
 
@@ -721,6 +731,8 @@
     
 
     <script>
+
+
         var cattle_id = {{ cattle_id }}
         var appointment_id = {{ appointment_id }}
         var cattle_type = {{ cattle_type }}
@@ -1107,6 +1119,12 @@
         division = $('#division').val();
         district = $('#district').val();
         upazila = $('#upazila').val();
+        if(division=="" || district=="" || upazila == "")
+        {
+            alert('You must select division, district and upazila');
+            return false
+        }
+
         $.ajax({
             type: 'GET',
             url: ' /livestock/add_location/'+id+'/',
@@ -1117,21 +1135,34 @@
                 console.log(data)
                 $('#add_loc_modal').modal('toggle');
                 $('#addModal').modal('show');
-
+                $('#add_location_btn').text('Edit Location');
             },
             error: function (xhr, status, error) {
                // $('#error_msg_upload').html("<h5><strong>"+xhr.responseText+"</strong></h5>");
             }
         }); //ajax end
 
+
+
     }
 
+
+    var s = 0;
 
 
     /*geo hierarchy loading*/
          $(document).on("change", "#division", function () {
-            division = $(this).val()
+             ajaxcall();
+             dist_id = 0;
+             var stat = {{ stat | safe }};
 
+             if(!s && stat)
+             {
+                 dist_id = {{ dist_id | safe }};
+                 s++;
+             }
+
+            division = $(this).val();
             $.ajax({
                 type: 'POST',
                 url: '/livestock/get_district/',
@@ -1143,17 +1174,33 @@
                    list = JSON.parse(data)
 
                     $('#district').find('option').remove()
-                    $('#district').append('<option value = "%">All</option>')
+                    $('#district').append('<option value = "">Select One</option>')
                     for (var i = 0 ; i < list.dist_list.length ; i++){
-                         $('#district').append('<option value = '+list.dist_list[i][1]+'>'+list.dist_list[i][0]+'</option>')
+
+                       if(list.dist_list[i][1] == dist_id)
+                         $('#district').append('<option value = '+list.dist_list[i][1]+' selected>'+list.dist_list[i][0]+'</option>')
+                        else $('#district').append('<option value = '+list.dist_list[i][1]+'>'+list.dist_list[i][0]+'</option>')
+
                     }
+
                 }
 
             });
 
         });
+         var j = 0;
         $(document).on("change", "#district", function () {
-            district = $(this).val()
+            ajaxcall();
+            district = $(this).val();
+            upz_id = 0;
+            var stat = {{ stat | safe }};
+             if(!j && stat)
+             {
+                 district = {{ dist_id | safe  }};
+                 upz_id = {{ upz_id | safe }};
+                 j++;
+             }
+
                         $.ajax({
                 type: 'POST',
                 url: '/livestock/get_upazila/',
@@ -1165,10 +1212,12 @@
                    list = JSON.parse(data)
                     console.log(list)
                     $('#upazila').find('option').remove()
-                    $('#upazila').append('<option value = "%">All </option>')
+                    $('#upazila').append('<option value = "">Select One </option>')
 
                     for (var i = 0 ; i < list.upz_list.length ; i++){
-                         $('#upazila').append('<option value = '+list.upz_list[i][1]+'>'+list.upz_list[i][0]+'</option>')
+                        if(list.upz_list[i][1] == upz_id)
+                         $('#upazila').append('<option value = '+list.upz_list[i][1]+' selected>'+list.upz_list[i][0]+'</option>');
+                        else $('#upazila').append('<option value = '+list.upz_list[i][1]+'>'+list.upz_list[i][0]+'</option>');
                     }
                 }
 
@@ -1177,20 +1226,16 @@
         });
 
 
+<!--$("#district option:selected").val({{ dist_id }});-->
+$(window).on('load', function() {
+    var stat = {{ stat | safe }};
+    if(stat)
+    {
+        $("#division").trigger( "change" );
+        $("#district").trigger( "change" );
+    }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+});
 
 
 

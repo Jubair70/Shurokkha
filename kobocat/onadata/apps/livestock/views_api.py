@@ -266,7 +266,7 @@ def save_user(request):
             farmer_name = data['name'][0].upper() + data['name'][1:]
             mobile = data['phone']
             #Duplicate FARMER/PARAVET/AI checking
-            if check_duplicate_farmer == 0:
+            if check_duplicate_farmer(mobile) == 0:
                 for role in user_roles:
                     UserRoleMap(user=profile, role=role).save()
                 insert_q = "INSERT INTO public.farmer(id, farmer_name, mobile,submission_time,submitted_by)VALUES (DEFAULT, '" + farmer_name + "','" + mobile + "', NOW()," + str(

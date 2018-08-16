@@ -256,7 +256,8 @@ def approve(request,id):
     __db_commit_query(insert_q)
     for role in user_roles:
         UserRoleMap(user=profile, role=role).save()
-    send_push_message(mobile, 1, 'Approval', 'Approved as Paravet/AI Technician.', '', mobile, '')
+    send_push_message(mobile, 2, 'Approval', 'Approved as Paravet/AI Technician.', '', mobile, '')
+
     # TO DO ::SMS Notification
     send_mail(
         'Successful Approval',
@@ -699,8 +700,14 @@ def get_prescription(prescription_id):
         c = c + 1
         medicine_str = medicine_str + mstr
 
-    prescription_html = ' <h3>Prescription:</h3>\n <p>খামারী : '+str(farmer_name.encode('utf-8'))+', তারিখ: '+str(created_date.encode('utf-8'))+'</p>\n<p>গরু: '+str(cattle_type.encode('utf-8'))+', '+str(age_year.encode('utf-8'))+' বছর '+str(age_month.encode('utf-8'))+' মাস '+str(age_day.encode('utf-8'))+' দিন</p>\n<h3>Rx:</h3> '+str(medicine_str.encode('utf-8'))+' \n<h3>Advice:</h3> <p>'+str(advice.encode('utf-8'))+'</p>\n<h4>'+str(next_appointment_after)+' দিন পর পুনরায় তথ্য পাঠিয়ে ডাক্তারের সাথে যোগাযোগ করুন</h4> <img src="'+str(signature_img)+'" width="200" height="74"> <br>'+str(prescribey_by.encode('utf-8'))+' \n জরুরী প্রয়জনে ০১২৪৫৮৭৯৬৫২ নাম্বারে যোগাযোগ করুন '
-
+    prescription_html = ' <h3>Prescription:</h3>\n <p>খামারী : ' + str(farmer_name.encode('utf-8')) + ', তারিখ: ' + str(
+        created_date.encode('utf-8')) + '</p>\n<p>গরু: ' + str(cattle_type.encode('utf-8')) + ', ' + str(
+        age_year.encode('utf-8')) + ' বছর ' + str(age_month.encode('utf-8')) + ' মাস ' + str(
+        age_day.encode('utf-8')) + ' দিন</p>\n<h3>Rx:</h3> ' + str(
+        medicine_str.encode('utf-8')) + ' \n<h3>Advice:</h3> <p>' + str(advice.encode('utf-8')) + '</p>\n<h4>' + str(
+        next_appointment_after) + ' দিন পর পুনরায় তথ্য পাঠিয়ে ডাক্তারের সাথে যোগাযোগ করুন</h4> <img src="' + str(
+        signature_img) + '" width="200" height="74"> <br>' + str(
+        prescribey_by.encode('utf-8')) + ' \n জরুরী প্রয়জনে ০১২৪৫৮৭৯৬৫২ নাম্বারে যোগাযোগ করুন '
 
     return prescription_html
 
@@ -762,6 +769,22 @@ def get_suggested_prescription(request):
     return HttpResponse(json.dumps(data, default=decimal_date_default), content_type="application/json",
                         status=200)
 
+
+'''
+def get_prescription_data(id):
+    q = "with t as(select cattle_system_id,(select farmer_name from farmer where mobile = c.mobile) as farmer_name,mobile, case when cattle_birth_date is not null then EXTRACT(year from age(now()::date,cattle_birth_date::date))::text else cattle_age end as age_year, case when cattle_birth_date is not null then EXTRACT(month from age(now()::date,cattle_birth_date::date))::text else 0::text end as age_month, case when cattle_birth_date is not null then EXTRACT(day from age(now()::date,cattle_birth_date::date))::text else 0::text end as age_day from cattle c), n as(with m as(select p.id as prescription_id,a.cattle_system_id,p.advice,p.next_appointment_after,pd.medicine_part_1,pd.medicine_part_2,p.created_by,p.created_date from prescription p left join prescription_details pd on pd.prescription_id = p.id left join appointment a on a.id = p.appointment_id) select m.created_date,m.prescription_id,m.created_by,m.cattle_system_id,m.advice,m.next_appointment_after,string_agg(medicine_part_1 || '\n' ||medicine_part_2, ';') as rx from m group by m.advice,m.next_appointment_after,m.cattle_system_id,m.created_by,m.prescription_id,m.created_date) select t.cattle_system_id,(select label from vwcattle_type where value =(select cattle_type from cattle where cattle_system_id =  t.cattle_system_id)) as cattle_type,t.farmer_name,t.mobile,t.age_year,t.age_month,t.age_day,n.created_date,n.prescription_id,n.created_by,n.cattle_system_id,n.advice,n.next_appointment_after,n.rx,(select first_name || last_name from auth_user where id = created_by) as prescribey_by, (select signature_img from users_additional_info where user_id = (select created_by from prescription where id ="+str(id)+")) as signature_img from t,n where t.cattle_system_id = n.cattle_system_id and n.prescription_id = "+str(id)+""
+    print q
+    data = __db_fetch_values_dict(q)
+    dict = {}
+    for temp in data:
+        rx_list = temp['rx'].split(';')
+        dict={
+            'farmer_name' : temp['farmer_name'],'mp_1' : rx_list[0],'mp_2' : rx_list[1],'signature_img' : temp['signature_img'],
+            'rx' : rx_list,'created_date' : temp['created_date'],'advice':temp['advice'],'cattle_type' : temp['cattle_type'],
+            'age_year' : temp['age_year'],'age_month' : temp['age_month'],'age_day' : temp['age_day'],'next_appointment_after' : temp['next_appointment_after'],'prescribey_by' : temp['prescribey_by'],
+        }
+    return dict
+'''
 
 def get_prescription_data(id):
     q = "with t as(select cattle_system_id,(select farmer_name from farmer where mobile = c.mobile) as farmer_name,mobile, case when cattle_birth_date is not null then EXTRACT(year from age(now()::date,cattle_birth_date::date))::text else cattle_age end as age_year, case when cattle_birth_date is not null then EXTRACT(month from age(now()::date,cattle_birth_date::date))::text else 0::text end as age_month, case when cattle_birth_date is not null then EXTRACT(day from age(now()::date,cattle_birth_date::date))::text else 0::text end as age_day from cattle c), n as(with m as(select p.id as prescription_id,a.cattle_system_id,p.advice,p.next_appointment_after,pd.medicine_part_1,pd.medicine_part_2,p.created_by,p.created_date from prescription p left join prescription_details pd on pd.prescription_id = p.id left join appointment a on a.id = p.appointment_id) select m.created_date,m.prescription_id,m.created_by,m.cattle_system_id,m.advice,m.next_appointment_after,string_agg(medicine_part_1 || '\n;'||medicine_part_2, ',') as rx from m group by m.advice,m.next_appointment_after,m.cattle_system_id,m.created_by,m.prescription_id,m.created_date) select t.cattle_system_id,(select label from vwcattle_type where value =(select cattle_type from cattle where cattle_system_id =  t.cattle_system_id)) as cattle_type,t.farmer_name,t.mobile,t.age_year,t.age_month,t.age_day,n.created_date,n.prescription_id,n.created_by,n.cattle_system_id,n.advice,n.next_appointment_after,n.rx,(select first_name || last_name from auth_user where id = created_by) as prescribey_by, (select signature_img from users_additional_info where user_id = (select created_by from prescription where id ="+str(id)+")) as signature_img from t,n where t.cattle_system_id = n.cattle_system_id and n.prescription_id = "+str(id)+""
@@ -1056,14 +1079,14 @@ def get_dates(daterange):
 
 
 def update_user_device(data, user_information, profile_id):
-    search_query = "select count(*)::text from user_device_map where profile_id = "+str(profile_id)+" and device_id = '"+data['device_id']+"'"
+    search_query = "select count(*)::text from user_device_map where profile_id = "+str(profile_id)+""
     entry_count = __db_fetch_single_value(search_query)
     print entry_count
     if entry_count == '0':
-        update_query = "INSERT INTO public.user_device_map( profile_id, firebase_token, created_at, username) VALUES ( "+str(profile_id)+", '"+data['firebase_token']+"', now(), '"+user_information['user_name']+"'); "
+        update_query = "INSERT INTO public.user_device_map( profile_id, firebase_token, created_at, username) VALUES ( "+str(profile_id)+", '"+data['firebase_token']+"', now(), '"+user_information['username']+"'); "
     else:
 
-        update_query = "update user_device_map set firebase_token='"+data['firebase_token']+"', updated_at = now() where username = '"+user_information['user_name']+"'"
+        update_query = "update user_device_map set firebase_token='"+data['firebase_token']+"', updated_at = now() where username = '"+user_information['username']+"'"
     cur = connection.cursor()
 
     # execute the UPDATE  statement
@@ -1084,10 +1107,11 @@ def send_push_message(username,notification_type,title,content,cattle_id,farmer_
 
     registration_id.append(firebase_token)
 
-    message_title = "Shurokkkha Update"
+    message_title = title
 
-    message_body = "Hi , your customized news for today is ready"
+    message_body = content
 
+    
     data_message = {
         "notif_type" : notification_type,
         "title" : title ,
@@ -1097,6 +1121,26 @@ def send_push_message(username,notification_type,title,content,cattle_id,farmer_
         "prescription_id" : prescription_id
 
     }
+    '''
+    data_message = {
+        "message": {
+            "token": firebase_token,
+            "notification": {
+                "title": title,
+                "body": content,
+            },
+            "data":{
+        "notif_type" : notification_type,
+        "title" : title ,
+        "content" : content,
+        "cattle_id" : cattle_id,
+        "farmer_id" : farmer_id,
+        "prescription_id" : prescription_id
+
+    }
+        }
+    }
+    '''
 
     result = push_service.notify_multiple_devices(registration_ids=registration_id, message_title=message_title,
 

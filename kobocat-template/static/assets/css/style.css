@@ -522,12 +522,15 @@ Page sidebar
 }
 
 .page-sidebar-menu > li.start > a {
-   border-top-color: transparent !important;
+   /*border-top-color: transparent !important;*/
+  border-top-color: #00B755 !important;
+
 }
 
 .page-sidebar-menu > li:last-child > a,
 .page-sidebar-menu > li.last > a {
-   border-bottom-color: transparent !important;
+   /*border-bottom-color: transparent !important;*/
+  border-bottom-color: #00B755 !important;
 }
 
 .page-sidebar-menu > li > a {
@@ -1589,7 +1592,7 @@ Box portlet
 }
 
 .portlet.box.red > .portlet-title {
-  background-color: #004cb9;
+  background-color: #00B755;
 } 
 
 .portlet.box.red {  

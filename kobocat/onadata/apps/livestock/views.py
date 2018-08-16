@@ -27,6 +27,10 @@ from datetime import datetime as dt
 import time
 import os.path
 from datetime import date, timedelta, datetime
+from pyfcm import FCMNotification
+
+push_service = FCMNotification(api_key="AAAA1dBJQYk:APA91bGQf5qjEkdhxxcjnvodj-xMKVWmRPQ2UbBw_qsp4XlxGratkzemLNbF6JYnTIZ1jfRIZ-1e1IaqSZctL_n_i338zF5_5swkRBAiW0PEc4fW_DOl-03jq-aKLKOfOVcHcZMqDLctAXVKOT-kx4XdRRekuIofqg")
+
 
 
 def __db_fetch_values(query):
@@ -252,7 +256,7 @@ def approve(request,id):
     __db_commit_query(insert_q)
     for role in user_roles:
         UserRoleMap(user=profile, role=role).save()
-
+    send_push_message(mobile, 1, 'Approval', 'Approved as Paravet/AI Technician.', '', mobile, '')
     # TO DO ::SMS Notification
     send_mail(
         'Successful Approval',
@@ -646,6 +650,12 @@ def submit_prescription(request,appointment_id):
             __db_commit_query(pres_detail_q)
         __db_commit_query("update appointment set status = 2,prescription_id="+str(prescription_id)+" where id = "+str(appointment_id)+"")
         pres_html = get_prescription(prescription_id)
+        q = "select cattle_system_id,(select mobile from cattle where cattle_system_id = appointment.cattle_system_id) as mobile from appointment where id = "+str(appointment_id)+" "
+        d = __db_fetch_values_dict(q)
+        for temp in d:
+            cattle_id = temp['cattle_system_id']
+            farmer_id = temp['mobile']
+        send_push_message(farmer_id, 1, 'Prescription', 'There is a prescription.', cattle_id, farmer_id, prescription_id)
         send_mail(
             'User LogIn One Time Password',
             pres_html,
@@ -653,7 +663,6 @@ def submit_prescription(request,appointment_id):
             ['mpowersocialent@gmail.com'],
             fail_silently=False
         )
-
 
     return HttpResponse(json.dumps("Prescription added"), content_type="application/json", status=200)
 
@@ -746,14 +755,18 @@ def get_suggested_prescription(request):
 
 
 def get_prescription_data(id):
-    q = "with t as(select cattle_system_id,(select farmer_name from farmer where mobile = c.mobile) as farmer_name,mobile, case when cattle_birth_date is not null then EXTRACT(year from age(now()::date,cattle_birth_date::date))::text else cattle_age end as age_year, case when cattle_birth_date is not null then EXTRACT(month from age(now()::date,cattle_birth_date::date))::text else 0::text end as age_month, case when cattle_birth_date is not null then EXTRACT(day from age(now()::date,cattle_birth_date::date))::text else 0::text end as age_day from cattle c), n as(with m as(select p.id as prescription_id,a.cattle_system_id,p.advice,p.next_appointment_after,pd.medicine_part_1,pd.medicine_part_2,p.created_by,p.created_date from prescription p left join prescription_details pd on pd.prescription_id = p.id left join appointment a on a.id = p.appointment_id) select m.created_date,m.prescription_id,m.created_by,m.cattle_system_id,m.advice,m.next_appointment_after,string_agg(medicine_part_1 || '\n' ||medicine_part_2, ';') as rx from m group by m.advice,m.next_appointment_after,m.cattle_system_id,m.created_by,m.prescription_id,m.created_date) select t.cattle_system_id,(select label from vwcattle_type where value =(select cattle_type from cattle where cattle_system_id =  t.cattle_system_id)) as cattle_type,t.farmer_name,t.mobile,t.age_year,t.age_month,t.age_day,n.created_date,n.prescription_id,n.created_by,n.cattle_system_id,n.advice,n.next_appointment_after,n.rx,(select first_name || last_name from auth_user where id = created_by) as prescribey_by, (select signature_img from users_additional_info where user_id = (select created_by from prescription where id ="+str(id)+")) as signature_img from t,n where t.cattle_system_id = n.cattle_system_id and n.prescription_id = "+str(id)+""
+    q = "with t as(select cattle_system_id,(select farmer_name from farmer where mobile = c.mobile) as farmer_name,mobile, case when cattle_birth_date is not null then EXTRACT(year from age(now()::date,cattle_birth_date::date))::text else cattle_age end as age_year, case when cattle_birth_date is not null then EXTRACT(month from age(now()::date,cattle_birth_date::date))::text else 0::text end as age_month, case when cattle_birth_date is not null then EXTRACT(day from age(now()::date,cattle_birth_date::date))::text else 0::text end as age_day from cattle c), n as(with m as(select p.id as prescription_id,a.cattle_system_id,p.advice,p.next_appointment_after,pd.medicine_part_1,pd.medicine_part_2,p.created_by,p.created_date from prescription p left join prescription_details pd on pd.prescription_id = p.id left join appointment a on a.id = p.appointment_id) select m.created_date,m.prescription_id,m.created_by,m.cattle_system_id,m.advice,m.next_appointment_after,string_agg(medicine_part_1 || '\n;'||medicine_part_2, ',') as rx from m group by m.advice,m.next_appointment_after,m.cattle_system_id,m.created_by,m.prescription_id,m.created_date) select t.cattle_system_id,(select label from vwcattle_type where value =(select cattle_type from cattle where cattle_system_id =  t.cattle_system_id)) as cattle_type,t.farmer_name,t.mobile,t.age_year,t.age_month,t.age_day,n.created_date,n.prescription_id,n.created_by,n.cattle_system_id,n.advice,n.next_appointment_after,n.rx,(select first_name || last_name from auth_user where id = created_by) as prescribey_by, (select signature_img from users_additional_info where user_id = (select created_by from prescription where id ="+str(id)+")) as signature_img from t,n where t.cattle_system_id = n.cattle_system_id and n.prescription_id = "+str(id)+""
     print q
     data = __db_fetch_values_dict(q)
     dict = {}
     for temp in data:
+        print "temp['rx']***********************"
+        print temp['rx']
         rx_list = temp['rx'].split(';')
+        print rx_list[0]
+        print rx_list[1]
         dict={
-            'farmer_name' : temp['farmer_name'],'mp_1' : rx_list[0],'mp_2' : rx_list[1],'signature_img' : temp['signature_img'],
+            'farmer_name' : temp['farmer_name'],'mp_1' : rx_list[0],'mp_2' : rx_list[0],'signature_img' : temp['signature_img'],
             'rx' : rx_list,'created_date' : temp['created_date'],'advice':temp['advice'],'cattle_type' : temp['cattle_type'],
             'age_year' : temp['age_year'],'age_month' : temp['age_month'],'age_day' : temp['age_day'],'next_appointment_after' : temp['next_appointment_after'],'prescribey_by' : temp['prescribey_by'],
         }
@@ -1027,3 +1040,55 @@ def get_dates(daterange):
         'start_date': date_list[0], 'end_date': date_list[1]
     }
     return data
+
+
+
+
+def update_user_device(data, user_information, profile_id):
+    search_query = "select count(*)::text from user_device_map where profile_id = "+str(profile_id)+" and device_id = '"+data['device_id']+"'"
+    entry_count = __db_fetch_single_value(search_query)
+    print entry_count
+    if entry_count == '0':
+        update_query = "INSERT INTO public.user_device_map( profile_id, firebase_token, created_at, username) VALUES ( "+str(profile_id)+", '"+data['firebase_token']+"', now(), '"+user_information['user_name']+"'); "
+    else:
+
+        update_query = "update user_device_map set firebase_token='"+data['firebase_token']+"', updated_at = now() where username = '"+user_information['user_name']+"'"
+    cur = connection.cursor()
+
+    # execute the UPDATE  statement
+
+    cur.execute(update_query)
+
+
+
+def send_push_message(username,notification_type,title,content,cattle_id,farmer_id,prescription_id):
+
+    firebase_query = "select firebase_token from user_device_map where username = '"+username+"'"
+
+    firebase_token = __db_fetch_single_value(firebase_query)
+
+    # unique firebase token for the user
+
+    registration_id = []
+
+    registration_id.append(firebase_token)
+
+    message_title = "Shurokkkha Update"
+
+    message_body = "Hi , your customized news for today is ready"
+
+    data_message = {
+        "notif_type" : notification_type,
+        "title" : title ,
+        "content" : content,
+        "cattle_id" : cattle_id,
+        "farmer_id" : farmer_id,
+        "prescription_id" : prescription_id
+
+    }
+
+    result = push_service.notify_multiple_devices(registration_ids=registration_id, message_title=message_title,
+
+                                               message_body=message_body,data_message=data_message)
+
+    print result

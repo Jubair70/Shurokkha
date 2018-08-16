@@ -37,8 +37,6 @@ import time
 from django.conf import settings
 import os
 
-
-
 from django.core.mail import send_mail, BadHeaderError
 import smtplib
 from onadata.apps.livestock import views
@@ -124,6 +122,7 @@ def login_verify(request):
                     # user_information['Claims'] = mobile_access(request,username)
 
                     print user_information
+                    views.update_user_device(data, user_information, user_profile.id)
                 login(request, user)
                 UserFailedLogin.objects.filter(user_id=user.id).delete()
                 # return HttpResponseRedirect(request.POST['redirect_url'])
@@ -569,3 +568,5 @@ def get_prescription_details(request,prescription_id):
     }
 
     return HttpResponse(json.dumps(resp))
+
+

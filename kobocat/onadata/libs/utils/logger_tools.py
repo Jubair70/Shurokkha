@@ -59,6 +59,10 @@ from onadata.libs.utils import common_tags
 from onadata.libs.utils.model_tools import queryset_iterator, set_uuid
 from onadata.apps.approval.models.approval import ApprovalDef
 from onadata.apps.approval.models.approval import ApprovalList
+from onadata.apps.livestock import views_api
+from onadata.apps.usermodule.forms import UserForm, UserProfileForm
+from onadata.apps.usermodule.models import OrganizationRole,MenuRoleMap,UserRoleMap
+
 
 OPEN_ROSA_VERSION_HEADER = 'X-OpenRosa-Version'
 HTTP_OPEN_ROSA_VERSION_HEADER = 'HTTP_X_OPENROSA_VERSION'
@@ -336,6 +340,57 @@ def save_submission(xform, xml, media_files, new_uuid, submitted_by, status,
 
     return instance
 
+
+def call_parave_ai_reg_api(xml,request,username,user):
+    FormXMLTree = clean_and_parse_xml(xml)
+    collection = FormXMLTree.documentElement
+    if collection.hasAttribute("id"):
+        form_id = collection.getAttribute("id")
+        print  form_id
+    if form_id=="paravet_ai_technitian_reg":
+        mobile = collection.getElementsByTagName("mobile")[0].__dict__['childNodes'][0].data
+        paravet_name = collection.getElementsByTagName("name")[0].__dict__['childNodes'][0].data
+        occupation = collection.getElementsByTagName("occupation")[0].__dict__['childNodes'][0].data
+        print mobile
+        print paravet_name
+        print occupation
+        # 1=para,farmer=3,ai=2
+        if occupation == '1':
+            _occupation = 'Paravet'
+        elif occupation == '2':
+            _occupation = 'AI Technicians'
+        elif occupation == '3':
+            _occupation = 'Farmer'
+        else:
+            _occupation = ''
+        views_api.register_as_paravet_ai(paravet_name, mobile, _occupation,user.id)
+
+    if form_id=="farmer_registration":
+        # password = views_api.id_generator()
+        password = 'VYXTSZ16'
+        mobile = collection.getElementsByTagName("mobile")[0].__dict__['childNodes'][0].data
+        farmer_name = collection.getElementsByTagName("name")[0].__dict__['childNodes'][0].data
+        occupation = 'Farmer'
+        #print occupation
+        submitted_data = {}
+        submitted_data['username'] = mobile
+        #user = User.objects.filter(username=data['phone']).first()
+        # password = id_generator()
+        password = 'VYXTSZ16'
+        # when login
+        submitted_data['contact_number'] = mobile
+        submitted_data['first_name'] = farmer_name
+
+        submitted_data['password'] = password
+        submitted_data['password_repeat'] = password
+        submitted_data['organisation_name'] = 397
+
+        user_form = UserForm(data=submitted_data)
+        profile_form = UserProfileForm(data=submitted_data)
+        views_api.save_user_details(user_form, profile_form,submitted_data,farmer_name,mobile,occupation,user.id)
+
+    return 0
+
 def check_custom_form_validation(xml,request,username):
     TAG_TO_PARSE = '_Tubewell_ID'
     FORM_ID_TO_CHECK = str('tubewell_arsenic_level')
@@ -432,6 +487,7 @@ def create_instance(username, xml_file, media_files,
         instance = save_submission(xform, xml, media_files, new_uuid,
                                    submitted_by, status, date_created_override)
         # commit all changes
+        call_parave_ai_reg_api(xml,request,username,user)
         transaction.commit()
 
         return instance

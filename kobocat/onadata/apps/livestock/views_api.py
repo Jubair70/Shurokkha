@@ -37,9 +37,13 @@ import time
 from django.conf import settings
 import os
 
+
+
 from django.core.mail import send_mail, BadHeaderError
 import smtplib
 from onadata.apps.livestock import views
+
+
 
 
 
@@ -120,9 +124,9 @@ def login_verify(request):
                     user_information["username"] = username
                     # user_information['Organizations'] = [pro.organization.organization for pro in profile_organization]
                     # user_information['Claims'] = mobile_access(request,username)
-
-                    print user_information
+                    print data
                     views.update_user_device(data, user_information, user_profile.id)
+                    print user_information
                 login(request, user)
                 UserFailedLogin.objects.filter(user_id=user.id).delete()
                 # return HttpResponseRedirect(request.POST['redirect_url'])
@@ -186,13 +190,12 @@ def save_user(request):
 
         submitted_data['first_name'] = data['name'][0].upper() + data['name'][1:]
         # submitted_data['last_name'] = data['LastName'][0].upper() + data['LastName'][1:]
-        role = data['occupation']
-        role_list = ['Farmer']
+
         '''
         if role != 'Farmer':
             role_list.append(role)
         '''
-        user_roles = OrganizationRole.objects.filter(role__in=role_list)
+
         # submitted_data['role'] = Role.id
 
         submitted_data['password'] = password
@@ -218,83 +221,22 @@ def save_user(request):
         #     user_update = False
         # user_form = UserForm(username=data['UserName'], email=data['Email'], password=data['Password'], password_repeat=data['Password'])
 
-        user_form = UserForm(data=submitted_data)
-        profile_form = UserProfileForm(data=submitted_data)
+        #user_form = UserForm(data=submitted_data)
+        #profile_form = UserProfileForm(data=submitted_data)
         userRole_flag = 0
 
         user_form = UserForm(data=submitted_data)
         profile_form = UserProfileForm(data=submitted_data)
-
+        farmer_name = data['name'][0].upper() + data['name'][1:]
+        mobile = data['phone']
+        occupation=data['occupation']
+        if user:
+            auth_user_id = user.id
+        else:
+            auth_user_id = None
         if user_form.is_valid() and profile_form.is_valid():
 
-            user = user_form.save()
-            form_bool_value = False
-
-            encrypted_password = make_password(user.password)
-            user.password = encrypted_password
-            user.save()
-
-            profile = profile_form.save(commit=False)
-
-            profile.user = user
-
-            expiry_months_delta = 3
-
-            # next_expiry_date = (datetime.today() + timedelta(expiry_months_delta * 365 / 12))
-            next_expiry_date = (datetime.today() + timedelta(minutes=5))
-
-            profile.expired = next_expiry_date
-            profile.admin = form_bool_value
-
-            profile.save()
-            # kobo main/models/UserProfile
-            if userRole_flag == 0:
-                main_user_profile = UserProfile(user=user)
-                main_user_profile.save()
-
-            registered = True
-
-            passwordHistory = UserPasswordHistory(user_id=user.id, date=datetime.now())
-            passwordHistory.password = encrypted_password
-            passwordHistory.save()
-            submitted_data['user'] = profile.id
-
-
-            # insert into farmer
-            auth_user_id = user.id
-            user_profile_id = profile.id
-            farmer_name = data['name'][0].upper() + data['name'][1:]
-            mobile = data['phone']
-            #Duplicate FARMER/PARAVET/AI checking
-            if check_duplicate_farmer(mobile) == 0:
-                for role in user_roles:
-                    UserRoleMap(user=profile, role=role).save()
-                insert_q = "INSERT INTO public.farmer(id, farmer_name, mobile,submission_time,submitted_by)VALUES (DEFAULT, '" + farmer_name + "','" + mobile + "', NOW()," + str(
-                    auth_user_id) + " ) RETURNING ID;"
-                ##print insert_q
-                f_id = views.__db_fetch_single_value(insert_q)
-                insert_q_map = "INSERT INTO public.user_farmer_map(id, user_id, farmer_id)VALUES (DEFAULT, " + str(
-                    user_profile_id) + ", " + str(f_id) + ");"
-                views.__db_commit_query(insert_q_map)
-                if data['occupation'] != 'Farmer':
-                    approval_q = "INSERT INTO public.approval_queue(id,name, mobile, role_name, status, submitted_by, submission_time)VALUES (DEFAULT, '"+farmer_name+"','"+mobile+"', '"+data['occupation']+"', 0, "+str(auth_user_id)+", NOW());"
-                    #print approval_q
-                    views.__db_commit_query(approval_q)
-
-                ## Sending notification mail ----------- (Start) // we have imported (from django.core.mail import send_mail)
-
-            # loggeusername = request.user.username
-            # currentOwner = get_object_or_404(User, username__iexact=loggeusername)
-            # sendermail = currentOwner.email
-            receivermail = data['phone']
-
-            send_mail(
-                'User LogIn One Time Password',
-                'Hi,\n\nWelcome to Shurokkha!!\n\nPlease use this Password given below  to access The shurokkha App.\n\n Password :' + password + '\n\n',
-                'mpowersocial2018@gmail.com',
-                ['mpowersocialent@gmail.com'],
-                fail_silently=False
-            )
+            save_user_details(user_form, profile_form,submitted_data,farmer_name,mobile,occupation,auth_user_id)
 
             return HttpResponse(json.dumps({'password': password}), status=200)
 
@@ -315,6 +257,102 @@ def save_user(request):
         fail_silently=False
     )
     return HttpResponse(json.dumps({'password': password}), status=200)
+
+
+def save_user_details(user_form,profile_form,submitted_data,farmer_name,mobile,occupation,auth_user_id):
+    role = occupation
+    role_list = ['Farmer']
+    user_roles = OrganizationRole.objects.filter(role__in=role_list)
+    user = user_form.save()
+    form_bool_value = False
+
+    encrypted_password = make_password(user.password)
+    user.password = encrypted_password
+    user.save()
+
+    profile = profile_form.save(commit=False)
+
+    profile.user = user
+
+    expiry_months_delta = 3
+
+    # next_expiry_date = (datetime.today() + timedelta(expiry_months_delta * 365 / 12))
+    next_expiry_date = (datetime.today() + timedelta(minutes=5))
+
+    profile.expired = next_expiry_date
+    profile.admin = form_bool_value
+
+    profile.save()
+    # kobo main/models/UserProfile
+    #if userRole_flag == 0:
+    main_user_profile = UserProfile(user=user)
+    main_user_profile.save()
+
+    registered = True
+
+    passwordHistory = UserPasswordHistory(user_id=user.id, date=datetime.now())
+    passwordHistory.password = encrypted_password
+    passwordHistory.save()
+    submitted_data['user'] = profile.id
+
+    # insert into farmer
+    #auth_user_id = user.id
+    user_profile_id = profile.id
+    #farmer_name = data['name'][0].upper() + data['name'][1:]
+    #mobile = data['phone']
+    isuser=None
+    if auth_user_id is None:
+        submitted_user_id = user.id
+    else:
+        isuser=1
+        submitted_user_id = auth_user_id
+    # Duplicate FARMER/PARAVET/AI checking
+    if check_duplicate_farmer(mobile) == 0:
+        for role in user_roles:
+            UserRoleMap(user=profile, role=role).save()
+        insert_q = "INSERT INTO public.farmer(id, farmer_name, mobile,submission_time,submitted_by)VALUES (DEFAULT, '" + farmer_name + "','" + mobile + "', NOW()," + str(
+            submitted_user_id) + " ) RETURNING ID;"
+        ##print insert_q
+        f_id = views.__db_fetch_single_value(insert_q)
+        insert_q_map = "INSERT INTO public.user_farmer_map(id, user_id, farmer_id)VALUES (DEFAULT, " + str(
+            user_profile_id) + ", " + str(f_id) + ");"
+        views.__db_commit_query(insert_q_map)
+        if isuser:
+            p_id = views.__db_fetch_single_value("select id from usermodule_usermoduleprofile where user_id = "+str(auth_user_id)+"")
+            q = "INSERT INTO public.user_farmer_map(id, user_id, farmer_id)VALUES (DEFAULT, " + str(
+                p_id) + ", " + str(f_id) + ");"
+            views.__db_commit_query(q)
+        if occupation != 'Farmer':
+            register_as_paravet_ai(farmer_name, mobile, occupation, submitted_user_id)
+
+            ## Sending notification mail ----------- (Start) // we have imported (from django.core.mail import send_mail)
+
+    # loggeusername = request.user.username
+    # currentOwner = get_object_or_404(User, username__iexact=loggeusername)
+    # sendermail = currentOwner.email
+    #receivermail = data['phone']
+
+    send_mail(
+        'User LogIn One Time Password',
+        'Hi,\n\nWelcome to Shurokkha!!\n\nPlease use this Password given below  to access The shurokkha App.\n\n Password :' + submitted_data['password'] + '\n\n',
+        'mpowersocial2018@gmail.com',
+        ['mpowersocialent@gmail.com'],
+        fail_silently=False
+    )
+
+
+
+
+
+def register_as_paravet_ai(p_ai_name,mobile,occupation,auth_user_id):
+    q = "select * from paravet_aitechnician where mobile = '" + mobile + "' "
+    data = __db_fetch_values_dict(q)
+    data_length = len(data)
+    if data_length==0:
+        approval_q = "INSERT INTO public.approval_queue(id,name, mobile, role_name, status, submitted_by, submission_time)VALUES (DEFAULT, '" + p_ai_name + "','" + mobile + "', '" + \
+                     occupation + "', 0, " + str(auth_user_id) + ", NOW());"
+        # print approval_q
+        views.__db_commit_query(approval_q)
 
 
 def check_duplicate_farmer(mobile):
@@ -568,5 +606,7 @@ def get_prescription_details(request,prescription_id):
     }
 
     return HttpResponse(json.dumps(resp))
+
+
 
 

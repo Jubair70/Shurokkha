@@ -28,6 +28,7 @@ import time
 import os.path
 from datetime import date, timedelta, datetime
 from pyfcm import FCMNotification
+import requests
 
 push_service = FCMNotification(api_key="AAAA1dBJQYk:APA91bGQf5qjEkdhxxcjnvodj-xMKVWmRPQ2UbBw_qsp4XlxGratkzemLNbF6JYnTIZ1jfRIZ-1e1IaqSZctL_n_i338zF5_5swkRBAiW0PEc4fW_DOl-03jq-aKLKOfOVcHcZMqDLctAXVKOT-kx4XdRRekuIofqg")
 
@@ -199,8 +200,26 @@ def edit_medicine(request,id):
 
 '''
 
+
+def send_sms(mobile,sms_text):
+    url ="http://api.boom-cast.com/boomcast/WebFramework/boomCastWebService/externalApiSendTextMessage.php?masking=Shurokkha&userName=Shurokkha_mpower&password=982b8ae51fdc7147a9911aa211d1ec21&MsgType=Unicode&"
+    try:
+        #print url
+        urlParameters = "receiver=" + mobile + "&message=" + sms_text;
+        print "**************************  sending SMS **************************"
+        r = requests.get(url+urlParameters)  # data=json.dumps(payload))
+        print r.status_code
+        print "**************************  sending SMS  successfull.**************************"
+    except Exception, e:
+        print "sending failed.."
+        print str(e)
+        return
+
+
+
 @login_required
 def farmer_list(request):
+    #send_sms('01840970511','this is test shurokkha sms')
     q= "select (select  id from auth_user where username = mobile) user_id,name from paravet_aitechnician"
     paravet_ai_list = makeTableList(q)
     return render(request,"livestock/farmer_list.html",{'paravet_ai_list' : paravet_ai_list})

@@ -143,8 +143,8 @@ def login_verify(request):
     return HttpResponse('Login failed', status=409)
 
 
-def id_generator(size=8):
-    return ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(size))
+def id_generator(size=4):
+    return ''.join(random.SystemRandom().choice(string.digits) for _ in range(size))
 
 
 # mobile save user
@@ -165,8 +165,8 @@ def save_user(request):
     submitted_data = {}
     submitted_data['username'] = data['phone']
     user = User.objects.filter(username=data['phone']).first()
-    #password = id_generator()
-    password = 'VYXTSZ16'
+    password = id_generator()
+    #password = 'VYXTSZ16'
     # when login
     if user is not None:
         # password = id_generator()
@@ -237,6 +237,8 @@ def save_user(request):
         if user_form.is_valid() and profile_form.is_valid():
 
             save_user_details(user_form, profile_form,submitted_data,farmer_name,mobile,occupation,auth_user_id)
+            sms_text = "সুরক্ষা-তে রেজিস্ট্রেশান সম্পন্ন করার জন্য গোপন কোডটি লিখুন.কোড : " + password
+            views.send_sms(receivermail, sms_text.decode('utf-8'))
 
             return HttpResponse(json.dumps({'password': password}), status=200)
 
@@ -256,6 +258,8 @@ def save_user(request):
         ['mpowersocialent@gmail.com'],
         fail_silently=False
     )
+    sms_text = "সুরক্ষা-তে রেজিস্ট্রেশান সম্পন্ন করার জন্য গোপন কোডটি লিখুন.কোড : " + password
+    views.send_sms(receivermail, sms_text.decode('utf-8'))
     return HttpResponse(json.dumps({'password': password}), status=200)
 
 
@@ -339,6 +343,7 @@ def save_user_details(user_form,profile_form,submitted_data,farmer_name,mobile,o
         ['mpowersocialent@gmail.com'],
         fail_silently=False
     )
+
 
 
 
@@ -606,6 +611,9 @@ def get_prescription_details(request,prescription_id):
     }
 
     return HttpResponse(json.dumps(resp))
+
+
+
 
 
 

@@ -365,7 +365,7 @@
 
                 <div class="form-group " id="q_reproductive_problem"  style="display: none">
               <label for="exampleInputEmail1">বর্তমানে প্রজনন সংক্রান্ত কি সমস্যা আছে?:</label>
-              <select  class="form-control multiselect_class" multiple="multiple"  name="reproductive_problem[]" id="reproductive_problem" aria-describedby="emailHelp" required>
+              <select  class="form-control multiselect_class" multiple="multiple"  name="reproductive_problem[]" id="reproductive_problem" aria-describedby="emailHelp" >
                      {% for data in reproductive_problem %}
                     <option value="{{ data.0 }}">{{ data.1 }}</option>
                     {% endfor %}
@@ -374,7 +374,7 @@
 
                 <div class="form-group" id="q_milking_problem"  style="display: none">
               <label for="exampleInputEmail1">দুধ উৎপাদন সম্পর্কিত কোন সমস্যা আছে? থাকলে কি কি ?:</label>
-              <select  class="form-control multiselect_class" multiple="multiple" name ="milking_problem[]" id="milking_problem" aria-describedby="emailHelp" required>
+              <select  class="form-control multiselect_class" multiple="multiple" name ="milking_problem[]" id="milking_problem" aria-describedby="emailHelp" >
                      {% for data in milking_problem %}
                     <option value="{{ data.0 }}">{{ data.1 }}</option>
                     {% endfor %}
@@ -636,9 +636,9 @@
     </div>
     <!--Add Farmer location modal -->
      <!--Add medicine modal -->
-    <div class="modal fade"  id="add_loc_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal fade" id="add_loc_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
       <div class="modal-dialog" role="document">
-        <div class="modal-content" >
+        <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title" id="exampleModalLabel">Add Location</h5>
             <button class="close" type="button" data-dismiss="modal" aria-label="Close">
@@ -731,8 +731,6 @@
     
 
     <script>
-
-
         var cattle_id = {{ cattle_id }}
         var appointment_id = {{ appointment_id }}
         var cattle_type = {{ cattle_type }}
@@ -975,6 +973,7 @@
         });
 
         $(document).on("submit", "#prescription_form", function (event) {
+            console.log("trigger submit_prescription");
             event.preventDefault();
             form_url = $(this).attr('action');
             console.log(form_url)
@@ -988,13 +987,16 @@
                 processData: false,
                 data: data,
                 success: function (data) {
+                    console.log(data);
                     get_old_prescription(cattle_id);
                     $('#prescription').hide()
                     $('#clinical_findings_div').hide();
+                    //$('#success_msg_upload').html("");
+                    //$('#success_msg_upload').html('<div class="alert alert-success fade in alert-dismissible"><strong>Success!</strong> Successfully uploaded</div>');
 
                 },
                 error: function (xhr, status, error) {
-                    // $('#error_msg_upload').html("<h5><strong>"+xhr.responseText+"</strong></h5>");
+                   // $('#error_msg_upload').html("<h5><strong>"+xhr.responseText+"</strong></h5>");
                 }
             }); //ajax end
 
@@ -1142,13 +1144,10 @@
             }
         }); //ajax end
 
-
-
     }
 
 
     var s = 0;
-
 
     /*geo hierarchy loading*/
          $(document).on("change", "#division", function () {
@@ -1182,7 +1181,6 @@
                         else $('#district').append('<option value = '+list.dist_list[i][1]+'>'+list.dist_list[i][0]+'</option>')
 
                     }
-
                 }
 
             });

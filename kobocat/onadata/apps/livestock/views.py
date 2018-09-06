@@ -353,6 +353,7 @@ def upload_prescription(request):
         des = filePath
         xlsx = pd.ExcelFile(des)  # open the file
         df = xlsx.parse(0)  # get the first sheet as an object
+        df = df.fillna({'Medicine Type':0,'Type':0,'Advices' :0}, inplace=True)
         duplicate_diagnosis = []
         df_1 = df.groupby(['Tentative Diagnosis', 'Type','Body Weight From','Body Weight To']).size().reset_index(name='Freq')
         for index_1,row_1 in df_1.iterrows():
@@ -378,7 +379,10 @@ def upload_prescription(request):
                 #*** Diagnosis *******#
                 diagnosis_name = row[0]
                 description_type = row[1]
-                cattle_type = row[2].encode('utf-8')
+                if row[2] !=0:
+                    cattle_type = row[2].encode('utf-8')
+                else:
+                    cattle_type = ''
 
                 #print cattle_type_id
                 weight_from = row[3]
@@ -386,7 +390,11 @@ def upload_prescription(request):
 
                 # *** Medicine *******#
                 med_type = row[5]
-                med_type_id = __db_fetch_single_value("select id from medicine_type where name = '" + med_type + "'")
+
+                if med_type != 0:
+                    med_type_id = __db_fetch_single_value("select id from medicine_type where name = '" + med_type + "'")
+                else:
+                    med_type_id = 0
                 #print med_type_id
                 med_name = row[6]
                 packsize = row[7]
@@ -394,8 +402,10 @@ def upload_prescription(request):
                 dose = row[9]
                 route = row[10]
                 days = row[11]
-
-                advice = row[12]
+                if row[12] != 0:
+                    advice = row[12].encode('utf-8')
+                else:
+                    advice = ''
                 if ((diagnosis_1 == diagnosis_name) and (type_1 == cattle_type) and (weight_from_1 == weight_from) and (weight_to_1 == weight_to )):
 
                     if description_type == 'M':
@@ -470,7 +480,7 @@ def cattle_profile(request,cattle_id,appointment_id):
         'div_list' : div_list,
         'appointment_id' : appointment_id,'appointment_status' : appointment_status,'appointment_type' : appointment_type,'cattle_id':cattle_id,
         'wrong_feeding_last_days' : get_option_list('wrong_feeding_last_days'),
-        'muzzle': get_option_list('muzzle'),'same_sickness_other_cattle' : get_option_list('same_sickness_other_cattle'),
+        #'muzzle': get_option_list('muzzle'),'same_sickness_other_cattle' : get_option_list('same_sickness_other_cattle'),
         'sickness_sign': get_option_list('sickness_sign'),
         'behavioral_signs': get_option_list('behavioral_signs'),
         'mouth_digestion_sign': get_option_list('mouth_digestion_sign'),
@@ -601,14 +611,14 @@ def clinical_findings(request,appointment_id):
         edit_id = request.POST.get('clinical_findings_id')
         complain_details = request.POST.get('complain_details')
         treatment_history = request.POST.get('treatment_history')
-        same_sickness_other_cattle = request.POST.get('same_sickness_other_cattle')
-        sick_cattle_affected_or_died = request.POST.get('sick_cattle_affected_or_died')
+        #same_sickness_other_cattle = request.POST.get('same_sickness_other_cattle')
+        #sick_cattle_affected_or_died = request.POST.get('sick_cattle_affected_or_died')
         deworming_history = request.POST.get('deworming_history')
         feeding_history = request.POST.get('feeding_history')
         wrong_feeding_last_days = get_multiple_input_string(request.POST.getlist('wrong_feeding_last_days[]'))
         rumination = request.POST.get('rumination')
-        lacrimation = request.POST.get('lacrimation')
-        muzzle = request.POST.get('muzzle')
+        #lacrimation = request.POST.get('lacrimation')
+        #muzzle = request.POST.get('muzzle')
         sickness_sign = get_multiple_input_string(request.POST.getlist('sickness_sign[]'))
         behavioral_signs = get_multiple_input_string(request.POST.getlist('behavioral_signs[]'))
         mouth_digestion_sign = get_multiple_input_string(request.POST.getlist('mouth_digestion_sign[]'))
@@ -623,10 +633,10 @@ def clinical_findings(request,appointment_id):
         disease_pattern = request.POST.get('disease_pattern')
         tentative_diagnosis = request.POST.get('tentative_diagnosis')
         if edit_id:
-            q="update public.clinical_findings set complain_details = '"+complain_details+"',sick_cattle_affected_or_died = "+str(sick_cattle_affected_or_died)+",same_sickness_other_cattle = "+str(same_sickness_other_cattle)+", treatment_history='"+treatment_history+"', deworming_history='"+deworming_history+"', feeding_history='"+feeding_history+"', wrong_feeding_last_days='"+wrong_feeding_last_days+"', rumination='"+rumination+"', lacrimation='"+lacrimation+"', muzzle='"+muzzle+"', sickness_sign='"+sickness_sign+"', behavioral_signs='"+behavioral_signs+"', mouth_digestion_sign='"+mouth_digestion_sign+"', stool_condition='"+stool_condition+"', repiratory_sign='"+repiratory_sign+"', reproductive_problem='"+reproductive_problem+"', milking_problem='"+milking_problem+"', male_reproductive_problem='"+male_reproductive_problem+"', skin_problem='"+skin_problem+"', foot_problem='"+foot_problem+"', megot='"+megot+"', disease_pattern='"+disease_pattern+"', tentative_diagnosis='"+tentative_diagnosis+"',updated_by="+str(request.user.id)+",updated_date=NOW()"
+            q="update public.clinical_findings set complain_details = '"+complain_details+"', treatment_history='"+treatment_history+"', deworming_history='"+deworming_history+"', feeding_history='"+feeding_history+"', wrong_feeding_last_days='"+wrong_feeding_last_days+"', rumination='"+rumination+"',  sickness_sign='"+sickness_sign+"', behavioral_signs='"+behavioral_signs+"', mouth_digestion_sign='"+mouth_digestion_sign+"', stool_condition='"+stool_condition+"', repiratory_sign='"+repiratory_sign+"', reproductive_problem='"+reproductive_problem+"', milking_problem='"+milking_problem+"', male_reproductive_problem='"+male_reproductive_problem+"', skin_problem='"+skin_problem+"', foot_problem='"+foot_problem+"', megot='"+megot+"', disease_pattern='"+disease_pattern+"', tentative_diagnosis='"+tentative_diagnosis+"',updated_by="+str(request.user.id)+",updated_date=NOW()"
             __db_commit_query(q)
         else:
-            q = "INSERT INTO public.clinical_findings(id, appointment_id, complain_details, sick_cattle_affected_or_died, same_sickness_other_cattle, treatment_history, deworming_history, feeding_history, wrong_feeding_last_days, rumination, lacrimation, muzzle, sickness_sign, behavioral_signs, mouth_digestion_sign, stool_condition, repiratory_sign, reproductive_problem, milking_problem, male_reproductive_problem, skin_problem, foot_problem, megot, disease_pattern, tentative_diagnosis, created_by, created_date)VALUES (DEFAULT , "+str(appointment_id)+",'"+complain_details+"', "+str(sick_cattle_affected_or_died)+", "+str(same_sickness_other_cattle)+", '"+treatment_history+"', '"+deworming_history+"', '"+feeding_history+"', '"+wrong_feeding_last_days+"', '"+rumination+"', '"+lacrimation+"', "+muzzle+", '"+sickness_sign+"', '"+behavioral_signs+"', '"+mouth_digestion_sign+"', '"+stool_condition+"','"+repiratory_sign+"','"+reproductive_problem+"', '"+milking_problem+"', '"+male_reproductive_problem+"', '"+skin_problem+"', '"+foot_problem+"', '"+megot+"','"+disease_pattern+"', '"+tentative_diagnosis+"', "+str(request.user.id)+", NOW()) RETURNING id"
+            q = "INSERT INTO public.clinical_findings(id, appointment_id, complain_details,  treatment_history, deworming_history, feeding_history, wrong_feeding_last_days, rumination,  sickness_sign, behavioral_signs, mouth_digestion_sign, stool_condition, repiratory_sign, reproductive_problem, milking_problem, male_reproductive_problem, skin_problem, foot_problem, megot, disease_pattern, tentative_diagnosis, created_by, created_date)VALUES (DEFAULT , "+str(appointment_id)+",'"+complain_details+"', '"+treatment_history+"', '"+deworming_history+"', '"+feeding_history+"', '"+wrong_feeding_last_days+"', '"+rumination+"', '"+sickness_sign+"', '"+behavioral_signs+"', '"+mouth_digestion_sign+"', '"+stool_condition+"','"+repiratory_sign+"','"+reproductive_problem+"', '"+milking_problem+"', '"+male_reproductive_problem+"', '"+skin_problem+"', '"+foot_problem+"', '"+megot+"','"+disease_pattern+"', '"+tentative_diagnosis+"', "+str(request.user.id)+", NOW()) RETURNING id"
             clinical_dignosis_id = __db_fetch_single_value(q)
             update_q = "update appointment set status =1,clinical_diagnosis_id = "+str(clinical_dignosis_id)+" where id ="+str(appointment_id)
             __db_commit_query(update_q)
@@ -1108,51 +1118,52 @@ def send_push_message(username,notification_type,title,content,cattle_id,farmer_
 
     firebase_query = "select firebase_token from user_device_map where username = '"+username+"'"
 
-    firebase_token = __db_fetch_single_value(firebase_query)
+    firebase_token = __db_commit_query(firebase_query)
+    if firebase_token:
 
-    # unique firebase token for the user
+        # unique firebase token for the user
 
-    registration_id = []
+        registration_id = []
 
-    registration_id.append(firebase_token)
+        registration_id.append(firebase_token)
 
-    message_title = title
+        message_title = title
 
-    message_body = content
+        message_body = content
 
-    
-    data_message = {
-        "notif_type" : notification_type,
-        "title" : title ,
-        "content" : content,
-        "cattle_id" : cattle_id,
-        "farmer_id" : farmer_id,
-        "prescription_id" : prescription_id
 
-    }
-    '''
-    data_message = {
-        "message": {
-            "token": firebase_token,
-            "notification": {
-                "title": title,
-                "body": content,
-            },
-            "data":{
-        "notif_type" : notification_type,
-        "title" : title ,
-        "content" : content,
-        "cattle_id" : cattle_id,
-        "farmer_id" : farmer_id,
-        "prescription_id" : prescription_id
+        data_message = {
+            "notif_type" : notification_type,
+            "title" : title ,
+            "content" : content,
+            "cattle_id" : cattle_id,
+            "farmer_id" : farmer_id,
+            "prescription_id" : prescription_id
 
-    }
         }
-    }
-    '''
+        '''
+        data_message = {
+            "message": {
+                "token": firebase_token,
+                "notification": {
+                    "title": title,
+                    "body": content,
+                },
+                "data":{
+            "notif_type" : notification_type,
+            "title" : title ,
+            "content" : content,
+            "cattle_id" : cattle_id,
+            "farmer_id" : farmer_id,
+            "prescription_id" : prescription_id
 
-    result = push_service.notify_multiple_devices(registration_ids=registration_id, message_title=message_title,
+        }
+            }
+        }
+        '''
 
-                                               message_body=message_body,data_message=data_message)
+        result = push_service.notify_multiple_devices(registration_ids=registration_id, message_title=message_title,
 
-    print result
+                                                   message_body=message_body,data_message=data_message)
+
+        print result

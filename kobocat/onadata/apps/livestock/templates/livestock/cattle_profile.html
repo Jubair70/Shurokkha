@@ -266,7 +266,7 @@
                 <textarea type="email" class="form-control" name="treatment_history" id="treatment_history" aria-describedby="emailHelp" placeholder=""></textarea>
             </div>
 
-            <div class="form-group">
+            <!--<div class="form-group">
               <label for="exampleInputEmail1">Is there other cattle infected with same type of sickness?:</label>
               <select  class="form-control" id="same_sickness_other_cattle"  name="same_sickness_other_cattle" aria-describedby="emailHelp">
                     {% for data in same_sickness_other_cattle %}
@@ -278,7 +278,7 @@
                 <div class="form-group">
               <label for="exampleInputEmail1">How many of the sick cattle was affected or died?</label>
                 <input type="number" class="form-control"  name="sick_cattle_affected_or_died" id="sick_cattle_affected_or_died" aria-describedby="emailHelp" placeholder="">
-            </div>
+            </div>-->
 
                 <div class="form-group">
                 <label for="exampleInputEmail1">Deworming history</label>
@@ -304,7 +304,7 @@
                 <textarea class="form-control" id="rumination" name="rumination" aria-describedby="emailHelp" placeholder=""></textarea>
             </div>
 
-                <div class="form-group">
+                <!--<div class="form-group">
               <label for="exampleInputEmail1">Details of lacrimation</label>
                 <textarea  class="form-control" id="lacrimation" name="lacrimation" aria-describedby="emailHelp" placeholder=""></textarea>
             </div>
@@ -317,7 +317,7 @@
                     {% endfor %}
                 </select>
             </div>
-
+-->
                 <div class="form-group">
               <label for="exampleInputEmail1">Generalized sign of sickness:</label>
               <select  class="form-control multiselect_class" multiple="multiple" name="sickness_sign[]" id="sickness_sign" aria-describedby="emailHelp">
@@ -747,14 +747,14 @@
                     $('#clinical_findings_id').val('{{ clinical_findings_data.id }}')
                     $('#complain_details').val('{{ clinical_findings_data.complain_details  | safe}}')
                     $('#treatment_history').val('{{ clinical_findings_data.treatment_history | safe}}')
-                    $('#same_sickness_other_cattle').val({{ clinical_findings_data.same_sickness_other_cattle  | safe}} )
-                    $('#sick_cattle_affected_or_died').val('{{ clinical_findings_data.sick_cattle_affected_or_died | safe}}')
+                    //$('#same_sickness_other_cattle').val({{ clinical_findings_data.same_sickness_other_cattle  | safe}} )
+                    //$('#sick_cattle_affected_or_died').val('{{ clinical_findings_data.sick_cattle_affected_or_died | safe}}')
                     $('#deworming_history').val('{{ clinical_findings_data.deworming_history | safe}}')
                     $('#feeding_history').val('{{ clinical_findings_data.feeding_history | safe}}')
                     $('#wrong_feeding_last_days').val({{ clinical_findings_data.wrong_feeding_last_days | safe}})
                     $('#rumination').val('{{ clinical_findings_data.rumination | safe}}')
-                    $('#lacrimation').val('{{ clinical_findings_data.lacrimation | safe}}')
-                    $('#muzzle').val({{ clinical_findings_data.muzzle | safe}})
+                    //$('#lacrimation').val('{{ clinical_findings_data.lacrimation | safe}}')
+                    //$('#muzzle').val({{ clinical_findings_data.muzzle | safe}})
                     $('#sickness_sign').val({{ clinical_findings_data.sickness_sign | safe}})
                     $('#behavioral_signs').val({{ clinical_findings_data.behavioral_signs | safe}})
                     $('#mouth_digestion_sign').val({{ clinical_findings_data.mouth_digestion_sign | safe}})

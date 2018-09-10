@@ -1,0 +1,142 @@
+{% extends 'base_test.html' %}
+
+{% block additional-headers %}
+
+
+    <link rel="stylesheet" type="text/css" media="all" href="/static/css/Date-Range-Picker-For-Twitter-Bootstrap/daterangepicker.css" />
+
+    <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}assets/plugins/select2/select2_metro.css"/>
+<link rel="stylesheet" href="{{STATIC_URL}}assets/plugins/data-tables/DT_bootstrap.css"/>
+
+
+
+    <style type="text/css">
+    .thumbnail{
+        border: 0;
+    }
+
+    </style>
+
+{% endblock %}
+
+
+{% block content %}
+    <div class ="col-md-12" style = "">
+    <div class="page-header align">
+        <h3>Prescription List</h3>
+    </div>
+
+
+    <div class="row">
+
+
+        <div class="col-md-2"><label class="control-label">Paravet/AI Technician </label><br>
+            <select class="form-control" id = "user_id">
+            <option value="%">All</option>
+                {% for data in paravet_ai_list %}
+                    <option value="{{ data.0 }}">{{ data.1 }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="control-label"> </label><br>
+            <button id="filter_farmer_list" style="margin-top:8px;" class="btn red-custom btn-md"  data-original-title="" title="">Search</button>
+        </div>
+
+    </div>
+
+    </div>
+
+    <br>
+    <div class="portlet box red" style="margin-top:15px;">
+            <div class="portlet-title">
+                <div class="caption"><i class="fa fa-adn"></i></div>
+            </div>
+            <div class="portlet-body">
+
+                <div id="prescription_table_block">
+
+                </div>
+            </div>
+        </div>
+
+</div>
+{% endblock %}
+
+{% block additional-javascript %}
+
+
+
+    <!--datatable -->
+    <script type="text/javascript" src="{{STATIC_URL}}assets/plugins/data-tables/jquery.dataTables.js"></script>
+    <script type="text/javascript" src="{{STATIC_URL}}assets/plugins/data-tables/DT_bootstrap.js"></script>
+    <!--datatable ended-->
+     <script type="text/javascript" src="/static/js/Date-Range-Picker-For-Twitter-Bootstrap/date.js"></script>
+	<script type="text/javascript" src="/static/js/Date-Range-Picker-For-Twitter-Bootstrap/daterangepicker.js"></script>
+
+
+    <script>
+        var district = '%';
+        var upazila = '%';
+        var union = '%';
+        var ward = '%';
+        var gender = '%';
+        var start_date = '';
+        var end_date = '';
+        var youth_group_affliation = '%';
+        var train_id = '%';
+        $( ".datepicker" ).each(function() {
+            $(this).datepicker({autoclose:true  });
+        });
+
+
+        //  Page Loading First Time
+
+        $(document).ready(function () {
+            get_prescription_table()
+            $('#date_range').daterangepicker({ showDropdowns: true,maxDate: new Date()});
+
+        });
+
+    function getfilterCriteria(){
+        date_range = $('#date_range').val();
+        user_id = $('#user_id').val();
+    }
+
+    function get_prescription_table(){
+        //getfilterCriteria()
+        $.ajax({
+            url: '/livestock/get_prescription_table/',
+            type: 'POST',
+            //data:{'date_range':date_range,'user_id' : user_id
+               // },
+
+            success: function (data) {
+                $("#prescription_table_block").html(data);
+                $('#prescription_table_id').dataTable({
+                            "retrieve": true,
+                            "bFilter": true,
+                            "paging": true,
+                            "scrollCollapse": true,
+                            select: true,
+                            // dom: 'Bfrtip',
+                            dom: 'Blfrtip',
+                            buttons: [{extend: 'excel', text: "Export to excel", title: 'Direct Beneficiary list'}],
+                            ordering: true,
+                            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+                            "scrollX": true
+
+                        });
+
+            }
+        });
+    //}
+    }
+
+     $(document).on("click", "#filter_farmer_list", function () {
+         get_farmer_table()
+     });
+
+</script>
+
+{% endblock %}

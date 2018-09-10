@@ -438,6 +438,16 @@ def delete_duplicate_presciption_diagnosis(data):
     return "1"
 
 
+@login_required
+def prescription(request):
+    return render(request, 'livestock/prescription.html')
+
+def get_prescription_table(request):
+    q  = "SELECT diagnosis.*,diagnosis_medicine.*,(select label from vwcattle_type where value::Integer =diagnosis.cattle_type)cattle,(select advice from diagnosis_advice where diagnosis_id = diagnosis.id) advice FROM diagnosis LEFT JOIN diagnosis_medicine ON diagnosis.id = diagnosis_medicine.diagnosis_id where diagnosis.diagnosis_name like '%' and cattle_type::text like '%' order by diagnosis.id"
+    dataset = __db_fetch_values_dict(q)
+    return render(request, 'livestock/prescription_table.html',{'dataset' :dataset})
+
+
 
 '''
      CATTLE PROFILE

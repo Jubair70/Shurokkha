@@ -39,6 +39,8 @@ urlpatterns = patterns('',
                         url(r'^get_upazila/$', views.get_upazila, name='get_upazila'),
                         url(r'^get_dashboard_content/$', views.get_dashboard_content, name='get_dashboard_content'),
                         url(r'^add_location/(?P<farmer_id>\d+)/$', views.add_location, name='add_location'),
+                        url(r'^prescription/$', views.prescription, name='prescription'),
+                        url(r'^get_prescription_table/$', views.get_prescription_table, name='get_prescription_table'),
 
 
                        ##############################

@@ -451,7 +451,7 @@
       <div class="prescription" id ="prescription" style="display:none">
         <div class="date-block mt-3">
            <div class="date-btn float-right">
-                <div id="suggest_prescription_button_div"><button onclick="get_suggested_prescription('3','{{ cattle_weight }}','Arthritis')" class="btn btn-warning p-3 ">Suggested Prescription</button></div>
+                <div id="suggest_prescription_button_div"><button onclick="get_suggested_prescription('{{ cattle_type }}','{{ cattle_weight }}','{{ clinical_findings_data.tentative_diagnosis | safe}}')" class="btn btn-warning p-3 ">Suggested Prescription</button></div>
                 <button onclick="add_medicine()" class="btn btn-warning p-3">Add Medicine</button>
               </div>
               <p class="ml-3 mt-2">Prescription</p>

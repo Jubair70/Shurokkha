@@ -28,19 +28,24 @@
 
 
     <div class="row">
+        <div class="col-md-3"><label class="control-label">Tentative Diagnosis</label><br>
+            <input class="form-control" type="text" id = "tentative_diagnosis">
+        </div>
 
-
-        <div class="col-md-2"><label class="control-label">Paravet/AI Technician </label><br>
-            <select class="form-control" id = "user_id">
+        <div class="col-md-3"><label class="control-label">Cattle type </label><br>
+            <select class="form-control" id = "cattle_type">
             <option value="%">All</option>
-                {% for data in paravet_ai_list %}
+                {% for data in cattle_type_list %}
                     <option value="{{ data.0 }}">{{ data.1 }}</option>
                 {% endfor %}
             </select>
         </div>
+        <div class="col-md-3"><label class="control-label">Medicine Name</label><br>
+            <input class="form-control" type="text" id = "medicine_name">
+        </div>
         <div class="col-md-3">
             <label class="control-label"> </label><br>
-            <button id="filter_farmer_list" style="margin-top:8px;" class="btn red-custom btn-md"  data-original-title="" title="">Search</button>
+            <button id="filter_prescription_list" style="margin-top:8px;" class="btn red-custom btn-md"  data-original-title="" title="">Search</button>
         </div>
 
     </div>
@@ -76,41 +81,35 @@
 
 
     <script>
-        var district = '%';
-        var upazila = '%';
-        var union = '%';
-        var ward = '%';
-        var gender = '%';
-        var start_date = '';
-        var end_date = '';
-        var youth_group_affliation = '%';
-        var train_id = '%';
-        $( ".datepicker" ).each(function() {
-            $(this).datepicker({autoclose:true  });
-        });
-
-
-        //  Page Loading First Time
 
         $(document).ready(function () {
             get_prescription_table()
-            $('#date_range').daterangepicker({ showDropdowns: true,maxDate: new Date()});
 
         });
 
     function getfilterCriteria(){
-        date_range = $('#date_range').val();
-        user_id = $('#user_id').val();
+        if($('#tentative_diagnosis').val() == ''){
+            tentative_diagnosis = '%'
+        }
+        else{
+            tentative_diagnosis = $('#tentative_diagnosis').val();
+        }
+        console.log("tentative_diagnosis iis::"+tentative_diagnosis)
+        cattle_type = $('#cattle_type').val();
+         if($('#medicine_name').val() == ''){
+            medicine_name = '%'
+        }
+        else{
+            medicine_name = $('#medicine_name').val();
+        }
     }
 
     function get_prescription_table(){
-        //getfilterCriteria()
+        getfilterCriteria()
         $.ajax({
             url: '/livestock/get_prescription_table/',
             type: 'POST',
-            //data:{'date_range':date_range,'user_id' : user_id
-               // },
-
+            data:{'tentative_diagnosis':tentative_diagnosis,'cattle_type' : cattle_type,'medicine_name' : medicine_name },
             success: function (data) {
                 $("#prescription_table_block").html(data);
                 $('#prescription_table_id').dataTable({
@@ -121,7 +120,7 @@
                             select: true,
                             // dom: 'Bfrtip',
                             dom: 'Blfrtip',
-                            buttons: [{extend: 'excel', text: "Export to excel", title: 'Direct Beneficiary list'}],
+                            buttons: [{extend: 'excel', text: "Export to excel", title: 'Prescription list'}],
                             ordering: true,
                             "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
                             "scrollX": true
@@ -133,8 +132,8 @@
     //}
     }
 
-     $(document).on("click", "#filter_farmer_list", function () {
-         get_farmer_table()
+     $(document).on("click", "#filter_prescription_list", function () {
+         get_prescription_table()
      });
 
 </script>

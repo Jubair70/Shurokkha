@@ -440,10 +440,15 @@ def delete_duplicate_presciption_diagnosis(data):
 
 @login_required
 def prescription(request):
-    return render(request, 'livestock/prescription.html')
+    q="select * from vwcattle_type"
+    cattle_type_list = makeTableList(q)
+    return render(request, 'livestock/prescription.html',{'cattle_type_list' : cattle_type_list})
 
 def get_prescription_table(request):
-    q  = "SELECT diagnosis.*,diagnosis_medicine.*,(select label from vwcattle_type where value::Integer =diagnosis.cattle_type)cattle,(select advice from diagnosis_advice where diagnosis_id = diagnosis.id) advice FROM diagnosis LEFT JOIN diagnosis_medicine ON diagnosis.id = diagnosis_medicine.diagnosis_id where diagnosis.diagnosis_name like '%' and cattle_type::text like '%' order by diagnosis.id"
+    tentative_diagnosis = request.POST.get('tentative_diagnosis')
+    cattle_type = request.POST.get('cattle_type')
+    medicine_name = request.POST.get('medicine_name')
+    q  = "SELECT diagnosis.*,diagnosis_medicine.*,(select name from medicine_type where id =diagnosis_medicine.medicine_type ) m_type,(select label from vwcattle_type where value::Integer =diagnosis.cattle_type)cattle,(select advice from diagnosis_advice where diagnosis_id = diagnosis.id) advice FROM diagnosis LEFT JOIN diagnosis_medicine ON diagnosis.id = diagnosis_medicine.diagnosis_id where diagnosis.diagnosis_name like '"+tentative_diagnosis+"' and cattle_type::text like '"+str(cattle_type)+"' and diagnosis_medicine.medicine_name like '"+medicine_name+"' order by diagnosis.id"
     dataset = __db_fetch_values_dict(q)
     return render(request, 'livestock/prescription_table.html',{'dataset' :dataset})
 
@@ -1168,7 +1173,7 @@ def send_push_message(username,notification_type,title,content,cattle_id,farmer_
             "prescription_id" : prescription_id
 
         }
-            }
+            }make
         }
         '''
 

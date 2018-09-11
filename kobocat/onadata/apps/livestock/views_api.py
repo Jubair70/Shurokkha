@@ -165,6 +165,12 @@ def save_user(request):
     submitted_data = {}
     submitted_data['username'] = data['phone']
     user = User.objects.filter(username=data['phone']).first()
+    '''
+    flag =data['flag']
+    if flag=='1':
+        if user is not None:
+            return HttpResponse('Duplicate User', status=409)
+    '''
     password = id_generator()
     #password = 'VYXTSZ16'
     # when login
@@ -238,7 +244,7 @@ def save_user(request):
 
             save_user_details(user_form, profile_form,submitted_data,farmer_name,mobile,occupation,auth_user_id)
             sms_text = "সুরক্ষা-তে রেজিস্ট্রেশান সম্পন্ন করার জন্য গোপন কোডটি লিখুন.কোড : " + password
-            views.send_sms(receivermail, sms_text.decode('utf-8'))
+            views.send_sms(mobile, sms_text.decode('utf-8'))
 
             return HttpResponse(json.dumps({'password': password}), status=200)
 

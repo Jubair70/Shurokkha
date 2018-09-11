@@ -516,7 +516,7 @@
             </div>
             <div class="col-md-5 ">
               <a href="#" class="btn btn-danger p-3">Cancel</a>
-              <a href="#" class="btn btn-primary p-3">Save</a>
+              <!--<a href="#" class="btn btn-primary p-3">Save</a>-->
               <button type = "submit" class="btn btn-success p-3">Submit</button>
 
             </div>
@@ -1023,8 +1023,8 @@
         var dose = $("#dose").val();
         var route = $("#route").val();
         var day = $("#day").val();
-        var m_p_1 = m_type+','+m_name+','+p_size+'*'+qty;
-        var m_p_2 = dose+','+route+','+day;
+        var m_p_1 = m_type+' '+m_name+' '+p_size+' x '+qty;
+        var m_p_2 = dose+' '+route+' '+day+' দিন ';
         var arr = [m_p_1,m_p_2];
         i=0;
         $("#loop").clone().appendTo("#container_loop").find('input').each(function (e){

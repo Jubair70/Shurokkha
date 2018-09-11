@@ -798,7 +798,7 @@ def get_suggested_prescription(request):
     if dataset:
         for temp in dataset:
             diagnosis_id = temp['id']
-            diagnosis_medi_q = "select ( name || ',' || medicine_name || ',' ||packsize || '*' || quantity ) as mpart_1,( dose || ',' || route || ',' ||days  ) as mpart_2 from  vwdiagnosis_medicine where diagnosis_id="+str(diagnosis_id)
+            diagnosis_medi_q = "select ( name || ' ' || medicine_name || ' ' ||packsize || ' x ' || quantity ) as mpart_1,( dose || ' ' || route || ' ' ||days  ) as mpart_2 from  vwdiagnosis_medicine where diagnosis_id="+str(diagnosis_id)
             medicine_data = __db_fetch_values_dict(diagnosis_medi_q)
             for tmp in medicine_data:
                 data_dict = {}

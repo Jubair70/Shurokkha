@@ -165,12 +165,12 @@ def save_user(request):
     submitted_data = {}
     submitted_data['username'] = data['phone']
     user = User.objects.filter(username=data['phone']).first()
-    '''
+    
     flag =data['flag']
     if flag=='1':
         if user is not None:
             return HttpResponse('Duplicate User', status=409)
-    '''
+
     password = id_generator()
     #password = 'VYXTSZ16'
     # when login

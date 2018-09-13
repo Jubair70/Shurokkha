@@ -88,6 +88,7 @@
                     <th>Paravet/AI Technician</th>
                     <th>Phone No</th>
                     <th>Prescription Date & Time</th>
+                    <th>Created Date</th>
                     <th>Status</th>
                     <th>Action</th>
                 </tr>
@@ -151,8 +152,8 @@
 
         for (var idx in advisory_list) {
             if( advisory_list[idx].mobile !=  advisory_list[idx].submitted_by)
-            tbody += '<tr><td>' + advisory_list[idx].farmer_name + '</td><td>' + advisory_list[idx].mobile + '</td><td>' + advisory_list[idx].cattle_type + '</td><td>' + advisory_list[idx].cattle_age + '</td><td>' + advisory_list[idx].ai_paravet_name + '</td><td>' + advisory_list[idx].submitted_by + '</td><td>' + advisory_list[idx].prescription_date + '</td>';
-            else tbody += '<tr><td>' + advisory_list[idx].farmer_name + '</td><td>' + advisory_list[idx].mobile + '</td><td>' + advisory_list[idx].cattle_type + '</td><td>' + advisory_list[idx].cattle_age + '</td><td></td><td></td><td>' + advisory_list[idx].prescription_date + '</td>';
+            tbody += '<tr><td>' + advisory_list[idx].farmer_name + '</td><td>' + advisory_list[idx].mobile + '</td><td>' + advisory_list[idx].cattle_type + '</td><td>' + advisory_list[idx].cattle_age + '</td><td>' + advisory_list[idx].ai_paravet_name + '</td><td>' + advisory_list[idx].submitted_by + '</td><td>' + advisory_list[idx].prescription_date + '</td><td>' + advisory_list[idx].created_date + '</td>';
+            else tbody += '<tr><td>' + advisory_list[idx].farmer_name + '</td><td>' + advisory_list[idx].mobile + '</td><td>' + advisory_list[idx].cattle_type + '</td><td>' + advisory_list[idx].cattle_age + '</td><td></td><td></td><td>' + advisory_list[idx].prescription_date + '</td><td>' + advisory_list[idx].created_date + '</td>';
             if(advisory_list[idx].status==0)
                 tbody += '<td><span class="control-label btn btn-primary" style="background-color:#e02222"><b>New</b></span></td>';
             else if (advisory_list[idx].status==2)
@@ -285,8 +286,8 @@
 
                     for (var idx in result) {
                         if (result[idx].mobile != result[idx].submitted_by)
-                            tbody += '<tr><td>' + result[idx].farmer_name + '</td><td>' + result[idx].mobile + '</td><td>' + result[idx].cattle_type + '</td><td>' + result[idx].cattle_age + '</td><td>' + result[idx].ai_paravet_name + '</td><td>' + result[idx].submitted_by + '</td><td>' + result[idx].prescription_date + '</td>';
-                        else tbody += '<tr><td>' + result[idx].farmer_name + '</td><td>' + result[idx].mobile + '</td><td>' + result[idx].cattle_type + '</td><td>' + result[idx].cattle_age + '</td><td></td><td></td><td>' + result[idx].prescription_date + '</td>';
+                            tbody += '<tr><td>' + result[idx].farmer_name + '</td><td>' + result[idx].mobile + '</td><td>' + result[idx].cattle_type + '</td><td>' + result[idx].cattle_age + '</td><td>' + result[idx].ai_paravet_name + '</td><td>' + result[idx].submitted_by + '</td><td>' + result[idx].prescription_date + '</td><td>' + advisory_list[idx].created_date + '</td>';
+                        else tbody += '<tr><td>' + result[idx].farmer_name + '</td><td>' + result[idx].mobile + '</td><td>' + result[idx].cattle_type + '</td><td>' + result[idx].cattle_age + '</td><td></td><td></td><td>' + result[idx].prescription_date + '</td><td>' + advisory_list[idx].created_date + '</td>';
                         if (result[idx].status == 0)
                             tbody += '<td><span class="control-label btn btn-primary" style="background-color:#e02222"><b>New</b></span></td>';
                         else if (result[idx].status == 2)

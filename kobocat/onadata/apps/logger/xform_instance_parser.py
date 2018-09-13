@@ -18,6 +18,13 @@ class DuplicateInstance(Exception):
     def __str__(self):
         return unicode(self).encode('utf-8')
 
+class DuplicateFarmer(Exception):
+    def __unicode__(self):
+        return _("Duplicate Farmer")
+
+    def __str__(self):
+        return unicode(self).encode('utf-8')
+
 
 class InstanceInvalidUserError(Exception):
     def __unicode__(self):

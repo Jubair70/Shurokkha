@@ -165,7 +165,7 @@ def save_user(request):
     submitted_data = {}
     submitted_data['username'] = data['phone']
     user = User.objects.filter(username=data['phone']).first()
-    
+
     flag =data['flag']
     if flag=='1':
         if user is not None:
@@ -245,8 +245,12 @@ def save_user(request):
             save_user_details(user_form, profile_form,submitted_data,farmer_name,mobile,occupation,auth_user_id)
             sms_text = "সুরক্ষা-তে রেজিস্ট্রেশান সম্পন্ন করার জন্য গোপন কোডটি লিখুন.কোড : " + password
             views.send_sms(mobile, sms_text.decode('utf-8'))
-
-            return HttpResponse(json.dumps({'password': password}), status=200)
+            if occupation != 'Farmer':
+                tag = "true"
+            else:
+                tag = "false"
+            print tag
+            return HttpResponse(json.dumps({'password': password,'tag' : tag}), status=200)
 
         else:
 
@@ -362,14 +366,18 @@ def register_as_paravet_ai(p_ai_name,mobile,occupation,auth_user_id):
     if data_length==0:
         approval_q = "INSERT INTO public.approval_queue(id,name, mobile, role_name, status, submitted_by, submission_time)VALUES (DEFAULT, '" + p_ai_name + "','" + mobile + "', '" + \
                      occupation + "', 0, " + str(auth_user_id) + ", NOW());"
+
         # print approval_q
         views.__db_commit_query(approval_q)
+        insert_q = "INSERT INTO public.paravet_aitechnician(id, name, mobile,user_type,submission_time,submitted_by)VALUES (DEFAULT, '" + p_ai_name + "','" + mobile + "', '" + occupation + "',NOW()," + str(auth_user_id) + " );"
+        __db_commit_query(insert_q)
 
 
 def check_duplicate_farmer(mobile):
     q = "select * from farmer where mobile = '"+mobile+"'"
     data = __db_fetch_values_dict(q)
     data_length = len(data)
+    print data_length
     return data_length
 
 

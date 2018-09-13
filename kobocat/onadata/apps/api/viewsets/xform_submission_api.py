@@ -24,7 +24,7 @@ from onadata.libs.authentication import DigestAuthentication
 from onadata.libs.mixins.openrosa_headers_mixin import OpenRosaHeadersMixin
 from onadata.libs.renderers.renderers import TemplateXMLRenderer
 from onadata.libs.serializers.data_serializer import SubmissionSerializer
-from onadata.libs.utils.logger_tools import dict2xform, safe_create_instance
+from onadata.libs.utils.logger_tools import dict2xform, safe_create_instance,call_parave_ai_reg_api
 from rest_framework import authentication
 import logging
 from django.contrib.auth import authenticate
@@ -66,6 +66,7 @@ def dict_lists2strings(d):
 def create_instance_from_xml(username, request):
     xml_file_list = request.FILES.pop('xml_submission_file', [])
     xml_file = xml_file_list[0] if len(xml_file_list) else None
+    print xml_file
     media_files = request.FILES.values()
 
     return safe_create_instance(username, xml_file, media_files, None, request)
@@ -182,6 +183,17 @@ Here is some example JSON, it would replace `[the JSON]` above:
 
         is_json_request = is_json(request)
 
+        
+        xml_file_list = request.FILES
+        tf= request.FILES['xml_submission_file']
+        print "_________________________________________________________________ss_"
+        print tf
+        
+        #print xml
+        #call_parave_ai_reg_api(xml,request,username)
+        #xml_file = xml_file_list[0] if len(xml_file_list) else None
+        #print xml_file
+
         error, instance = (create_instance_from_json if is_json_request else
                            create_instance_from_xml)(username, request)
 
@@ -224,7 +236,11 @@ Here is some example JSON, it would replace `[the JSON]` above:
             #print 'Entered'
             create_db_async_export(instance.xform, 'dbtable', json.dumps(query_dict), False, options)
 
+
+
         update_instance_approval_status(instance.id, 'Submitted')
+        xmlf = tf.read()
+        print xmlf
 
         return Response(serializer.data,
                         headers=self.get_openrosa_headers(request),

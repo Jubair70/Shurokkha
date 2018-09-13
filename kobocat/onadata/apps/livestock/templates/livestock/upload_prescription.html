@@ -56,9 +56,6 @@
 
 
 
-
-
-
                     <div class="row">
                         <div class="col-md-12">
                             <button class="btn btn-danger pull-left" id="submit" name="submit" type="submit"
@@ -95,8 +92,6 @@
         //  Page Loading First Time
 
         $(document).ready(function () {
-            get_approval_table()
-            $('#date_range').daterangepicker({ showDropdowns: true,maxDate: new Date()});
 
         });
         $(document).on("submit", "#upload_prescription_form", function (event) {

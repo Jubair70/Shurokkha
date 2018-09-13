@@ -71,7 +71,7 @@
 
 <div class="content-wrapper">
     <div class="container-fluid gray-bg">
-    <p class="pt-2">Veterinarian's panel</p>
+    <p class="pt-2"></p>
 
     <!-- veterinarian panel start-->
       <div class="row">
@@ -82,6 +82,7 @@
           <div class="veterinarian-box">
             <div class="card">
               <div class="card-body pb-4">
+                  <h3>Farmer:</h3>
                 <img src="{{ image_url }}" width="80px"
     height="107px" class="img-fluid"  alt="">
                 <div class="card-text float-right">
@@ -187,8 +188,10 @@
           <div class="veterinarian-box">
             <div class="card">
               <div class="card-body pb-4">
+                  <h3>Cattle:</h3>
                 <img width="105px" src="{{ cattle_img }}" class="img-fluid"  alt="">
                 <div class="card-text float-right">
+
                   <p>Cattle Name: {{ cattle_name }}<br>
                      Cattle type: {{ cattle_type_text }}<br>
                      Age: {{ cattle_age | safe}}<br>
@@ -233,12 +236,13 @@
           <div class="veterinarian-box">
             <div class="card">
               <div class="card-body pb-4"  style="overflow:scroll;height: 143px;">
+                  <h3>Sickness image:</h3>
                   {% for data in sickness_images %}
                 <!--<img src="{{ data.picture_sinckness_sign }}" class="img-fluid"  alt="">-->
                       <img height="100px" width="280px" src="{{ data.picture_sinckness_sign }}">
                   {% endfor %}
                 <div class="card-text float-right">
-                  <h4 class="mt-5">Sickness Image</h4>
+                  <!--<h4 class="mt-5">Sickness Image</h4>-->
                 </div>
               </div>
 
@@ -530,7 +534,9 @@
     <!-- Prescription panel end-->
 
     <!--old prescription load-->
-<div id = "old_prescription_div" style="overflow-y: scroll; height: 606px">
+        <div id="old_prescription_head"></div>
+<div id = "old_prescription_div" style="overflow-y: scroll;  height:301px;margin-top:30px">
+
 
 
 </div>
@@ -1104,6 +1110,8 @@
                 url: '/livestock/get_old_prescription/'+cattle_id+'/',
                 success: function (data) {
                     $("#old_prescription_div").html(data);
+                    $("#old_prescription_head").html("<h2>Old Prescription</h2>");
+
                 },
                 error: function (xhr, status, error) {
 

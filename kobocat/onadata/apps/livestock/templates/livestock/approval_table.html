@@ -4,7 +4,7 @@
             <th>Mobile number</th>
             <th> Type</th>
             <th>Status</th>
-            <!--<th>Action</th>-->
+            <th></th>
         </thead>
         <tbody>
         {% for data in dataset %}
@@ -27,7 +27,8 @@
                 <button onclick="edit_entity('{{ data.id }}')" id = ""  class="btn btn-primary green"  data-original-title="" title="">Update</button>
 
             </td>-->
-
+            <td><a  href = "/livestock/view_ai_paravet_profile/{{ data.id }}"  target="_blank" class="btn btn-red"  data-original-title="" title="">View Details</a>
+</td>
         </tr>
         {% endfor %}
         </tbody>

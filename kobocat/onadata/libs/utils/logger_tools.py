@@ -47,7 +47,7 @@ from onadata.apps.logger.xform_instance_parser import (
     InstanceEmptyError,
     InstanceInvalidUserError,
     InstanceMultipleNodeError,
-    DuplicateInstance,
+    DuplicateInstance,DuplicateFarmer,
     clean_and_parse_xml,
     get_uuid_from_xml,
     get_deprecated_uuid_from_xml,
@@ -62,6 +62,8 @@ from onadata.apps.approval.models.approval import ApprovalList
 from onadata.apps.livestock import views_api
 from onadata.apps.usermodule.forms import UserForm, UserProfileForm
 from onadata.apps.usermodule.models import OrganizationRole,MenuRoleMap,UserRoleMap
+import json
+
 
 
 OPEN_ROSA_VERSION_HEADER = 'X-OpenRosa-Version'
@@ -366,8 +368,8 @@ def call_parave_ai_reg_api(xml,request,username,user):
         views_api.register_as_paravet_ai(paravet_name, mobile, _occupation,user.id)
 
     if form_id=="farmer_registration":
-        # password = views_api.id_generator()
-        password = 'VYXTSZ16'
+        password = views_api.id_generator()
+        #password = 'VYXTSZ16'
         mobile = collection.getElementsByTagName("mobile")[0].__dict__['childNodes'][0].data
         farmer_name = collection.getElementsByTagName("name")[0].__dict__['childNodes'][0].data
         occupation = 'Farmer'
@@ -376,7 +378,7 @@ def call_parave_ai_reg_api(xml,request,username,user):
         submitted_data['username'] = mobile
         #user = User.objects.filter(username=data['phone']).first()
         # password = id_generator()
-        password = 'VYXTSZ16'
+        #password = 'VYXTSZ16'
         # when login
         submitted_data['contact_number'] = mobile
         submitted_data['first_name'] = farmer_name
@@ -387,6 +389,14 @@ def call_parave_ai_reg_api(xml,request,username,user):
 
         user_form = UserForm(data=submitted_data)
         profile_form = UserProfileForm(data=submitted_data)
+        '''
+        print "check_duplicate_farmer(mobile)**************************************"
+        views_api.check_duplicate_farmer(mobile)
+        if views_api.check_duplicate_farmer(mobile) != 0:
+            print "enter  duplicateeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+            return HttpResponse('Duplicate Farmer', status=409)
+            print "enddddddddddddddddddddddddddd"
+        '''
         views_api.save_user_details(user_form, profile_form,submitted_data,farmer_name,mobile,occupation,user.id)
 
     return 0
@@ -484,9 +494,15 @@ def create_instance(username, xml_file, media_files,
             transaction.commit()
             raise DuplicateInstance()
 
+        if is_exist_farmer_paravet_ait(xml,request,username,user)==1:
+            transaction.commit()
+            raise DuplicateFarmer()
+
+
         instance = save_submission(xform, xml, media_files, new_uuid,
                                    submitted_by, status, date_created_override)
         # commit all changes
+
         call_parave_ai_reg_api(xml,request,username,user)
         transaction.commit()
 
@@ -494,6 +510,22 @@ def create_instance(username, xml_file, media_files,
     except Exception:
         transaction.rollback()
         raise
+
+def is_exist_farmer_paravet_ait(xml,request,username,user):
+    flag = 0
+    FormXMLTree = clean_and_parse_xml(xml)
+    collection = FormXMLTree.documentElement
+    if collection.hasAttribute("id"):
+        form_id = collection.getAttribute("id")
+        print  form_id
+    if form_id == "farmer_registration":
+        mobile = collection.getElementsByTagName("mobile")[0].__dict__['childNodes'][0].data
+        if views_api.check_duplicate_farmer(mobile) == 0:
+            flag = 0
+        else:
+            flag = 1
+    return flag
+
 
 
 def safe_create_instance(username, xml_file, media_files, uuid, request):
@@ -526,6 +558,11 @@ def safe_create_instance(username, xml_file, media_files, uuid, request):
         response.status_code = 202
         response['Location'] = request.build_absolute_uri(request.path)
         error = response
+    except DuplicateFarmer:
+        response = OpenRosaResponse(_(u"Duplicate Farmer"))
+        response.status_code = 409
+        error = response
+
     except PermissionDenied as e:
         error = OpenRosaResponseForbidden(e)
     except InstanceMultipleNodeError as e:

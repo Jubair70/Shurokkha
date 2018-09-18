@@ -122,6 +122,7 @@ def login_verify(request):
                     user_information['Role'] = roles
                     user_information["farm_id"] = get_farm_id(user.id)
                     user_information["username"] = username
+                    user_information["paravet_flag"] =user_profile.is_req_para_ai
                     # user_information['Organizations'] = [pro.organization.organization for pro in profile_organization]
                     # user_information['Claims'] = mobile_access(request,username)
                     print data
@@ -249,8 +250,9 @@ def save_user(request):
                 tag = "true"
             else:
                 tag = "false"
-            print tag
-            return HttpResponse(json.dumps({'password': password,'tag' : tag}), status=200)
+            is_req_para_ai =views.__db_fetch_single_value("select is_req_para_ai from usermodule_usermoduleprofile where user_id = (select id from auth_user where username = '"+mobile+"')")
+
+            return HttpResponse(json.dumps({'password': password,'tag' : tag,'paravet_flag' :is_req_para_ai}), status=200)
 
         else:
 
@@ -328,13 +330,13 @@ def save_user_details(user_form,profile_form,submitted_data,farmer_name,mobile,o
             submitted_user_id) + " ) RETURNING ID;"
         ##print insert_q
         f_id = views.__db_fetch_single_value(insert_q)
-        insert_q_map = "INSERT INTO public.user_farmer_map(id, user_id, farmer_id)VALUES (DEFAULT, " + str(
-            user_profile_id) + ", " + str(f_id) + ");"
+        insert_q_map = "INSERT INTO public.user_farmer_map(id, user_id, farmer_id,assigned_date)VALUES (DEFAULT, " + str(
+            user_profile_id) + ", " + str(f_id) + ",NOW());"
         views.__db_commit_query(insert_q_map)
         if isuser:
             p_id = views.__db_fetch_single_value("select id from usermodule_usermoduleprofile where user_id = "+str(auth_user_id)+"")
-            q = "INSERT INTO public.user_farmer_map(id, user_id, farmer_id)VALUES (DEFAULT, " + str(
-                p_id) + ", " + str(f_id) + ");"
+            q = "INSERT INTO public.user_farmer_map(id, user_id, farmer_id,assigned_date)VALUES (DEFAULT, " + str(
+                p_id) + ", " + str(f_id) + ",NOW());"
             views.__db_commit_query(q)
         if occupation != 'Farmer':
             register_as_paravet_ai(farmer_name, mobile, occupation, submitted_user_id)
@@ -369,8 +371,10 @@ def register_as_paravet_ai(p_ai_name,mobile,occupation,auth_user_id):
 
         # print approval_q
         views.__db_commit_query(approval_q)
-        insert_q = "INSERT INTO public.paravet_aitechnician(id, name, mobile,user_type,submission_time,submitted_by)VALUES (DEFAULT, '" + p_ai_name + "','" + mobile + "', '" + occupation + "',NOW()," + str(auth_user_id) + " );"
-        __db_commit_query(insert_q)
+        views.__db_commit_query("update usermodule_usermoduleprofile set is_req_para_ai = 1 where user_id=(select id from auth_user where username='"+mobile+"')")
+
+        #insert_q = "INSERT INTO public.paravet_aitechnician(id, name, mobile,user_type,submission_time,submitted_by)VALUES (DEFAULT, '" + p_ai_name + "','" + mobile + "', '" + occupation + "',NOW()," + str(auth_user_id) + " );"
+       # __db_commit_query(insert_q)
 
 
 def check_duplicate_farmer(mobile):
@@ -385,8 +389,7 @@ def check_duplicate_farmer(mobile):
 @csrf_exempt
 def get_farmer_list(request):
     username = request.GET.get('username')
-    q = "SELECT *,(SELECT count(*) FROM cattle WHERE mobile = farmer.mobile) AS no_cattle,string_to_array(gps,' ') gps_list,date(submission_time)::text AS s_date FROM farmer WHERE id in(with t1 AS (SELECT farmer_id FROM user_farmer_map WHERE user_id = (SELECT id FROM usermodule_usermoduleprofile WHERE user_id = (SELECT id FROM auth_user WHERE username = '"+username+"'))) SELECT * FROM t1)"
-    print q
+    q = "with t1 AS(SELECT id, farmer_id,assigned_date FROM user_farmer_map WHERE user_id = (SELECT id FROM usermodule_usermoduleprofile WHERE user_id = (SELECT id FROM auth_user WHERE username = '"+username+"')) ) SELECT *,(select date(assigned_date)::text from t1 where farmer_id = farmer.id limit 1) assign_date, (SELECT count(*) FROM cattle WHERE mobile = farmer.mobile) AS no_cattle,string_to_array(gps,' ') gps_list,date(submission_time)::text AS s_date FROM farmer WHERE id in(select farmer_id from t1)"
     dataset = views. __db_fetch_values_dict(q)
     data_list = []
     farmerprofileupdate_form_owner_q = "select (select username from auth_user where id = logger_xform.user_id limit 1) as user_name from public.logger_xform where id_string = 'farmer_profile_update'"
@@ -397,6 +400,7 @@ def get_farmer_list(request):
         data_dict['name'] = temp['farmer_name']
         data_dict['phone'] = temp['mobile']
         data_dict['no_of_cattle'] = temp['no_cattle']
+        data_dict['assign_date'] = temp['assign_date']
         data_dict['division'] = temp['division']
         data_dict['district'] = temp['district']
         data_dict['upzilla'] = temp['upazila']
@@ -424,6 +428,7 @@ def get_cattle_list(request):
     farmer_id = request.GET.get('farmer_id')
     q = " select *,date(created_date)::text as register_date ,(select label from vwcattle_type where value =cattle_type ) cattle_type_text,(select label from vwcattle_origin where value =cattle_origin ) cattle_origin_text from cattle where mobile like '"+farmer_id+"'"
     dataset = views.__db_fetch_values_dict(q)
+    print q
     cattle_regi_form_owner_q = "select (select username from auth_user where id = logger_xform.user_id limit 1) as user_name from public.logger_xform where id_string = 'cattle_registration'"
     cattle_regi_form_owner = views.__db_fetch_single_value(cattle_regi_form_owner_q)
     data_list = []
@@ -436,7 +441,7 @@ def get_cattle_list(request):
         data_dict['cattle_age'] = temp['cattle_age']
         data_dict['register_date'] = temp['register_date']
         data_dict['cattle_birth_date'] = temp['cattle_birth_date']
-        data_dict['weight'] = temp['calf_birth_weight']
+        data_dict['weight'] = temp['cattle_weight']
         data_dict['cattle_type'] = temp['cattle_type_text']
         data_dict['cattle_system_id'] = temp['cattle_system_id']
         img_path = None
@@ -447,6 +452,7 @@ def get_cattle_list(request):
 
         data_list.append(data_dict.copy())
         data_dict.clear()
+    print data_list
     return HttpResponse(json.dumps(data_list))
 
 
@@ -479,18 +485,6 @@ def search_farmer(request):
     msg = ""
     data_list = []
     if dataset:
-        user_id = views.__db_fetch_single_value("select id from usermodule_usermoduleprofile where user_id = (select id from auth_user where username = '"+username+"')")
-        farmer_id = views.__db_fetch_single_value("select id from farmer where mobile = '"+farmer_id+"'")
-        duplicate_check_q = "select id from user_farmer_map where user_id = "+str(user_id)+" and farmer_id = "+str(farmer_id)
-        data = views.__db_fetch_values_dict(duplicate_check_q)
-
-        if data:
-            msg = "Already assigned"
-        else:
-            insert_q = "INSERT INTO public.user_farmer_map(id, user_id, farmer_id)VALUES (DEFAULT, " + str(
-                user_id) + ", " + str(farmer_id) + ");"
-            views.__db_commit_query(insert_q)
-            msg = "Assigned successfully"
         for temp in dataset:
             data_dict = {}
             data_dict['id'] = temp['id']
@@ -517,9 +511,69 @@ def search_farmer(request):
             data_dict.clear()
     else:
         msg = "No farmer exists."
+    return HttpResponse(json.dumps(data_list))
+
+
+def assign_farmer(request):
+    farmerprofileupdate_form_owner_q = "select (select username from auth_user where id = logger_xform.user_id limit 1) as user_name from public.logger_xform where id_string = 'farmer_profile_update'"
+    farmerprofileupdate_form_owner = views.__db_fetch_single_value(farmerprofileupdate_form_owner_q)
+    username = request.GET.get('username')
+    farmer_id = request.GET.get('farmer_id')
+    q = "select *,(select count(*) from cattle where mobile = farmer.mobile) as no_cattle,string_to_array(gps,' ') gps_list,date(submission_time)::text as s_date from farmer where mobile = '" + farmer_id + "' "
+    dataset = views.__db_fetch_values_dict(q)
+    msg = ""
+    data_list = []
+    if dataset:
+        user_id = views.__db_fetch_single_value(
+            "select id from usermodule_usermoduleprofile where user_id = (select id from auth_user where username = '" + username + "')")
+        farmer_id = views.__db_fetch_single_value("select id from farmer where mobile = '" + farmer_id + "'")
+        duplicate_check_q = "select id from user_farmer_map where user_id = " + str(
+            user_id) + " and farmer_id = " + str(farmer_id)
+        data = views.__db_fetch_values_dict(duplicate_check_q)
+
+        if data:
+            msg = "Already assigned"
+        else:
+            insert_q = "INSERT INTO public.user_farmer_map(id, user_id, farmer_id,assigned_date)VALUES (DEFAULT, " + str(
+                user_id) + ", " + str(farmer_id) + ",NOW());"
+            views.__db_commit_query(insert_q)
+            msg = "Assigned successfully"
+        for temp in dataset:
+            data_dict = {}
+            data_dict['id'] = temp['id']
+            data_dict['name'] = temp['farmer_name']
+            data_dict['phone'] = temp['mobile']
+            data_dict['no_of_cattle'] = temp['no_cattle']
+            data_dict['division'] = temp['division']
+            data_dict['district'] = temp['district']
+            data_dict['upzilla'] = temp['upazila']
+            data_dict['union'] = ''
+            data_dict['village'] = ''
+            if temp['gps_list']:
+                gps = str(temp['gps_list'][0]) + "," + str(temp['gps_list'][1])
+            else:
+                gps = ""
+            data_dict['gps'] = gps
+            data_dict['submission_date'] = temp['s_date']
+            img_path = None
+            if temp['image'] is not None:
+                img = temp['image']
+                img_path = "media/" + farmerprofileupdate_form_owner + "/attachments/" + img
+            data_dict['image_url'] = img_path
+            data_dict['assign_date'] =get_date_farmermap(user_id,farmer_id)
+            data_list.append(data_dict.copy())
+            data_dict.clear()
+
+    else:
+        msg = "No farmer exists."
     print(msg)
     return HttpResponse(json.dumps(data_list))
 
+
+def get_date_farmermap(user,farmer):
+    q = "select date(assigned_date)::text assigned_date from user_farmer_map where user_id = " + str(user) + " and farmer_id = " + str(farmer)
+    assign_date = views.__db_commit_query(q)
+    return assign_date
 
 def decimal_date_default(obj):
     if isinstance(obj, decimal.Decimal):

@@ -266,6 +266,9 @@ def approve(request,id):
     name = request.POST.get('name')
     q = "update approval_queue set status = 1,approve_by = "+str(request.user.id)+",approval_date = NOW() where id  ="+str(id)
     __db_commit_query(q)
+
+    __db_commit_query(
+        "update usermodule_usermoduleprofile set is_req_para_ai = 0 where user_id=(select id from auth_user where  username='"+mobile+"')")
     role_list = []
     role_list.append(role_name)
     user_roles = OrganizationRole.objects.filter(role__in=role_list)
@@ -360,6 +363,8 @@ def get_cattle_list(request,id):
             dob_cattle = temp['cattle_birth_date']
             dob_cf = dt.strptime(temp['cattle_birth_date'], '%Y-%m-%d')
             age_cattle = ((dt.today() - dob_cf).days / 30)
+        else:
+            age_cattle = temp['cattle_age']
         data_dict['cattle_type_text'] = temp['cattle_type_text']
         data_dict['cattle_age'] = age_cattle
         img = ""
@@ -620,7 +625,7 @@ def get_cattle_info(id):
     cattle_regi_form_owner_q = "select (select username from auth_user where id = logger_xform.user_id limit 1) as user_name from public.logger_xform where id_string = 'cattle_registration'"
     cattle_regi_form_owner = __db_fetch_single_value(cattle_regi_form_owner_q)
     img = ""
-    q = "select picture,mobile,cattle_type,coalesce(round(cattle_weight::numeric,2)::text,'') cattleweight,AGE(current_date ,date(cattle_birth_date))::text cattle_age,coalesce(cattle_name,'') cattle_name,(select label from vwcattle_type where value = cattle_type limit 1) as cattletype,coalesce(calf_birth_weight,'') calf_birth_weight from cattle where cattle_system_id = " + str(id)
+    q = "select picture,mobile,cattle_type,coalesce(round(cattle_weight::numeric,2)::text,'') cattleweight,COALESCE (AGE(current_date ,date(cattle_birth_date))::text,cattle_age||' months') cattle_age,coalesce(cattle_name,'') cattle_name,(select label from vwcattle_type where value = cattle_type limit 1) as cattletype,coalesce(calf_birth_weight,'') calf_birth_weight from cattle where cattle_system_id = " + str(id)
     dataset = __db_fetch_values_dict(q)
     cattle_dict = {}
     for temp in dataset:
@@ -1180,14 +1185,22 @@ def update_user_device(data, user_information, profile_id):
     cur.execute(update_query)
 
 
+def send_push_message(username, notification_type, title, content, cattle_id, farmer_id, prescription_id):
+    firebase_query = "select firebase_token from user_device_map where username = '" + username + "'"
 
-def send_push_message(username,notification_type,title,content,cattle_id,farmer_id,prescription_id):
+    firebase_token = None
 
-    firebase_query = "select firebase_token from user_device_map where username = '"+username+"'"
+    cursor = connection.cursor()
 
-    firebase_token = __db_commit_query(firebase_query)
+    cursor.execute(firebase_query)
+
+    fetchVal = cursor.fetchone()
+
+    if fetchVal:
+        firebase_token = fetchVal[0]
+
+    cursor.close()
     if firebase_token:
-
         # unique firebase token for the user
 
         registration_id = []
@@ -1198,39 +1211,38 @@ def send_push_message(username,notification_type,title,content,cattle_id,farmer_
 
         message_body = content
 
+        user = User.objects.filter(username=username).first()
+
+        user_profile = user.usermoduleprofile
+        user_role = UserRoleMap.objects.filter(user_id=user_profile.id)
+        roles = [u.role.role for u in user_role]
+        user_information = {
+
+        }
+        user_information['Name'] = user.first_name + " " + user.last_name
+        user_information['Email'] = user.email
+        user_information['is_superuser'] = str(user.is_superuser)
+        user_information['is_staff'] = str(user.is_staff)
+        user_information['IsAdmin'] = str(user_profile.admin)
+        user_information['Role'] = roles
+        user_information["farm_id"] = ''
+        user_information["username"] = username
+        user_information["paravet_flag"] = user_profile.is_req_para_ai
 
         data_message = {
-            "notif_type" : notification_type,
-            "title" : title ,
-            "content" : content,
-            "cattle_id" : cattle_id,
-            "farmer_id" : farmer_id,
-            "prescription_id" : prescription_id
+            "notif_type": notification_type,
+            "title": title,
+            "content": content,
+            "cattle_id": cattle_id,
+            "farmer_id": farmer_id,
+            "prescription_id": prescription_id,
+            "user":user_information
 
         }
-        '''
-        data_message = {
-            "message": {
-                "token": firebase_token,
-                "notification": {
-                    "title": title,
-                    "body": content,
-                },
-                "data":{
-            "notif_type" : notification_type,
-            "title" : title ,
-            "content" : content,
-            "cattle_id" : cattle_id,
-            "farmer_id" : farmer_id,
-            "prescription_id" : prescription_id
 
-        }
-            }make
-        }
-        '''
 
         result = push_service.notify_multiple_devices(registration_ids=registration_id, message_title=message_title,
 
-                                                   message_body=message_body,data_message=data_message)
+                                                      message_body=message_body, data_message=data_message)
 
         print result

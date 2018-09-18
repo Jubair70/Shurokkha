@@ -59,7 +59,7 @@ from onadata.libs.utils import common_tags
 from onadata.libs.utils.model_tools import queryset_iterator, set_uuid
 from onadata.apps.approval.models.approval import ApprovalDef
 from onadata.apps.approval.models.approval import ApprovalList
-from onadata.apps.livestock import views_api
+from onadata.apps.livestock import views_api,views
 from onadata.apps.usermodule.forms import UserForm, UserProfileForm
 from onadata.apps.usermodule.models import OrganizationRole,MenuRoleMap,UserRoleMap
 import json
@@ -389,16 +389,13 @@ def call_parave_ai_reg_api(xml,request,username,user):
 
         user_form = UserForm(data=submitted_data)
         profile_form = UserProfileForm(data=submitted_data)
-        '''
-        print "check_duplicate_farmer(mobile)**************************************"
-        views_api.check_duplicate_farmer(mobile)
-        if views_api.check_duplicate_farmer(mobile) != 0:
-            print "enter  duplicateeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
-            return HttpResponse('Duplicate Farmer', status=409)
-            print "enddddddddddddddddddddddddddd"
-        '''
         views_api.save_user_details(user_form, profile_form,submitted_data,farmer_name,mobile,occupation,user.id)
-
+    if form_id == "farmer_profile_update":
+        mobile = collection.getElementsByTagName("mobile")[0].__dict__['childNodes'][0].data
+        views.send_push_message(mobile, 5, 'Profile update', 'Your profile has been updated as Farmer', '', mobile, '')
+    if form_id == "paravet_at_tech_profile_update":
+        mobile = collection.getElementsByTagName("mobile")[0].__dict__['childNodes'][0].data
+        views.send_push_message(mobile, 5, 'Profile update', 'Your profile has been updated as AI/Paravet', '', mobile, '')
     return 0
 
 def check_custom_form_validation(xml,request,username):

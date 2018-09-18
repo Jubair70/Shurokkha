@@ -52,6 +52,7 @@ class UserProfileForm(forms.ModelForm):
     #position = forms.CharField(label="Position")
     contact_number = forms.CharField(label="Contact Number")
     # expired = forms.DateTimeField(label="Expiry Date",required=False,initial=datetime.now()+ timedelta(days=90))
+    is_req_para_ai = forms.IntegerField( required=False)
 
     class Meta:
         model = UserModuleProfile

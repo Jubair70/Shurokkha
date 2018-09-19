@@ -1269,3 +1269,10 @@ def send_push_message(username, notification_type, title, content, cattle_id, fa
                                                       message_body=message_body, data_message=data_message)
 
         print result
+
+
+
+def update_cattle_type(request):
+    query = "select update_cattle_type()"
+    __db_commit_query(query)
+    return HttpResponse('')

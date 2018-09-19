@@ -390,13 +390,23 @@ def call_parave_ai_reg_api(xml,request,username,user):
         user_form = UserForm(data=submitted_data)
         profile_form = UserProfileForm(data=submitted_data)
         views_api.save_user_details(user_form, profile_form,submitted_data,farmer_name,mobile,occupation,user.id)
+
+    return 0
+
+
+def send_push_noti_after_profile_update(xml):
+    FormXMLTree = clean_and_parse_xml(xml)
+    collection = FormXMLTree.documentElement
+    if collection.hasAttribute("id"):
+        form_id = collection.getAttribute("id")
+        print  form_id
     if form_id == "farmer_profile_update":
         mobile = collection.getElementsByTagName("mobile")[0].__dict__['childNodes'][0].data
         views.send_push_message(mobile, 5, 'Profile update', 'Your profile has been updated as Farmer', '', mobile, '')
     if form_id == "paravet_at_tech_profile_update":
         mobile = collection.getElementsByTagName("mobile")[0].__dict__['childNodes'][0].data
         views.send_push_message(mobile, 5, 'Profile update', 'Your profile has been updated as AI/Paravet', '', mobile, '')
-    return 0
+    print 'push notificatiob ended*************************************'
 
 def check_custom_form_validation(xml,request,username):
     TAG_TO_PARSE = '_Tubewell_ID'
@@ -501,6 +511,7 @@ def create_instance(username, xml_file, media_files,
         # commit all changes
 
         call_parave_ai_reg_api(xml,request,username,user)
+        send_push_noti_after_profile_update(xml)
         transaction.commit()
 
         return instance

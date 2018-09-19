@@ -68,5 +68,6 @@ urlpatterns = patterns('',
                        url(r"^(?P<username>\w+)/get/user_contentlist/$", views_api.get_content_list,
                            name='get_content_list'),
                         url(r"^assign_farmer/$", views_api.assign_farmer, name='assign_farmer'),
+                        url(r"^update_token/$", views.update_token, name='update_token'),
 
                        )

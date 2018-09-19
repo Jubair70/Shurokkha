@@ -571,8 +571,8 @@ def assign_farmer(request):
 
 
 def get_date_farmermap(user,farmer):
-    q = "select date(assigned_date)::text assigned_date from user_farmer_map where user_id = " + str(user) + " and farmer_id = " + str(farmer)
-    assign_date = views.__db_commit_query(q)
+    q = "select COALESCE (date(assigned_date)::text,'') assigned_date from user_farmer_map where user_id = " + str(user) + " and farmer_id = " + str(farmer)
+    assign_date = views.__db_fetch_single_value(q)
     return assign_date
 
 def decimal_date_default(obj):

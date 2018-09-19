@@ -29,6 +29,8 @@ import os.path
 from datetime import date, timedelta, datetime
 from pyfcm import FCMNotification
 import requests
+from django.views.decorators.csrf import csrf_exempt
+
 
 push_service = FCMNotification(api_key="AAAA1dBJQYk:APA91bGQf5qjEkdhxxcjnvodj-xMKVWmRPQ2UbBw_qsp4XlxGratkzemLNbF6JYnTIZ1jfRIZ-1e1IaqSZctL_n_i338zF5_5swkRBAiW0PEc4fW_DOl-03jq-aKLKOfOVcHcZMqDLctAXVKOT-kx4XdRRekuIofqg")
 
@@ -1166,7 +1168,28 @@ def get_dates(daterange):
     }
     return data
 
+@csrf_exempt
+def update_token(request):
+    print request.body
+    json_string = request.body
+    data = json.loads(json_string)
+    username = data['username']
+    token = data['token']
+    profile_id = __db_fetch_single_value("select id from  usermodule_usermoduleprofile where user_id = (select id from auth_user where username = '"+username+"')")
+    search_query = "select count(*)::text from user_device_map where profile_id = "+str(profile_id)
+    entry_count = __db_fetch_single_value(search_query)
+    if entry_count == '0':
+        update_query = "INSERT INTO public.user_device_map( profile_id, firebase_token, created_at, username) VALUES ( " + str(
+            profile_id) + ", '" + token + "', now(), '" + username + "'); "
+    else:
 
+        update_query = "update user_device_map set firebase_token='" + token + "', updated_at = now() where username = '" +username+ "'"
+    cur = connection.cursor()
+
+    # execute the UPDATE  statement
+
+    cur.execute(update_query)
+    return HttpResponse(json.dumps('Token updated'), status=200)
 
 
 def update_user_device(data, user_information, profile_id):

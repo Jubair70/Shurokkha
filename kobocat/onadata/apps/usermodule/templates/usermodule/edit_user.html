@@ -15,6 +15,8 @@
             <form class="horizontal-form" id="user_form" method="post" action="/usermodule/edit/{{id}}/"
                   enctype="multipart/form-data">
                 <input type="hidden" name="userchange" value="userchange">
+            <input type="hidden" name="user_img_status" id="user_img_status" value="0">
+            <input type="hidden" name="signature_img_status" id="signature_img_status" value="0">
                 {% csrf_token %}
                 <div class="form-body">
                     <div class="row">
@@ -88,6 +90,13 @@
                                 <span class="help-block">{{ profile_form.organisation_name.errors.as_text }}</span>
                             </div>
                         </div>
+                    <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ profile_form.contact_number.id_for_label }}">Contact Number (e.g: 01xxxxxxxxx):</label>
+                                <input type="text" required name="{{ profile_form.contact_number.name }}" class="form-control" pattern="^(?:\+88|01)?(?:\d{11}|\d{13})$" value="{{ profile_form.contact_number.value }}">
+                                 <span class="help-block" hidden>{{ profile_form.contact_number.errors.as_text }}</span>
+                            </div>
+                        </div>
                         <!--<div class="col-md-6">
                             <div class="form-group">
                                 <label>Country:</label>
@@ -101,15 +110,31 @@
                                 <span class="help-block">{{ profile_form.country.errors.as_text }}</span>
                             </div>
                         </div>-->
+
                     </div>
-                    <div class="row">
+                <div class="row" >
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label for="{{ profile_form.contact_number.id_for_label }}">Contact Number (e.g: 01xxxxxxxxx):</label>
-                                <input type="text" required name="{{ profile_form.contact_number.name }}" class="form-control" pattern="^(?:\+88|01)?(?:\d{11}|\d{13})$" value="{{ profile_form.contact_number.value }}">
-                                 <span class="help-block" hidden>{{ profile_form.contact_number.errors.as_text }}</span>
+                                <label>Assign to (in case of Veterinarian):</label>
+                                <select id="supervisor"
+                                        name="supervisor" class="form-control">
+                                    <option value="">Select One</option>
+                                    {% for q,w in supervisors %}
+                                    <option value="{{ q }}" {% if q == supervisor_id %} selected{% endif %}>{{ w }}</option>
+                                    {% endfor %}
+                                </select>
                             </div>
                         </div>
+                        <!--<div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ profile_form.position.id_for_label }}" hidden>Position:</label>
+                                <input type="hidden" name="{{ profile_form.position.name }}" value="{%  if profile_form.position.value  %}{{ profile_form.position.value }}{% endif %}" class="form-control" value="default">
+                                <span class="help-block" hidden>{{ profile_form.position.errors.as_text }}</span>
+                            </div>
+                        </div>-->
+                    </div>
+                    <div class="row">
+
                         <!--<div class="col-md-6">
                             <div class="form-group">
                                 <label for="{{ profile_form.position.id_for_label }}" hidden>Position:</label>
@@ -119,9 +144,77 @@
                             </div>
                         </div>-->
                     </div>
+                <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <div class="imageupload imageupload_img panel panel-default">
+                                    <div class="panel-heading clearfix">
+                                        <h3 class="panel-title pull-left">Upload Image(Optional)</h3>
+                                        <div class="btn-group pull-right hidden">
+                                            <button type="button" class="btn btn-default active">File</button>
+                                            <button type="button" class="btn btn-default">URL</button>
+                                        </div>
+                                    </div>
+                                    <div class="file-tab panel-body">
+{#                                        <img id="img_src" src="" alt="Image preview" class="thumbnail" style="max-width: 250px; max-height: 250px">#}
+                                        <label class="btn btn-default btn-file" >
+                                            <span>Browse</span>
+                                            <!-- The file is stored here. -->
+                                            <input type="file" name="image-file" id="image-file">
+                                        </label>
+                                        <button type="button" class="btn btn-default" id="remove_image">Remove</button>
+                                    </div>
+                                    <div class="url-tab panel-body">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control hasclear" placeholder="Image URL">
+                                            <div class="input-group-btn">
+                                                <button type="button" class="btn btn-default">Submit</button>
+                                            </div>
+                                        </div>
+                                        <button type="button" class="btn btn-default" >Remove</button>
+                                        <!-- The URL is stored here. -->
+                                        <input type="hidden" name="image-url">
+                                    </div>
+                                </div>
+                            </div>
+                            </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <div class="imageupload imageupload_sig panel panel-default">
+                                    <div class="panel-heading clearfix">
+                                        <h3 class="panel-title pull-left">Digital Signature(Optional)</h3>
+                                        <div class="btn-group pull-right hidden">
+                                            <button type="button" class="btn btn-default active">File</button>
+                                            <button type="button" class="btn btn-default">URL</button>
+                                        </div>
+                                    </div>
+                                    <div class="file-tab panel-body">
+                                        <label class="btn btn-default btn-file">
+                                            <span>Browse</span>
+                                            <!-- The file is stored here. -->
+                                            <input type="file" name="signature-file" id="signature-file">
+                                        </label>
+                                        <button type="button" class="btn btn-default" id="remove_signature" >Remove</button>
+                                    </div>
+                                    <div class="url-tab panel-body">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control hasclear" placeholder="Image URL">
+                                            <div class="input-group-btn">
+                                                <button type="button" class="btn btn-default">Submit</button>
+                                            </div>
+                                        </div>
+                                        <button type="button" class="btn btn-default">Remove</button>
+                                        <!-- The URL is stored here. -->
+                                        <input type="hidden" name="image-url">
+                                    </div>
+                                </div>
+                            </div>
+                            </div>
+                        </div>
                 </div>
                 <div class="form-actions">
-                    <button type="submit" class="btn red pull-right">Submit</button>
+                    <button type="submit" id="submit" class="btn red pull-right">Submit</button>
                     <button onclick="history.go(-1);" style="margin-right:10px;" type="button" class="btn default pull-right">Cancel</button>
                 </div>
             </form>
@@ -132,42 +225,108 @@
 
 
 {% block additional-javascript %}
+    <script src="{{ STATIC_URL }}js/bootstrap-imageupload.js"></script>
 
 <!--<script type="text/javascript" src="/static/js/jquery.searchable-ie-1.1.0.min.js"></script> -->
 <!-- <script type="text/javascript" src="/static/js/usermodule_userprofile.js"></script>    -->
     <script>
 
-     $('#f_name').keypress(function (e) {
-        var regex = new RegExp("^[a-zA-Z]+$");
-        var str = String.fromCharCode(!e.charCode ? e.which : e.charCode);
-        if (regex.test(str)) {
-            return true;
+{#     $('#f_name').keypress(function (e) {#}
+{#        var regex = new RegExp("^[a-zA-Z]+$");#}
+{#        var str = String.fromCharCode(!e.charCode ? e.which : e.charCode);#}
+{#        if (regex.test(str)) {#}
+{#            return true;#}
+{#        }#}
+{#        else#}
+{#        {#}
+{#        e.preventDefault();#}
+{#        alert('Please Enter Alphabate');#}
+{#        return false;#}
+{#        }#}
+{#    });#}
+{#     $('#l_name').keypress(function (e) {#}
+{#        var regex = new RegExp("^[a-zA-Z]+$");#}
+{#        var str = String.fromCharCode(!e.charCode ? e.which : e.charCode);#}
+{#        if (regex.test(str)) {#}
+{#            return true;#}
+{#        }#}
+{#        else#}
+{#        {#}
+{#        e.preventDefault();#}
+{#        alert('Please Enter Alphabate');#}
+{#        return false;#}
+{#        }#}
+{#    });#}
+      $('.imageupload_img').imageupload();
+     $('.imageupload_sig').imageupload();
+
+{#        var x = document.createElement("CANVAS");#}
+{#        console.log(x.toDataURL("/media/uploaded_files/signature.jpg"))#}
+{#        $('#img_src').attr("src",x.toDataURL("/media/uploaded_files/signature.jpg"));#}
+{#        console.log(x.toDataURL("/media/uploaded_files/signature.jpg"))#}
+
+
+        var user_img = '{{ user_img | safe }}';
+        var signature_img = '{{ signature_img | safe }}';
+        if(user_img.length)
+        initial_img_set(user_img,'imageupload_img');
+        if(signature_img.length)
+        initial_img_set(signature_img,'imageupload_sig');
+
+        function initial_img_set(img_path,class_name) {
+            var img_string = "<img src=\""+img_path+"\" alt=\"Image preview\" class=\"thumbnail\" style=\"max-width: 250px; max-height:  250px\">";
+            var $imageupload = $('div.'+class_name+'');
+            var $fileTab = $imageupload.find('.file-tab');
+            $fileTab.prepend(img_string);
+            var $browseFileButton = $fileTab.find('.btn:eq(0)');
+            var $removeFileButton = $fileTab.find('.btn:eq(1)');
+            $browseFileButton.find('span').text('Change');
+            $removeFileButton.css('display', 'inline-block');
         }
-        else
-        {
-        e.preventDefault();
-        alert('Please Enter Alphabate');
-        return false;
-        }
-    });
-     $('#l_name').keypress(function (e) {
-        var regex = new RegExp("^[a-zA-Z]+$");
-        var str = String.fromCharCode(!e.charCode ? e.which : e.charCode);
-        if (regex.test(str)) {
-            return true;
-        }
-        else
-        {
-        e.preventDefault();
-        alert('Please Enter Alphabate');
-        return false;
-        }
-    });
+
+        $('#submit').on('click',function () {
+            if($('#user_img_status').val() == 2)
+            {
+                if(typeof $('#image-file')[0].files[0]!='undefined')
+                    $('#user_img_status').val(1);
+            }
+            else {
+                if(typeof $('#image-file')[0].files[0]!='undefined')
+                    $('#user_img_status').val(1);
+            }
+
+            if($('#signature_img_status').val() == 2)
+            {
+                if(typeof $('#signature-file')[0].files[0]!='undefined')
+                    $('#signature_img_status').val(1);
+            }
+            else {
+                 if(typeof $('#signature-file')[0].files[0]!='undefined')
+                    $('#signature_img_status').val(1);
+            }
+
+
+            console.log( $('#user_img_status').val(),$('#signature_img_status').val());
+
+{#            getImageThumbnailHtml("/media/uploaded_files/signature.jpg")#}
+{#            return false;#}
+        });
+
+        $('#remove_signature').on('click',function () {
+            $('#signature_img_status').val(2);
+        });
+
+    $('#remove_image').on('click',function () {
+            $('#user_img_status').val(2);
+        });
+
     </script>
 
 {% endblock %}
 
 {% block additional-headers %}
+      <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link href="{{ STATIC_URL }}css/bootstrap-imageupload.css" rel="stylesheet">
 <head>
     <title>
         {% block title %} Edit User {% endblock %}

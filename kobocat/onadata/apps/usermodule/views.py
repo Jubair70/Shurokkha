@@ -524,6 +524,57 @@ def edit_profile(request,user_id):
                 # Now we save the UserProfile model instance.
                 profile.save()
 
+                # users_additional_info
+                user_img_status = request.POST.get('user_img_status')
+                signature_img_status = request.POST.get('signature_img_status')
+
+
+
+                img_file_path = ""
+                if user_img_status == '1' and 'image-file' in request.FILES:
+                    myfile = request.FILES['image-file']
+                    url = "onadata/media/uploaded_files/"
+                    userName = request.user
+                    fs = FileSystemStorage(location=url)
+                    myfile.name = str(datetime.now().date()) + "_" + str(userName) + "_" + str(myfile.name)
+                    filename = fs.save(myfile.name, myfile)
+                    img_file_path = "onadata/media/uploaded_files/" + myfile.name
+
+                signature_file_path = ""
+                if signature_img_status == '1' and 'signature-file' in request.FILES:
+                    myfile = request.FILES['signature-file']
+                    url = "onadata/media/uploaded_files/"
+                    userName = request.user
+                    fs = FileSystemStorage(location=url)
+                    myfile.name = str(datetime.now().date()) + "_" + str(userName) + "_" + str(myfile.name)
+                    filename = fs.save(myfile.name, myfile)
+                    signature_file_path = "onadata/media/uploaded_files/" + myfile.name
+
+                supervisor = ""
+                if 'supervisor' in request.POST:
+                    supervisor = request.POST.get('supervisor')
+                print(user_img_status, signature_img_status)
+                if user_img_status == '0' and signature_img_status == '0':
+                    update_query = "Update users_additional_info set supervisor_id = '"+str(supervisor)+"' where user_id = "+str(user_id)
+                elif user_img_status == '0':
+                    update_query = "Update users_additional_info set supervisor_id = '" + str(supervisor) + "', signature_img='"+str(signature_file_path)+"' where user_id = "+str(user_id)
+                elif signature_img_status == '0':
+                    update_query = "Update users_additional_info set supervisor_id = '" + str(supervisor) + "', user_img='"+str(img_file_path)+"' where user_id = " + str(user_id)
+                else:
+                    if user_img_status == '2' and signature_img_status == '2':
+                        update_query = "Update users_additional_info set supervisor_id = '" + str(
+                            supervisor) + "', user_img ='" + str(img_file_path) + "', signature_img ='" + str(signature_file_path) + "' where user_id = " + str(user_id)
+                    elif user_img_status == '2':
+                        update_query = "Update users_additional_info set supervisor_id = '" + str(
+                            supervisor) + "', user_img ='" + str(img_file_path) + "' where user_id = " + str(
+                            user_id)
+                    elif signature_img_status == '2':
+                        update_query = "Update users_additional_info set supervisor_id = '" + str(
+                            supervisor) + "', signature_img ='" + str(signature_file_path) + "' where user_id = " + str(user_id)
+                    else:
+                        update_query = "Update users_additional_info set supervisor_id = '" + str(supervisor) + "', signature_img='"+str(signature_file_path)+"', user_img='"+str(img_file_path)+"' where user_id = "+str(user_id)
+                __db_commit_query(update_query)
+
                 # Update our variable to tell the template registration was successful.
                 edited = True
                 messages.success(request, '<i class="fa fa-check-circle"></i> User profile has been updated successfully!', extra_tags='alert-success crop-both-side')
@@ -539,6 +590,29 @@ def edit_profile(request,user_id):
         # Not a HTTP POST, so we render our form using two ModelForm instances.
         # These forms will be blank, ready for user input.
         else:
+            query_for_supervisor = "select (select (select username from auth_user where id = user_id)user_id from usermodule_usermoduleprofile where id = t.user_id)user_id,(select (select first_name || ' ' || last_name from auth_user where id = user_id)user_id from usermodule_usermoduleprofile where id = t.user_id)username from usermodule_userrolemap t where role_id = 53"
+            df = pandas.DataFrame()
+            df = pandas.read_sql(query_for_supervisor, connection)
+            users_id = df.user_id.tolist()
+            username = df.username.tolist()
+            supervisors = zip(users_id, username)
+
+
+
+
+            query_for_users_aditnal_info = "select substring(signature_img from 8) signature_img,substring(user_img from 8)user_img,supervisor_id from users_additional_info where user_id = "+str(user_id)
+            df = pandas.DataFrame()
+            df = pandas.read_sql(query_for_users_aditnal_info, connection)
+            signature_img = ""
+            user_img = ""
+            supervisor_id = ""
+            if not df.empty:
+                if len(df.signature_img.tolist()):
+                    signature_img = df.signature_img.tolist()[0]
+                if len(df.user_img.tolist()):
+                    user_img = df.user_img.tolist()[0]
+                if len(df.supervisor_id.tolist()):
+                    supervisor_id = df.supervisor_id.tolist()[0]
             user_form = UserEditForm(instance=user,user=request.user)
             org_id_list = get_organization_by_user(request.user)
             if not org_id_list:
@@ -550,7 +624,7 @@ def edit_profile(request,user_id):
 
         return render_to_response(
                 'usermodule/edit_user.html',
-                {'id':user_id, 'user_form': user_form, 'profile_form': profile_form, 'edited': edited},
+                {'signature_img':signature_img,'user_img':user_img,'id':user_id, 'user_form': user_form, 'profile_form': profile_form, 'edited': edited,'supervisors':supervisors,'supervisor_id':supervisor_id},
                 context)
 
 

@@ -563,7 +563,7 @@ def cattle_profile(request,cattle_id,appointment_id):
         'megot': get_option_list('megot'),
         'disease_pattern': get_option_list('disease_pattern'),
         'clinical_findings_data' : get_clinical_findings_dict(clinical_findings_data),
-        'sickness_images' : get_sickness_images(cattle_id)
+        'sickness_images' : get_sickness_images(cattle_id,appointment_id)
     }
 
     data = {'data':get_accoridian_dict(cattle_id)}
@@ -572,11 +572,11 @@ def cattle_profile(request,cattle_id,appointment_id):
     return render(request,'livestock/cattle_profile.html',context)
 
 
-def get_sickness_images(cattle_id):
+def get_sickness_images(cattle_id,appointment_id):
+    healthrecord_sickness_system_id = __db_fetch_single_value("select healthrecord_sickness_system_id from appointment where id ="+str(appointment_id))
     sickness_form_owner_q = "select (select username from auth_user where id = logger_xform.user_id limit 1) as user_name from public.logger_xform where id_string = 'sickness'"
     sickness_form_owner = __db_fetch_single_value(sickness_form_owner_q)
-
-    q = "(select picture_sinckness_sign1 from vwsickness where system_id::text ='"+str(cattle_id)+"'  and picture_sinckness_sign1 is not null order by id desc)union  (select picture_sinckness_sign2 from vwsickness where system_id::text ='"+str(cattle_id)+"' and picture_sinckness_sign2 is not null order by id desc) ;"
+    q = "(select picture_sinckness_sign1 from vwsickness where system_id::text ='"+str(cattle_id)+"'  and picture_sinckness_sign1 is not null and id="+str(healthrecord_sickness_system_id)+" order by id desc)union  (select picture_sinckness_sign2 from vwsickness where system_id::text ='"+str(cattle_id)+"' and picture_sinckness_sign2 is not null and id="+str(healthrecord_sickness_system_id)+" order by id desc) ;"
     data = __db_fetch_values_dict(q)
     data_list = []
     for temp in data:
@@ -938,7 +938,7 @@ def get_prescription_data(id):
 
 
 def get_old_prescription(request,cattle_id):
-    q="select prescription_id from appointment   where prescription_id is not null and cattle_system_id ="+str(cattle_id)
+    q="select prescription_id from appointment   where prescription_id is not null and cattle_system_id ="+str(cattle_id)+" order by id desc"
     data = __db_fetch_values_dict(q)
     data_list = []
     for temp in data:

@@ -176,7 +176,7 @@
                             <div class="form-group">
                                 <div class="imageupload imageupload_sig panel panel-default">
                                     <div class="panel-heading clearfix">
-                                        <h3 class="panel-title pull-left">Digital Signature</h3>
+                                        <h3 class="panel-title pull-left">Digital Signature(Optional)</h3>
                                         <div class="btn-group pull-right hidden">
                                             <button type="button" class="btn btn-default active">File</button>
                                             <button type="button" class="btn btn-default">URL</button>
@@ -186,7 +186,7 @@
                                         <label class="btn btn-default btn-file">
                                             <span>Browse</span>
                                             <!-- The file is stored here. -->
-                                            <input type="file" name="signature-file" required>
+                                            <input type="file" name="signature-file">
                                         </label>
                                         <button type="button" class="btn btn-default">Remove</button>
                                     </div>
@@ -225,32 +225,32 @@
  <!-- <script type="text/javascript" src="/static/js/usermodule_userprofile.js"></script>    -->
     <script>
 
-     $('#f_name').keypress(function (e) {
-        var regex = new RegExp("^[a-zA-Z]+$");
-        var str = String.fromCharCode(!e.charCode ? e.which : e.charCode);
-        if (regex.test(str)) {
-            return true;
-        }
-        else
-        {
-        e.preventDefault();
-        alert('Please Enter Alphabate');
-        return false;
-        }
-    });
-     $('#l_name').keypress(function (e) {
-        var regex = new RegExp("^[a-zA-Z]+$");
-        var str = String.fromCharCode(!e.charCode ? e.which : e.charCode);
-        if (regex.test(str)) {
-            return true;
-        }
-        else
-        {
-        e.preventDefault();
-        alert('Please Enter Alphabate');
-        return false;
-        }
-    });
+{#     $('#f_name').keypress(function (e) {#}
+{#        var regex = new RegExp("^[a-zA-Z]+$");#}
+{#        var str = String.fromCharCode(!e.charCode ? e.which : e.charCode);#}
+{#        if (regex.test(str)) {#}
+{#            return true;#}
+{#        }#}
+{#        else#}
+{#        {#}
+{#        e.preventDefault();#}
+{#        alert('Please Enter Alphabate');#}
+{#        return false;#}
+{#        }#}
+{#    });#}
+{#     $('#l_name').keypress(function (e) {#}
+{#        var regex = new RegExp("^[a-zA-Z]+$");#}
+{#        var str = String.fromCharCode(!e.charCode ? e.which : e.charCode);#}
+{#        if (regex.test(str)) {#}
+{#            return true;#}
+{#        }#}
+{#        else#}
+{#        {#}
+{#        e.preventDefault();#}
+{#        alert('Please Enter Alphabate');#}
+{#        return false;#}
+{#        }#}
+{#    });#}
 
 
 

@@ -392,6 +392,7 @@ def upload_prescription(request):
         xlsx = pd.ExcelFile(des)  # open the file
         df = xlsx.parse(0)  # get the first sheet as an object
         df = df.fillna({'Medicine Type':0,'Type':0,'Advices' :0,'Dose' : 0,'Route' : 0,'Days' :0,'Medine Name' : 0}, inplace=True)
+
         duplicate_diagnosis = []
         df_1 = df.groupby(['Tentative Diagnosis', 'Type','Body Weight From','Body Weight To']).size().reset_index(name='Freq')
         for index_1,row_1 in df_1.iterrows():
@@ -405,18 +406,13 @@ def upload_prescription(request):
             data = __db_fetch_values_dict((check_q))
             if len(data) != 0:
                 delete_duplicate_presciption_diagnosis(data)
-                #duplicate_item_str = "Diagnosis "+diagnosis_1 +" of cattle  type "+ unicode(type_1, 'utf-8') +" with weight range from  "+str(weight_from_1)+" to "+str(weight_to_1) + " is already existed."
-                #duplicate_diagnosis.append(duplicate_item_str)
-                #continue
-            #else:
             insert_diagnosis_q = "INSERT INTO public.diagnosis(id, diagnosis_name, cattle_type, weight_from, weight_to, created_by, created_date)VALUES (DEFAULT ,'" + diagnosis_1 + "', " + str(
                 cattle_type_id) + ", " + str(weight_from_1) + ", " + str(weight_to_1) + ", " + str(
                 request.user.id) + ", NOW())  RETURNING id;"
             inserted_id = __db_fetch_single_value(insert_diagnosis_q)
-            #print "diagnosis insert &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&"
-            #print insert_diagnosis_q
-            #print inserted_id
-            for index, row in df.iterrows():
+            df_filtered = df[(df['Tentative Diagnosis'] == diagnosis_1) & (df['Body Weight From'] == weight_from_1) & (
+            df['Body Weight To'] == weight_to_1)]
+            for index, row in df_filtered.iterrows():
                 #*** Diagnosis *******#
                 diagnosis_name = row[0]
                 description_type = row[1]
@@ -768,7 +764,10 @@ def submit_prescription(request,appointment_id):
         for temp in d:
             cattle_id = temp['cattle_system_id']
             farmer_id = temp['mobile']
+        print "start push noti ****__________________________________________________________________________________________"
         send_push_message(farmer_id, 1, 'Prescription', 'There is a prescription.', cattle_id, farmer_id, prescription_id)
+        print "start push noti ****__________________________________________________________________________________________end"
+        '''
         send_mail(
             'User LogIn One Time Password',
             pres_html,
@@ -776,19 +775,37 @@ def submit_prescription(request,appointment_id):
             ['mpowersocialent@gmail.com'],
             fail_silently=False
         )
-
-    return HttpResponse(json.dumps("Prescription added"), content_type="application/json", status=200)
+        '''
+        data={
+            'farmerid' : farmer_id,'pres_html' : pres_html
+        }
+    return HttpResponse(json.dumps(data), content_type="application/json", status=200)
 
 
 def get_prescription(prescription_id):
     st = datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S')
-    prescription_data = __db_fetch_values_dict("with t as(select(select value_label from xform_extracted where xform_id = 597 and field_name = 'cattle_type' and value_text = c.cattle_type) as cattle_type,cattle_system_id,(select farmer_name from farmer where mobile = c.mobile) as farmer_name,mobile, case when cattle_birth_date is not null then EXTRACT(year from age(now()::date,cattle_birth_date::date))::text else cattle_age end as age_year, case when cattle_birth_date is not null then EXTRACT(month from age(now()::date,cattle_birth_date::date))::text else 0::text end as age_month, case when cattle_birth_date is not null then EXTRACT(day from age(now()::date,cattle_birth_date::date))::text else 0::text end as age_day from cattle c), n as(with m as(select p.id as prescription_id,a.cattle_system_id,p.advice,p.next_appointment_after,pd.medicine_part_1,pd.medicine_part_2,p.created_by,p.created_date from prescription p left join prescription_details pd on pd.prescription_id = p.id left join appointment a on a.id = p.appointment_id) select m.created_date,m.prescription_id,m.created_by,m.cattle_system_id,m.advice,m.next_appointment_after,string_agg(medicine_part_1 || '@@' ||medicine_part_2, '|| ') as rx from m group by m.advice,m.next_appointment_after,m.cattle_system_id,m.created_by,m.prescription_id,m.created_date) select t.cattle_type,t.cattle_system_id,t.farmer_name,t.mobile,t.age_year,t.age_month,t.age_day,to_char(n.created_date,'DD/MM/YYYY') as created_date,n.prescription_id,n.created_by,n.cattle_system_id,n.advice,n.next_appointment_after,n.rx, (select first_name || last_name from auth_user where id = created_by) as prescribey_by, (select signature_img from users_additional_info where user_id = 288) as signature_img from t,n where t.cattle_system_id = n.cattle_system_id and n.prescription_id = "+str(prescription_id))
+    prescription_data = __db_fetch_values_dict("with t as(select(select value_label from xform_extracted where xform_id = 597 and field_name = 'cattle_type' and value_text = c.cattle_type) as cattle_type,cattle_system_id,(select farmer_name from farmer where mobile = c.mobile) as farmer_name,cattle_birth_date,cattle_age,created_date as create_date,mobile, case when cattle_age is NOT NULL then(with t1 as (select age(Current_date, Date(created_date)) as c_age) SELECT (EXTRACT(year FROM c_age)* 12 + EXTRACT(MONTH FROM c_age)) + cattle_age::Integer as age_month from t1) else 0 END as age_in_month, case when cattle_birth_date is not null then EXTRACT(year from age(now()::date,cattle_birth_date::date))::text else cattle_age end as age_year, case when cattle_birth_date is not null then EXTRACT(month from age(now()::date,cattle_birth_date::date))::text else 0::text end as age_month, case when cattle_birth_date is not null then EXTRACT(day from age(now()::date,cattle_birth_date::date))::text else 0::text end as age_day from cattle c), n as(with m as(select p.id as prescription_id,a.cattle_system_id,p.advice,p.next_appointment_after,pd.medicine_part_1,pd.medicine_part_2,p.created_by,p.created_date from prescription p left join prescription_details pd on pd.prescription_id = p.id left join appointment a on a.id = p.appointment_id) select m.created_date,m.prescription_id,m.created_by,m.cattle_system_id,m.advice,m.next_appointment_after,string_agg(medicine_part_1 || '@@' ||medicine_part_2, '|| ') as rx from m group by m.advice,m.next_appointment_after,m.cattle_system_id,m.created_by,m.prescription_id,m.created_date) select t.cattle_type,t.cattle_system_id,t.farmer_name,t.mobile,t.age_year,t.age_month,t.age_day,t.cattle_birth_date,t.age_in_month,t.cattle_age,t.create_date,to_char(n.created_date,'DD/MM/YYYY') as created_date,n.prescription_id,n.created_by,n.cattle_system_id,n.advice,n.next_appointment_after,n.rx, (select first_name || last_name from auth_user where id = created_by) as prescribey_by, (select signature_img from users_additional_info where user_id = 288) as signature_img from t,n where t.cattle_system_id = n.cattle_system_id and n.prescription_id = "+str(prescription_id))
+
     farmer_name = prescription_data[0]['farmer_name']
     created_date = prescription_data[0]['created_date']
     cattle_type = prescription_data[0]['cattle_type']
-    age_year = prescription_data[0]['age_year']
-    age_month = prescription_data[0]['age_month']
-    age_day = prescription_data[0]['age_day']
+    age_year = 0
+    age_month = 0
+    age_day = 0
+    if prescription_data[0]['cattle_birth_date'] is not None:
+        print "prescription_data[0]['cattle_birth_date']_________________________" + prescription_data[0][
+            'cattle_birth_date']
+        age_year = prescription_data[0]['age_year']
+        age_month = prescription_data[0]['age_month']
+        age_day = prescription_data[0]['age_day']
+    else:
+        if prescription_data[0]['cattle_age'] is not None:
+            print str(prescription_data[0]['age_in_month'])
+            age_in_month = prescription_data[0]['age_in_month']
+            age_year = int(age_in_month / 12)
+            age_month = int(age_in_month % 12)
+            age_day = 0
+
     advice = prescription_data[0]['advice']
     next_appointment_after = prescription_data[0]['next_appointment_after']
     prescribey_by = prescription_data[0]['prescribey_by']
@@ -799,10 +816,10 @@ def get_prescription(prescription_id):
     c = 1
     for m in medicines:
         m = m.split('@@')
-        mstr = '<p>'+str(c)+'. '+m[0]+'</p><p>'+m[1]+'</p>'
+        mstr = str(c)+'. '+m[0]+' '+m[1]+'\n'
         c = c + 1
         medicine_str = medicine_str + mstr
-
+    '''
     prescription_html = ' <h3>Prescription:</h3>\n <p>খামারী : ' + str(farmer_name.encode('utf-8')) + ', তারিখ: ' + str(
         created_date.encode('utf-8')) + '</p>\n<p>গরু: ' + str(cattle_type.encode('utf-8')) + ', ' + str(
         age_year.encode('utf-8')) + ' বছর ' + str(age_month.encode('utf-8')) + ' মাস ' + str(
@@ -811,8 +828,13 @@ def get_prescription(prescription_id):
         next_appointment_after) + ' দিন পর পুনরায় তথ্য পাঠিয়ে ডাক্তারের সাথে যোগাযোগ করুন</h4> <img src="' + str(
         signature_img) + '" width="200" height="74"> <br>' + str(
         prescribey_by.encode('utf-8')) + ' \n জরুরী প্রয়জনে ০১২৪৫৮৭৯৬৫২ নাম্বারে যোগাযোগ করুন '
-
+    '''
+    prescription_html = str(created_date.encode('utf-8')) + '\n'+str(farmer_name.encode('utf-8'))+ '\n'+str(cattle_type.encode('utf-8')) +'\n'+ str(
+        age_year) + ' বছর ' + str(age_month) + ' মাস ' + str(
+        age_day) + ' দিন \n'+ str(
+        medicine_str.encode('utf-8'))+'\n'+ str(advice.encode('utf-8'));
     return prescription_html
+
 
 
 def get_medicine_name(request):
@@ -875,12 +897,28 @@ def get_suggested_prescription(request):
 
 
 def get_prescription_data(id):
-    q = "with t as(select cattle_system_id,(select farmer_name from farmer where mobile = c.mobile) as farmer_name,mobile, case when cattle_birth_date is not null then EXTRACT(year from age(now()::date,cattle_birth_date::date))::text else cattle_age end as age_year, case when cattle_birth_date is not null then EXTRACT(month from age(now()::date,cattle_birth_date::date))::text else 0::text end as age_month, case when cattle_birth_date is not null then EXTRACT(day from age(now()::date,cattle_birth_date::date))::text else 0::text end as age_day from cattle c), n as(with m as(select p.id as prescription_id,a.cattle_system_id,p.advice,p.next_appointment_after,pd.medicine_part_1,pd.medicine_part_2,p.created_by,p.created_date from prescription p left join prescription_details pd on pd.prescription_id = p.id left join appointment a on a.id = p.appointment_id) select m.created_date,m.prescription_id,m.created_by,m.cattle_system_id,m.advice,m.next_appointment_after,string_agg(medicine_part_1 || '@@' ||medicine_part_2, '|| ') AS rx from m group by m.advice,m.next_appointment_after,m.cattle_system_id,m.created_by,m.prescription_id,m.created_date) select t.cattle_system_id,(select label from vwcattle_type where value =(select cattle_type from cattle where cattle_system_id =  t.cattle_system_id)) as cattle_type,t.farmer_name,t.mobile,t.age_year,t.age_month,t.age_day,n.created_date,n.prescription_id,n.created_by,n.cattle_system_id,n.advice,n.next_appointment_after,n.rx,(select first_name || last_name from auth_user where id = created_by) as prescribey_by, (select substring(signature_img from 8) from users_additional_info where user_id = (select created_by from prescription where id ="+str(id)+")) as signature_img from t,n where t.cattle_system_id = n.cattle_system_id and n.prescription_id = "+str(id)+""
+    q = "with t as(select cattle_system_id,(select farmer_name from farmer where mobile = c.mobile) as farmer_name,cattle_birth_date,cattle_age,created_date as create_date,mobile, case when cattle_age is NOT NULL then(with t1 as (select age(Current_date, Date(created_date)) as c_age) SELECT (EXTRACT(year FROM c_age)* 12 + EXTRACT(MONTH FROM c_age)) + cattle_age::Integer as age_month from t1) else 0 END as age_in_month, case when cattle_birth_date is not null then EXTRACT(year from age(now()::date,cattle_birth_date::date))::text else cattle_age end as age_year, case when cattle_birth_date is not null then EXTRACT(month from age(now()::date,cattle_birth_date::date))::text else 0::text end as age_month, case when cattle_birth_date is not null then EXTRACT(day from age(now()::date,cattle_birth_date::date))::text else 0::text end as age_day from cattle c), n as(with m as(select p.id as prescription_id,a.cattle_system_id,p.advice,p.next_appointment_after,pd.medicine_part_1,pd.medicine_part_2,p.created_by,p.created_date from prescription p left join prescription_details pd on pd.prescription_id = p.id left join appointment a on a.id = p.appointment_id) select m.created_date,m.prescription_id,m.created_by,m.cattle_system_id,m.advice,m.next_appointment_after,string_agg(medicine_part_1 || '@@' ||medicine_part_2, '|| ') AS rx from m group by m.advice,m.next_appointment_after,m.cattle_system_id,m.created_by,m.prescription_id,m.created_date) select t.cattle_system_id,(select label from vwcattle_type where value =(select cattle_type from cattle where cattle_system_id =  t.cattle_system_id)) as cattle_type,t.farmer_name,t.mobile,t.age_year,t.age_month,t.age_day,t.cattle_birth_date,t.age_in_month,t.cattle_age,t.create_date,n.created_date,n.prescription_id,n.created_by,n.cattle_system_id,n.advice,n.next_appointment_after,n.rx,(select first_name || last_name from auth_user where id = created_by) as prescribey_by, (select substring(signature_img from 8) from users_additional_info where user_id = (select created_by from prescription where id ="+str(id)+")) as signature_img from t,n where t.cattle_system_id = n.cattle_system_id and n.prescription_id = "+str(id)+""
     #q = "with t as(select cattle_system_id,(select farmer_name from farmer where mobile = c.mobile) as farmer_name,mobile, case when cattle_birth_date is not null then EXTRACT(year from age(now()::date,cattle_birth_date::date))::text else cattle_age end as age_year, case when cattle_birth_date is not null then EXTRACT(month from age(now()::date,cattle_birth_date::date))::text else 0::text end as age_month, case when cattle_birth_date is not null then EXTRACT(day from age(now()::date,cattle_birth_date::date))::text else 0::text end as age_day from cattle c), n as(with m as(select p.id as prescription_id,a.cattle_system_id,p.advice,p.next_appointment_after,pd.medicine_part_1,pd.medicine_part_2,p.created_by,p.created_date from prescription p left join prescription_details pd on pd.prescription_id = p.id left join appointment a on a.id = p.appointment_id) select m.created_date,m.prescription_id,m.created_by,m.cattle_system_id,m.advice,m.next_appointment_after,string_agg(medicine_part_1 || '\n' ||medicine_part_2, ';') as rx from m group by m.advice,m.next_appointment_after,m.cattle_system_id,m.created_by,m.prescription_id,m.created_date) select t.cattle_system_id,(select label from vwcattle_type where value =(select cattle_type from cattle where cattle_system_id =  t.cattle_system_id)) as cattle_type,t.farmer_name,t.mobile,t.age_year,t.age_month,t.age_day,n.created_date,n.prescription_id,n.created_by,n.cattle_system_id,n.advice,n.next_appointment_after,n.rx,(select first_name || last_name from auth_user where id = created_by) as prescribey_by, (select signature_img from users_additional_info where user_id = (select created_by from prescription where id ="+str(id)+")) as signature_img from t,n where t.cattle_system_id = n.cattle_system_id and n.prescription_id = "+str(id)+""
     #print q
     data = __db_fetch_values_dict(q)
     dict = {}
     for temp in data:
+        age_year = 0
+        age_month = 0
+        age_day = 0
+        if temp['cattle_birth_date'] is not None:
+            print "prescription_data[0]['cattle_birth_date']_________________________" + temp[
+                'cattle_birth_date']
+            age_year = temp['age_year']
+            age_month = temp['age_month']
+            age_day =temp['age_day']
+        else:
+            if temp['cattle_age'] is not None:
+                print str(temp['age_in_month'])
+                age_in_month = temp['age_in_month']
+                age_year = int(age_in_month / 12)
+                age_month = int(age_in_month % 12)
+                age_day = 0
         medicines = temp['rx'].split('||')
         c = 1
         mstr=''
@@ -893,7 +931,7 @@ def get_prescription_data(id):
         dict={
             'farmer_name' : temp['farmer_name'],'mp_1' : medicine_str,'signature_img' : temp['signature_img'],
             'created_date' : temp['created_date'],'advice':temp['advice'],'cattle_type' : temp['cattle_type'],
-            'age_year' : temp['age_year'],'age_month' : temp['age_month'],'age_day' : temp['age_day'],'next_appointment_after' : temp['next_appointment_after'],'prescribey_by' : temp['prescribey_by'],
+            'age_year' : age_year,'age_month' : age_month,'age_day' : age_day,'next_appointment_after' : temp['next_appointment_after'],'prescribey_by' : temp['prescribey_by'],
         }
     return dict
 
@@ -1210,6 +1248,7 @@ def update_user_device(data, user_information, profile_id):
 
 def send_push_message(username, notification_type, title, content, cattle_id, farmer_id, prescription_id):
     firebase_query = "select firebase_token from user_device_map where username = '" + username + "'"
+    print firebase_query
 
     firebase_token = None
 
@@ -1223,6 +1262,8 @@ def send_push_message(username, notification_type, title, content, cattle_id, fa
         firebase_token = fetchVal[0]
 
     cursor.close()
+    print "firebase_token---------------------------------------------------------"
+    print firebase_token
     if firebase_token:
         # unique firebase token for the user
 
@@ -1263,9 +1304,32 @@ def send_push_message(username, notification_type, title, content, cattle_id, fa
 
         }
 
-
+        print "firebase_token-before service--------------------------------------------------------"
         result = push_service.notify_multiple_devices(registration_ids=registration_id, message_title=message_title,
 
                                                       message_body=message_body, data_message=data_message)
-
+        print "firebase_token-before serviceend --------------------------------------------------------"
         print result
+
+
+def send_prescription_sms(request):
+    if request.method == 'POST':
+        sms_text = request.POST.get("sms_text")
+        send_other = request.POST.get("send_other")
+        f_id = request.POST.get("f_id")
+        print "farmer mobile is:::" + str(f_id)
+        if send_other == '1':
+            mobile_num_list =__db_fetch_single_value("with t1 as(select user_id,(select username from auth_user where id =(select user_id from usermodule_usermoduleprofile where id =user_farmer_map.user_id)) para_ai_mobile from user_farmer_map where farmer_id=(select id from farmer where mobile = '"+f_id+"')) select string_to_array((string_agg(para_ai_mobile,',')),',') mobile_list from t1 ")
+            if mobile_num_list:
+                for temp in mobile_num_list:
+                    send_sms(temp, sms_text)
+        else:
+            send_sms(f_id, sms_text)
+        return HttpResponse(json.dumps('ok', default=decimal_date_default), content_type="application/json", status=200)
+
+
+
+def update_cattle_type(request):
+    query = "select update_cattle_type()"
+    __db_commit_query(query)
+    return HttpResponse('')

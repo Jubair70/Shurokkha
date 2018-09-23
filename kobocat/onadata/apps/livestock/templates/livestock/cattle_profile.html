@@ -711,6 +711,33 @@
             </div>
     </div>
 <!--modal ended-->
+
+
+ <!-- SMS MODAL-->
+    <div class="modal fade" id="sms_modal" tabindex="-1" role="dialog">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <button type="button" class="bootbox-close-button close" data-dismiss="modal" aria-hidden="true" style="margin-top: 10px;">×</button>
+                        <form style="" action="/livestock/send_prescription_sms/" id="send_pres_form" method="post">
+                        {% csrf_token %}
+                            <input type = "hidden" name ="f_id" id="f_id">
+                        <h3 class="modal-title" id="myModalLabel" style="margin-bottom:15px;">Send prescription as SMS</h3>
+                        <div style="color:red;">Total character : <div id="textarea_feedback"></div></div>
+                        <textarea id="sms_text" rows="10" cols="50" name="sms_text" ></textarea>
+                        <div class="row" style="margin:5px;"><input type="checkbox" name ="send_other" value="1">Also send to Paravet/AI Technician</div>
+                        <button type ="submit" class="btn btn-primary">Send</button>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn  btn-success" data-dismiss="modal">Close</button>
+                        </button>
+                    </div>
+                </div>
+            </div>
+    </div>
+<!--modal ended-->
+
   </div>
 {% endblock %}
 
@@ -978,37 +1005,6 @@
             }); //ajax end
         });
 
-        $(document).on("submit", "#prescription_form", function (event) {
-            console.log("trigger submit_prescription");
-            event.preventDefault();
-            form_url = $(this).attr('action');
-            console.log(form_url)
-            var data = new FormData(this); // <-- 'this' is form element
-            //return formData;
-            if(confirm("Are you sure  to submit the prescription?")){
-            $.ajax({
-                type: 'POST',
-                url: form_url,
-                contentType: false,
-                processData: false,
-                data: data,
-                success: function (data) {
-                    console.log('prescriptionadd--------------------------------------------------------')
-                    console.log(data);
-                    get_old_prescription(cattle_id);
-                    $('#prescription').hide()
-                    $('#clinical_findings_div').hide();
-                    //$('#success_msg_upload').html("");
-                    //$('#success_msg_upload').html('<div class="alert alert-success fade in alert-dismissible"><strong>Success!</strong> Successfully uploaded</div>');
-
-                },
-                error: function (xhr, status, error) {
-                   // $('#error_msg_upload').html("<h5><strong>"+xhr.responseText+"</strong></h5>");
-                }
-            }); //ajax end
-
-        }
-        });
 
 
     function delete_element(obj){
@@ -1484,6 +1480,73 @@ $(window).on('load', function() {
                 }
             });
         }
+        $(document).on("submit", "#prescription_form", function (event) {
+            event.preventDefault();
+            form_url = $(this).attr('action');
+            console.log(form_url)
+            var data = new FormData(this); // <-- 'this' is form element
+            //return formData;
+            if(confirm("Are you sure  to submit the prescription?")){
+            $.ajax({
+                type: 'POST',
+                url: form_url,
+                contentType: false,
+                processData: false,
+                data: data,
+                success: function (data) {
+                    prescription = data.pres_html
+                    farmerid = data.farmerid
+                    console.log("farmer id===="+farmerid)
+                    get_old_prescription(cattle_id);
+                    $('#prescription').hide()
+                    $('#clinical_findings_div').hide();
+                    $('#sms_modal').modal('show');
+                    $('#sms_text').html('');
+                    $('#sms_text').html(prescription);
+                    $('#f_id').val(farmerid);
+                    var cs = $("#sms_text").val().length;
+                     $('#textarea_feedback').text(cs);
+
+                },
+                error: function (xhr, status, error) {
+                   // $('#error_msg_upload').html("<h5><strong>"+xhr.responseText+"</strong></h5>");
+                }
+            }); //ajax end
+
+        }
+        });
+
+        //SMS PANEL
+    $('#sms_text').on('input', update_count);
+    function update_count() {
+        console.log("update count");
+        var cs = $(this).val().length;
+        $('#textarea_feedback').text(cs);
+    }
+     $(document).on("submit", "#send_pres_form", function (event) {
+        event.preventDefault();
+        form_url = $(this).attr('action');
+        console.log(form_url)
+        var data = new FormData(this); // <-- 'this' is form element
+        //return formData;
+        if(confirm("Are you sure  to send  the prescription?")){
+        $.ajax({
+            type: 'POST',
+            url: form_url,
+            contentType: false,
+            processData: false,
+            data: data,
+            success: function (data) {
+                $('#sms_modal').modal('toggle');
+            },
+            error: function (xhr, status, error) {
+               // $('#error_msg_upload').html("<h5><strong>"+xhr.responseText+"</strong></h5>");
+            }
+        }); //ajax end
+
+    }
+    });
+
 </script>
 
 {% endblock %}

@@ -62,9 +62,9 @@ def login_verify(request):
         # Gather the username and password provided by the user.
         # This information is obtained from the login form.
         print "check1"
-        print request.body
+        #print request.body
         json_string = request.POST.get('data')
-        print "check2" + json_string
+        #print "check2" + json_string
         data = json.loads(json_string)
         print "check3 "
         username = data['phone']
@@ -151,18 +151,9 @@ def id_generator(size=4):
 # mobile save user
 @csrf_exempt
 def save_user(request):
-    """{
- "name":"Jon Snow",
- "phone":"01234567891",
- "occupation":"Farmer"
-}
-
-
-    """
     json_string = request.POST.get('data')
-    #print json_string
-    # print json_string
     data = json.loads(json_string)
+
     submitted_data = {}
     submitted_data['username'] = data['phone']
     user = User.objects.filter(username=data['phone']).first()
@@ -173,7 +164,6 @@ def save_user(request):
             return HttpResponse('Duplicate User', status=409)
 
     password = id_generator()
-    #password = 'VYXTSZ16'
     # when login
     if user is not None:
         # password = id_generator()
@@ -193,6 +183,15 @@ def save_user(request):
 
     # when signup
     else:
+        print data['occupation_position']
+        print str(data['occupation'].encode('utf-8'))
+        if data['occupation_position'] == '0':
+            occupation = 'Farmer'
+        if data['occupation_position'] == '1':
+            occupation = 'Paravet'
+        if data['occupation_position'] == '2':
+            occupation = 'AI Technicians'
+
         submitted_data['contact_number'] = data['phone']
 
         submitted_data['first_name'] = data['name'][0].upper() + data['name'][1:]
@@ -236,7 +235,6 @@ def save_user(request):
         profile_form = UserProfileForm(data=submitted_data)
         farmer_name = data['name'][0].upper() + data['name'][1:]
         mobile = data['phone']
-        occupation=data['occupation']
         if user:
             auth_user_id = user.id
         else:
@@ -244,8 +242,15 @@ def save_user(request):
         if user_form.is_valid() and profile_form.is_valid():
 
             save_user_details(user_form, profile_form,submitted_data,farmer_name,mobile,occupation,auth_user_id)
-            sms_text = "সুরক্ষা-তে রেজিস্ট্রেশান সম্পন্ন করার জন্য গোপন কোডটি লিখুন.কোড : " + password
+            sms_text = "সুরক্ষা-তে রেজিস্ট্রেশন সম্পন্ন করার জন্য গোপন কোডটি লিখুন.কোড : " + password
             views.send_sms(mobile, sms_text.decode('utf-8'))
+            send_mail(
+                'User LogIn One Time Password',
+                'Hi,\n\nWelcome to Shurokkha!!\n\nPlease use this Password given below  to access The shurokkha App.\n\n User :' + mobile + '\n\n Password :' + password + '\n\n',
+                'mpowersocial2018@gmail.com',
+                ['mpowersocialent@gmail.com'],
+                fail_silently=False
+            )
             if occupation != 'Farmer':
                 tag = "true"
             else:
@@ -265,12 +270,12 @@ def save_user(request):
 
     send_mail(
         'User LogIn One Time Password',
-        'Hi,\n\nWelcome to Shurokkha!!\n\nPlease use this Password given below  to access The shurokkha App.\n\n Password :' + password + '\n\n',
+        'Hi,\n\nWelcome to Shurokkha!!\n\nPlease use this Password given below  to access The shurokkha App.\n\n User :' + receivermail + '\n\n Password :' + password + '\n\n',
         'mpowersocial2018@gmail.com',
         ['mpowersocialent@gmail.com'],
         fail_silently=False
     )
-    sms_text = "সুরক্ষা-তে রেজিস্ট্রেশান সম্পন্ন করার জন্য গোপন কোডটি লিখুন.কোড : " + password
+    sms_text = "সুরক্ষা-তে রেজিস্ট্রেশন সম্পন্ন করার জন্য গোপন কোডটি লিখুন.কোড : " + password
     views.send_sms(receivermail, sms_text.decode('utf-8'))
     return HttpResponse(json.dumps({'password': password}), status=200)
 
@@ -347,14 +352,15 @@ def save_user_details(user_form,profile_form,submitted_data,farmer_name,mobile,o
     # currentOwner = get_object_or_404(User, username__iexact=loggeusername)
     # sendermail = currentOwner.email
     #receivermail = data['phone']
-
+    '''
     send_mail(
         'User LogIn One Time Password',
-        'Hi,\n\nWelcome to Shurokkha!!\n\nPlease use this Password given below  to access The shurokkha App.\n\n Password :' + submitted_data['password'] + '\n\n',
+        'Hi,\n\nWelcome to Shurokkha!!\n\nPlease use this Password given below  to access The shurokkha App.\n\n User :' + mobile + '\n\n Password :' + user.password + '\n\n',
         'mpowersocial2018@gmail.com',
         ['mpowersocialent@gmail.com'],
         fail_silently=False
     )
+    '''
 
 
 

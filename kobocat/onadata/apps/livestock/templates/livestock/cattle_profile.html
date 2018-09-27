@@ -464,45 +464,48 @@
           <div class="row">
             <!--<div class=" ml-5 mr-3">1.</div>-->
             <div class="col-md-11">
-              <form  id ="prescription_form" method="post" action="/livestock/submit_prescription/{{ appointment_id }}"  onsubmit="return false;">
+              <form  id ="prescription_form" method="post" action="/livestock/submit_prescription/{{ appointment_id }}"  >
                   {% csrf_token %}
                   <input type="hidden" id ="clinical_findings_id_prescription" value="" name="clinical_findings_id_prescription">
-                  <div id = "container_loop">
-                    <div id = "loop" class="loop_class">
+                  <div class = "row">
+                  <div id = "container_loop" class="col-md-8">
+                      <div id = "loop" class="loop_class">
 
-                      <div class="form-group">
-                        <input type="text" required name = "med_part_1[]" class="form-control lst" id="med_p1" placeholder="Medicine type, Name, Pack size, quantity:">
-                      </div>
-                      <div class="form-group">
-                        <input type="text" required name = "med_part_2[]" class="form-control lst" id="med_p2" placeholder="Dose, Route days:">
-                      </div>
-                        <button class="btn btn-lg minus" onclick="delete_element(this)" type="button" >
-                                <span class="glyphicon glyphicon-minus"></span>
-                        </button>
-
-                    <!--<div class="row">
-                    <div class="col-md-12">
-                        <div class="form-group">
-                            <!--<button class="btn btn-lg" type="button" id="plus">
-                                <span class="glyphicon glyphicon-plus"></span>
-                            </button>-->
-                            <!--<button class="btn btn-lg minus" onclick="delete_element()" type="button" >
-                                <span class="glyphicon glyphicon-minus"></span>
+                          <div class="form-group">
+                            <input type="text" onblur="get_prescription_sms()" required name = "med_part_1[]" class="form-control lst med_p1" id="med_p1" placeholder="Medicine type, Name, Pack size, quantity:">
+                          </div>
+                          <div class="form-group">
+                            <input type="text" onblur="get_prescription_sms()" required name = "med_part_2[]" class="form-control lst med_p2" id="med_p2" placeholder="Dose, Route days:">
+                          </div>
+                            <button class="btn btn-lg minus" onclick="delete_element(this)" type="button" >
+                                    <span class="glyphicon glyphicon-minus"></span>
                             </button>
-                        </div>
-                    </div>
-                    </div>-->
-</div><!--end loop div-->
+                      </div><!--end loop div-->
 
                     </div> <!--end container loop div-->
 
-              <div class="form-group">
-                 <label for="exampleFormControlTextarea1">Advice</label>
-                 <textarea class="form-control" required name="advice" id="advice" rows="3" placeholder="Suggestion box"></textarea>
+                      <!--SMS Panel start-->
+                      <div class="col-md-4">
+                          <h3 class="" id="" style="margin-bottom:15px;">Prescription as SMS</h3>
+                          <input type = "hidden" name ="f_id" id="f_id" value="{{ mobile }}">
+                        <div style="color:red;">Total character : <div id="textarea_feedback"></div></div>
+                        <textarea id="sms_text" rows="10" cols="50" name="sms_text" ></textarea>
+                        <div class="row" style="margin:5px;"><input type="checkbox" name ="send_other" value="1">Also send to Paravet/AI Technician</div>
+
+                      </div>
+                      <!--SMS Panel ended-->
+
               </div>
 
-            </div>
-          </div>
+
+
+              <div class="form-group">
+                 <label for="exampleFormControlTextarea1">Advice</label>
+                 <textarea class="form-control" onblur="get_prescription_sms()" required name="advice" id="advice" rows="3" placeholder="Suggestion box"></textarea>
+              </div>
+
+
+
 
           <div class="row mb-4">
             <div class="col-md-7">
@@ -526,24 +529,27 @@
             </div>
           </div>
 
-        </div>
+
            </form>
+                </div>
 
       </div>
-
+        </div>
+      </div>
     <!-- Prescription panel end-->
 
     <!--old prescription load-->
         <div id="old_prescription_head"></div>
-<div id = "old_prescription_div" style="overflow-y: scroll;  height:301px;margin-top:30px">
+        <div id = "old_prescription_div" style="overflow-y: scroll;  height:301px;margin-top:30px">
 
 
 
-</div>
+        </div>
 
     <!--old prescription load-->
 
     </div>
+    <!--<button id="test_sms_data" onclick="get_prescription_sms()">SMS</button>-->
     <!-- /.container-fluid-->
     <!-- /.content-wrapper-->
     <!--<footer class="sticky-footer">
@@ -764,7 +770,13 @@
     
 
     <script>
+        var farmer_mobile = {{ mobile }}
+        console.log('farmer mobileis ::'+farmer_mobile)
+        var farmer_name = '{{ farmer_name }}'
+        var cattle_type_text = '{{ cattle_type_text }}'
+        var cattle_age = '{{ cattle_age }}'
         var cattle_id = {{ cattle_id }}
+        console.log(cattle_id)
         var appointment_id = {{ appointment_id }}
         var cattle_type = {{ cattle_type }}
         var appointment_status = {{ appointment_status }}
@@ -1011,6 +1023,7 @@
         if($('#container_loop').children().length!=1){
             $(obj).parent('div').remove();
         }
+        get_prescription_sms();
     }
 
 
@@ -1041,6 +1054,7 @@
                        });
         $(this).focus().select();
         $('#add_medicine_modal').modal('toggle');
+        get_prescription_sms();
     }
 
     function get_suggested_prescription(type,weight,diagnosis) {
@@ -1085,10 +1099,13 @@
                                $(this).parent().parent().remove();
                            }
                        });
+
                     }
+
                     else{
                         alert("No prescription suggested.")
                     }
+                    get_prescription_sms();
                     //$('#success_msg_upload').html("");
                     //$('#success_msg_upload').html('<div class="alert alert-success fade in alert-dismissible"><strong>Success!</strong> Successfully uploaded</div>');
 
@@ -1101,14 +1118,17 @@
 
 
     function get_old_prescription(cattle_id) {
+        console.log("Trigger old prescription");
 
         $.ajax({
                 type: 'POST',
                 url: '/livestock/get_old_prescription/'+cattle_id+'/',
                 success: function (data) {
+                    console.log("data")
+                    console.log(data)
                     $("#old_prescription_div").html(data);
                     $("#old_prescription_head").html("<h2>Old Prescription</h2>");
-
+                    console.log("data ended________________________________")
                 },
                 error: function (xhr, status, error) {
 
@@ -1494,19 +1514,20 @@ $(window).on('load', function() {
                 processData: false,
                 data: data,
                 success: function (data) {
-                    prescription = data.pres_html
-                    farmerid = data.farmerid
-                    console.log("farmer id===="+farmerid)
+                    //prescription = data.pres_html
+                    //farmerid = data.farmerid
+                    //console.log("farmer id===="+farmerid)
                     get_old_prescription(cattle_id);
                     $('#prescription').hide()
                     $('#clinical_findings_div').hide();
+                    /*
                     $('#sms_modal').modal('show');
                     $('#sms_text').html('');
                     $('#sms_text').html(prescription);
                     $('#f_id').val(farmerid);
                     var cs = $("#sms_text").val().length;
                      $('#textarea_feedback').text(cs);
-
+                    */
                 },
                 error: function (xhr, status, error) {
                    // $('#error_msg_upload').html("<h5><strong>"+xhr.responseText+"</strong></h5>");
@@ -1518,9 +1539,9 @@ $(window).on('load', function() {
 
         //SMS PANEL
     $('#sms_text').on('input', update_count);
+
     function update_count() {
-        console.log("update count");
-        var cs = $(this).val().length;
+        var cs = $("#sms_text").val().length;
         $('#textarea_feedback').text(cs);
     }
      $(document).on("submit", "#send_pres_form", function (event) {
@@ -1546,6 +1567,24 @@ $(window).on('load', function() {
 
     }
     });
+
+
+    function get_prescription_sms(){
+        med_str = ''
+        i = 1;
+        $(".loop_class").each(function (e){
+            m_p_1 = $(this).closest('div:has("input.med_p1")').find('input.med_p1').val()
+            m_p_2 = $(this).closest('div:has("input.med_p2")').find('input.med_p2').val()
+            temp_medicine = i+'. '+ m_p_1+'\n'+m_p_2;
+            med_str = med_str+temp_medicine+'\n'
+            i++
+        });
+        advice = $('#advice').val()
+       $("#sms_text").val(farmer_name+'\n'+cattle_type_text+'\n'+cattle_age+'\n'+med_str+'\n'+advice)
+        update_count()
+        //med_p2
+        //$("input[name=med_part_1[]]").val();
+    }
 
 </script>
 

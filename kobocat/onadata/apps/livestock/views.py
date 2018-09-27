@@ -141,15 +141,19 @@ def add_medicine(request):
 def upload_medicine(request):
     des = handle_uploaded_file(request.FILES['ex_file'])
     xlsx = pd.ExcelFile(des)        # open the file
-    df = xlsx.parse(0)              # get the first sheet as an object
+    df = xlsx.parse(0)
     # print pd.__version__
     duplicate_medicine = []
     for index, row in df.iterrows():
         type = row[0]
         type_id= __db_fetch_single_value("select id from medicine_type where name = '"+type+"'")
+
         name = row[1]
+        #single quote replace with double single quote
+        if "'" in name:
+            name = str(name).replace("'", "''")
         pack_size =  row[2]
-        check_q = "select * from medicine where medicine_type::text like '" + str(type_id) + "' and medicine_name like '" + name + "' and  packsize like '" + pack_size + "' "
+        check_q = "select * from medicine where medicine_type::text = '" + str(type_id) + "' and medicine_name = '" + name + "' and  packsize = '" + pack_size + "' "
         data = __db_fetch_values_dict((check_q))
         if len(data) == 0:
             q = "INSERT INTO public.medicine(id, medicine_type, medicine_name, packsize, created_at, created_by)VALUES (DEFAULT , '" + str(type_id) + "','" + name + "', '" + pack_size + "', NOW(), " + str(
@@ -355,7 +359,7 @@ def get_cattle_list(request,id):
     cattle_regi_form_owner_q = "select (select username from auth_user where id = logger_xform.user_id limit 1) as user_name from public.logger_xform where id_string = 'cattle_registration'"
     cattle_regi_form_owner = __db_fetch_single_value(cattle_regi_form_owner_q)
     #q = " select *,get_form_option_text(597,'cattle_type',cattle_type) cattle_type_text,get_form_option_text(597,'cattle_origin',cattle_origin) cattle_origin_text from vwcattle_registration where cattle_type::text  like '"+cattle_type+"'"
-    q = " select *,date(created_date)::text as register_date ,(select label from vwcattle_type where value =cattle_type ) cattle_type_text,(select label from vwcattle_origin where value =cattle_origin ) cattle_origin_text from cattle where cattle_type::text  like '"+cattle_type+"'"
+    q = " select *,date(created_date)::text as register_date ,(select label from vwcattle_type where value =cattle_type ) cattle_type_text,(select label from vwcattle_origin where value =cattle_origin ) cattle_origin_text from cattle where cattle_type::text  like '"+cattle_type+"' and mobile = (select mobile from cattle where id = "+str(id)+")"
     dataset = __db_fetch_values_dict(q)
     data_list = []
     age_cattle = 0
@@ -398,6 +402,9 @@ def upload_prescription(request):
         for index_1,row_1 in df_1.iterrows():
             diagnosis_1 =  row_1[0]
             type_1 = row_1[1].encode('utf-8')
+            print "type________________________________________"
+            print type_1
+            print "select value from vwcattle_type where label = '" + type_1 + "'"
             cattle_type_id = __db_fetch_single_value(
                 "select value from vwcattle_type where label = '" + type_1 + "'")
             weight_from_1 = row_1[2]
@@ -751,6 +758,7 @@ def submit_prescription(request,appointment_id):
         med_part_2 = request.POST.getlist('med_part_2[]')
         revisit = request.POST.get('revisit')
         advice = request.POST.get('advice')
+
         pres_q = "INSERT INTO public.prescription(id, appointment_id, clinical_findings_id, advice, created_by, created_date, next_appointment_after)VALUES (DEFAULT , "+str(appointment_id)+","+str(clinical_findings_id)+", '"+advice+"',"+str(request.user.id)+", NOW(), "+str(revisit)+") returning id;"
         prescription_id = __db_fetch_single_value(pres_q)
         for index, elem in enumerate(med_part_1):
@@ -764,20 +772,41 @@ def submit_prescription(request,appointment_id):
         for temp in d:
             cattle_id = temp['cattle_system_id']
             farmer_id = temp['mobile']
-        print "start push noti ****__________________________________________________________________________________________"
-        send_push_message(farmer_id, 1, 'Prescription', 'There is a prescription.', cattle_id, farmer_id, prescription_id)
-        print "start push noti ****__________________________________________________________________________________________end"
-        '''
-        send_mail(
-            'User LogIn One Time Password',
-            pres_html,
-            'mpowersocial2018@gmail.com',
-            ['mpowersocialent@gmail.com'],
-            fail_silently=False
-        )
-        '''
+        get_paravet_mobile = __db_fetch_single_value("select(json->>'_submitted_by') user_mobile from logger_instance where id =(select healthrecord_sickness_system_id from appointment where id = "+str(appointment_id)+")")
+        if get_paravet_mobile == farmer_id:
+            print "Sending Push notification to " + farmer_id + " ****__________________________________________________________________________________________"
+
+            send_push_message(farmer_id, 1, 'Prescription', 'There is a prescription.', cattle_id, farmer_id,
+                              prescription_id)
+            print "End push noti ****__________________________________________________________________________________________end"
+        else:
+            print "Sending Push notification to "+ farmer_id+" ****__________________________________________________________________________________________"
+            send_push_message(farmer_id, 1, 'Prescription', 'There is a prescription.', cattle_id, farmer_id,
+                              prescription_id)
+            print "End push noti ****__________________________________________________________________________________________end"
+
+            print "Sending Push notification to " + get_paravet_mobile + " ****__________________________________________________________________________________________"
+
+            send_push_message(get_paravet_mobile, 1, 'Prescription', 'There is a prescription.', cattle_id, farmer_id,
+                              prescription_id)
+            print "End push noti ****__________________________________________________________________________________________end"
+
+        #SENDING Prescription SMS to farmer  AND/OR Paravet/AI Technician ###
+
+        sms_text = request.POST.get("sms_text")
+        send_other = request.POST.get("send_other")
+        f_id = request.POST.get("f_id")
+        print "farmer mobile is:::" + str(f_id)
+        if send_other == '1':
+            mobile_num_list = __db_fetch_single_value(
+                "with t1 as(select user_id,(select username from auth_user where id =(select user_id from usermodule_usermoduleprofile where id =user_farmer_map.user_id)) para_ai_mobile from user_farmer_map where farmer_id=(select id from farmer where mobile = '" + f_id + "')) select string_to_array((string_agg(para_ai_mobile,',')),',') mobile_list from t1 ")
+            if mobile_num_list:
+                for temp in mobile_num_list:
+                    send_sms(temp, sms_text)
+        else:
+            send_sms(f_id, sms_text)
         data={
-            'farmerid' : farmer_id,'pres_html' : pres_html
+            'farmerid' : f_id,'pres_html' : ''
         }
     return HttpResponse(json.dumps(data), content_type="application/json", status=200)
 
@@ -938,7 +967,8 @@ def get_prescription_data(id):
 
 
 def get_old_prescription(request,cattle_id):
-    q="select prescription_id from appointment   where prescription_id is not null and cattle_system_id ="+str(cattle_id)+" order by id desc"
+    q = "with t1 as(select prescription_id,(select created_date from prescription where id =prescription_id) c_date from appointment where prescription_id is not null and cattle_system_id ="+str(cattle_id)+") select prescription_id from t1 order by c_date desc"
+    #q="select prescription_id from appointment   where prescription_id is not null and cattle_system_id ="+str(cattle_id)+" order by id desc"
     data = __db_fetch_values_dict(q)
     data_list = []
     for temp in data:
@@ -947,8 +977,9 @@ def get_old_prescription(request,cattle_id):
         }
         data_list.append(dict.copy())
         dict.clear()
-    # print data_list
-    return render(request, 'livestock/old_prescription.html',{'prescription_data_list' : data_list})
+    print "ata_list___________________________________________________________________---------"
+    print data_list
+    return render(request, 'livestock/old_prescription.html',{'prescription_data_list' : data_list},status=200)
 
 
 
@@ -1311,7 +1342,7 @@ def send_push_message(username, notification_type, title, content, cattle_id, fa
         print "firebase_token-before serviceend --------------------------------------------------------"
         print result
 
-
+#This method is not using currently
 def send_prescription_sms(request):
     if request.method == 'POST':
         sms_text = request.POST.get("sms_text")

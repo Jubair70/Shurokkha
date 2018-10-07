@@ -1732,6 +1732,124 @@ def delete_child(form_id):
         delete_child(each)
 
 
+def calculate_parents(list_of_id_of_parents,list_of_name_of_parents, field_parent_id):
+    query="select * from geo_data where id="+str(field_parent_id)+""
+    df = pandas.DataFrame()
+    df = pandas.read_sql(query,connection)
+    id = df.id.tolist()[0]
+    field_name = df.field_name.tolist()[0]
+    field_parent_id = df.field_parent_id.tolist()[0]
+    list_of_id_of_parents.append(id)
+    list_of_name_of_parents.append(field_name)
+    if field_parent_id is not None:
+        calculate_parents(list_of_id_of_parents,list_of_name_of_parents,field_parent_id)
+
+
+@login_required
+def edit_form(request,form_id):
+    check = pandas.DataFrame()
+    option = "select * from geo_definition"
+    check = pandas.read_sql(option, connection)
+    node_val = check.node_name.tolist()
+    node_id = check.id.tolist()
+    node = json.dumps({"node_val": node_val, "node_id": node_id})
+    list = zip(node_id, node_val)
+    query_specific = "select field_name,field_parent_id,field_type_id,(select node_name from geo_definition where id = field_type_id ) as field_type,geocode,uploaded_file_path from geo_data where id =" + str(
+        form_id) + ""
+    check = pandas.read_sql(query_specific, connection)
+    field_parent_id = check.field_parent_id.tolist()[0]
+    field_name = check.field_name.tolist()[0]
+    field_type = check.field_type.tolist()[0]
+    geocode = check.geocode.tolist()[0]
+    field_type_id = check.field_type_id.tolist()[0]
+    uploaded_file_path = check.uploaded_file_path.tolist()[0]
+    list_of_id_of_parents = []
+    list_of_name_of_parents = []
+    if field_parent_id is not None:
+        calculate_parents(list_of_id_of_parents, list_of_name_of_parents, field_parent_id)
+    list_of_both = json.dumps(
+        {'list_of_id_of_parents': list_of_id_of_parents, 'list_of_name_of_parents': list_of_name_of_parents})
+
+    if field_parent_id is not None:
+        field_name_query = "select geocode from geo_data where field_type_id = " + str(
+            field_type_id) + " and field_parent_id = " + str(field_parent_id) + ""
+    else:
+        field_name_query = "select geocode from geo_data where field_type_id = " + str(
+            field_type_id) + " and field_parent_id  is null"
+    df = pandas.read_sql(field_name_query, connection)
+    all_geocode = df.geocode.tolist()
+
+    # Dependency Check
+    # First if it exists in usermodule_catchment_area
+    query_user = "select * from public.usermodule_catchment_area where geoid =" + str(form_id)
+    df_user = pandas.DataFrame()
+    df_user = pandas.read_sql(query_user, connection)
+
+    # if it exists in organization_catchment_area
+    query_org = "select * from public.organization_catchment_area where geoid =" + str(form_id)
+    df_org = pandas.DataFrame()
+    df_org = pandas.read_sql(query_org, connection)
+
+    # if it has any children
+    query_child = "select * from public.geo_data where field_parent_id =" + str(form_id)
+    df_child = pandas.DataFrame()
+    df_child = pandas.read_sql(query_child, connection)
+
+    if df_user.empty and df_org.empty and df_child.empty and parent_dependency_check_user(form_id) and parent_dependency_check_org(form_id):
+        dependency = 0
+    else:
+        dependency = 1
+
+    return render(request, 'usermodule/edit_form.html', {'node': list,
+                                                         'form_id': form_id,
+                                                         'field_parent_id': field_parent_id,
+                                                         'field_name': field_name,
+                                                         'field_type': field_type,
+                                                         'geocode': geocode,
+                                                         'uploaded_file_path': uploaded_file_path,
+                                                         'field_type_id': field_type_id,
+                                                         'list_of_both': list_of_both,
+                                                         'dependency': dependency,
+                                                         'all_geocode': json.dumps(all_geocode)
+                                                         })
+
+@login_required
+def update_form(request):
+    if request.POST:
+        if request.FILES:
+            myfile = request.FILES['geojsonfile']
+            url = "onadata/media/uploaded_files/"
+            userName = request.user  # "Jubair"
+            fs = FileSystemStorage(location=url)
+            myfile.name = str(datetime.now()) + "_" + str(userName) + "_" + str(myfile.name)
+            filename = fs.save(myfile.name, myfile)
+            full_file_path = "onadata/media/uploaded_files/" + myfile.name
+            file = open(full_file_path, 'r')
+            json_content = file.read()
+            file.close()
+        else:
+            query = "select geojson,uploaded_file_path from geo_data where id = "+str(request.POST.get("form_id"))
+            df = pandas.DataFrame()
+            df = pandas.read_sql(query,connection)
+            if df.empty:
+                json_content = '{}'
+                full_file_path = 'cd'
+            else:
+                json_content = json.dumps(df.geojson.tolist()[0])
+                full_file_path = df.uploaded_file_path.tolist()[0]
+        parent = int(request.POST.get("parent_id"))
+        user_id = request.user.id
+        if parent != -1:
+            query = "UPDATE public.geo_data SET field_name='"+ str(request.POST.get('field_name'))+"', field_parent_id="+str(request.POST.get('field_parent_' + str(parent) + '')) +", field_type_id="+ str(request.POST.get('field_type'))+", geocode='"+ str(request.POST.get('geocode'))+"', geojson='"+ str(json_content)+"', uploaded_file_path='"+str(full_file_path)+"',updated_by="+str(user_id)+",updated_date=now() WHERE id="+str(request.POST.get("form_id"))
+        else:
+            query = "UPDATE public.geo_data SET field_name='"+ str(request.POST.get('field_name'))+"', field_type_id="+ str(request.POST.get('field_type'))+", geocode='"+ str(request.POST.get('geocode'))+"', geojson='"+ str(json_content)+"', uploaded_file_path='"+str(full_file_path)+"',updated_by="+str(user_id)+",updated_date=now() WHERE id="+str(request.POST.get("form_id"))+""
+        database(query)
+
+        #sql= 'refresh materialized view vwunion_mat; refresh materialized view vwbranchcoverage_mat;refresh materialized view vwbranchunioncoverage;'
+        #database(sql)
+    return HttpResponseRedirect("/usermodule/geo_list/")
+
+
 @login_required
 def edit_form_definition(request, form_definition_id):
     check = pandas.DataFrame()
@@ -1866,6 +1984,41 @@ def delete_prev_org_catchment_record(org_id):
     query = "delete from organization_catchment_area where org_id = " + str(org_id)
     database(query)
 
+def parent_dependency_check_user(geoid):
+    query = "with recursive t as( select id,field_name,field_parent_id from geo_data where id =  " + str(geoid) + " union all select geo_data.id,geo_data.field_name,geo_data.field_parent_id from geo_data,t where t.field_parent_id = geo_data.id) select id,field_name,field_parent_id from t order by id"
+    df = pandas.DataFrame()
+    df = pandas.read_sql(query, connection)
+    parent_list = df.id.tolist()
+
+    query = "select distinct geoid from usermodule_catchment_area"
+    df = pandas.DataFrame()
+    df = pandas.read_sql(query, connection)
+    geo_list = df.geoid.tolist()
+
+    for each in parent_list:
+        if each in geo_list:
+            print("User " + str(each))
+            return False
+    return True
+
+
+def parent_dependency_check_org(geoid):
+    query = "with recursive t as( select id,field_name,field_parent_id from geo_data where id =  " + str(
+        geoid) + " union all select geo_data.id,geo_data.field_name,geo_data.field_parent_id from geo_data,t where t.field_parent_id = geo_data.id) select id,field_name,field_parent_id from t order by id"
+    df = pandas.DataFrame()
+    df = pandas.read_sql(query, connection)
+    parent_list = df.id.tolist()
+
+    query = "select distinct geoid from organization_catchment_area"
+    df = pandas.DataFrame()
+    df = pandas.read_sql(query, connection)
+    geo_list = df.geoid.tolist()
+
+    for each in parent_list:
+        if each in geo_list:
+            print("ORG " + str(each))
+            return False
+    return True
 
 ####################### GEO CATCHMENT AREA #############################
 

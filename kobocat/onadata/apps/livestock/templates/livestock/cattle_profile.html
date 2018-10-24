@@ -1033,6 +1033,13 @@
 
     function add_medicine() {
         $('#add_medicine_modal').modal('show');
+        $("#m_name").val('');
+        $("#p_size").val('');
+        $("#m_type").val('');
+        $("#qty").val('');
+        $("#dose").val('');
+        $("#route").val('');
+        $("#day").val('');
     }
 
     function put_medicine() {
@@ -1533,6 +1540,10 @@ $(window).on('load', function() {
                 },
                 error: function (xhr, status, error) {
                    // $('#error_msg_upload').html("<h5><strong>"+xhr.responseText+"</strong></h5>");
+                    alert("Duplicate Prescription!")
+                    get_old_prescription(cattle_id);
+                    $('#prescription').hide()
+                    $('#clinical_findings_div').hide();
                 }
             }); //ajax end
 

@@ -24,7 +24,8 @@
                         </div>
                          <div class="col-md-12">
                             <div class="col-md-6"><label class="control-label">User role </label><br>
-                                <select required class="form-control multiselect_class" multiple="multiple" id = "ngo" name ="content_role">
+                                <select  class="form-control multiselect_class" multiple="multiple" id = "ngo" name ="content_role" data-msg-required="The input field is required." data-rule-required="true">
+
                                     <option value ="49">Farmer</option>
                                     <option value ="50">Paravet</option>
                                     <option value ="51">AI Technician</option>
@@ -43,6 +44,7 @@
                         <div class="col-md-12">
                             <div class="col-md-4"><label class="control-label">File type</label><br>
                                 <select class="form-control" id = "file_type" name ="file_type">
+
                                     <option value ="1">pdf</option>
                                     <option value ="2">video</option>
                                 </select>
@@ -106,7 +108,7 @@
     <script type="text/javascript" src="/static/js/bootstrap-datepicker.js"></script>
     <script type="text/javascript" src="{{STATIC_URL}}assets/plugins/data-tables/jquery.dataTables.js"></script>
     <!--<script type="text/javascript" src="/static/js/jquery.table2excel.js"></script>-->
-    <script src="//cdn.rawgit.com/rainabba/jquery-table2excel/1.1.0/dist/jquery.table2excel.min.js"></script>
+
     <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-multiselect.js"></script>
         <script>
 
@@ -114,11 +116,11 @@
              $('.multiselect_class').multiselect({
                 onDropdownHidden: function(event) {
                 //alert('Dropdown closed.');
-                multiselect_class = $('.multiselect_class').val();
+               // multiselect_class = $('.multiselect_class').val();
                 },
                 buttonWidth: '60%',
                 numberDisplayed: 1,
-                includeSelectAllOption: true,
+                //includeSelectAllOption: true,
             });
 
 

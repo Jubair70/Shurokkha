@@ -244,7 +244,8 @@ def get_farmer_table(request):
         dates = get_dates(str(date_range))
         start_date = dates.get('start_date')
         end_date = dates.get('end_date')
-    q = "select *,(select first_name || last_name from auth_user where id= submitted_by ) as user_name from farmer where date(submission_time) between '"+start_date+"' and '"+end_date+"' and submitted_by ::text like '"+str(user_id)+"'"
+    #q = "select *,(select first_name || last_name from auth_user where id= submitted_by ) as user_name from farmer where date(submission_time) between '"+start_date+"' and '"+end_date+"' and submitted_by ::text like '"+str(user_id)+"'"
+    q = "with t1 as(select (select mobile from cattle where cattle_system_id = appointment.cattle_system_id) as farmer_mobile,* from appointment),t2 as (select t1.farmer_mobile as farmer_mobile,count(*) num_of_case from t1 group by t1.farmer_mobile),t3 as (select *, (select first_name || last_name from auth_user where id= submitted_by ) as user_name ,(select num_of_case from t2 where farmer_mobile = farmer.mobile) number_cases from farmer where date(submission_time) between '"+start_date+"' and '"+end_date+"' and submitted_by ::text like '"+str(user_id)+"') select *,(case when number_cases >0 then number_cases else 0 end) as case_number from t3"
     dataset = __db_fetch_values_dict(q)
     return render(request,"livestock/farmer_table.html",{'dataset' : dataset})
 
@@ -740,7 +741,7 @@ def get_diagnosis_name(request):
     return HttpResponse(json.dumps(data_list, default=decimal_date_default), content_type="application/json", status=200)
 
 
-def advisory_list1(request):
+def advisory_list(request):
     return render(request, 'livestock/advisory_list.html')
 
 
@@ -823,6 +824,12 @@ def submit_prescription(request,appointment_id):
         med_part_2 = request.POST.getlist('med_part_2[]')
         revisit = request.POST.get('revisit')
         advice = request.POST.get('advice')
+
+        #check the duplicate prescription of corresponding appointment
+        no_prescription_q = "select count(*) from prescription where appointment_id  = "+str(appointment_id)
+        no_prescription = __db_fetch_single_value(no_prescription_q)
+        if no_prescription > 0:
+            return HttpResponse(json.dumps('Duplicate Prescription.'), content_type="application/json", status=500)
 
         pres_q = "INSERT INTO public.prescription(id, appointment_id, clinical_findings_id, advice, created_by, created_date, next_appointment_after)VALUES (DEFAULT , "+str(appointment_id)+","+str(clinical_findings_id)+", '"+advice+"',"+str(request.user.id)+", NOW()::timestamp, "+str(revisit)+") returning id;"
         prescription_id = __db_fetch_single_value(pres_q)
@@ -1130,7 +1137,6 @@ def advisory_list(request):
     query = "WITH t AS( SELECT id,to_char(created_date, 'MM-DD-YYYY HH24:MI:SS') created_date,( SELECT created_date FROM prescription WHERE appointment_id = appointment.id limit 1) prescription_date, cattle_system_id, ( SELECT (json->>'cattle_type') cattle_type FROM logger_instance WHERE id = healthrecord_sickness_system_id limit 1), ( SELECT (json->>'mobile') mobile FROM logger_instance WHERE id = healthrecord_sickness_system_id limit 1), ( SELECT (json->>'_submitted_by') submitted_by FROM logger_instance WHERE id = healthrecord_sickness_system_id limit 1), status FROM appointment WHERE appointment_type =ANY('{1,3}') order by id desc) SELECT id,created_date, cattle_system_id, ( SELECT first_name || ' ' || last_name FROM auth_user WHERE username = t.mobile limit 1) farmer_name, mobile, ( SELECT label FROM vwcattle_type WHERE value = t.cattle_type limit 1) cattle_type, ( SELECT CASE WHEN cattle_birth_date IS NULL THEN cattle_age ELSE Age(CURRENT_DATE ,Date(cattle_birth_date))::text END cattle_age FROM cattle WHERE cattle_system_id = t.cattle_system_id limit 1), COALESCE(Substring(prescription_date::text FROM 0 FOR 20),'') prescription_date, ( SELECT first_name || ' ' || last_name FROM auth_user WHERE username = t.submitted_by limit 1)ai_paravet_name, submitted_by, status FROM t WHERE status = ANY('{0,2}')"
     df = pandas.DataFrame()
     df = pandas.read_sql(query,connection)
-
     advisory_list = json.dumps(__db_fetch_values_dict(query), default=decimal_date_default)
     return render(request, 'livestock/advisory_list.html',{'advisory_list':advisory_list,'ai_paravets':ai_paravets,'num':num})
 

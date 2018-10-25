@@ -16,7 +16,7 @@
     <div class ="row"><div class = "col-md-12" style = ""></div></div>
 
 
-                 <form name="dynamic_form" id="shared_file_form" enctype="multipart/form-data"  method="post" action = "/livestock/content_upload/" novalidate>
+                 <form name="dynamic_form" id="shared_file_form" enctype="multipart/form-data"  method="post" action = "/livestock/content_upload/" >
                     {% csrf_token %}
 
                         <div class="page-header align">
@@ -24,7 +24,7 @@
                         </div>
                          <div class="col-md-12">
                             <div class="col-md-6"><label class="control-label">User role </label><br>
-                                <select  class="form-control multiselect_class" multiple="multiple" id = "ngo" name ="content_role" data-msg-required="The input field is required." data-rule-required="true">
+                                <select  class="form-control multiselect_class" multiple="multiple" id = "content_role" name ="content_role" required>
 
                                     <option value ="49">Farmer</option>
                                     <option value ="50">Paravet</option>
@@ -50,6 +50,7 @@
                                 </select>
                             </div>
                         </div>
+                     <input type = "hidden" id = "file_ext" value = "">
                         <div class="row" style = "margin-botttom:20px;">
                             <div class="col-md-4"><label class="control-label">Upload File </label><br>
                                 <input required  accept="image/*|video/*" class="form-control" type ="file" name ="shared_file">
@@ -109,22 +110,25 @@
     <script type="text/javascript" src="{{STATIC_URL}}assets/plugins/data-tables/jquery.dataTables.js"></script>
     <!--<script type="text/javascript" src="/static/js/jquery.table2excel.js"></script>-->
 
-    <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-multiselect.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}assets/plugins/bootstrap-multiselect/bootstrap-multiselect.js"></script>
+
         <script>
 
         $(document).ready(function () {
              $('.multiselect_class').multiselect({
-                onDropdownHidden: function(event) {
-                //alert('Dropdown closed.');
-               // multiselect_class = $('.multiselect_class').val();
-                },
-                buttonWidth: '60%',
+                 enableFiltering: true,
+                //filterBehavior: 'value',
+                enableCaseInsensitiveFiltering: true,
+                maxHeight: 200,
                 numberDisplayed: 1,
-                //includeSelectAllOption: true,
+                includeSelectAllOption: true,
+                buttonWidth: '100%'
             });
 
 
               $('INPUT[type="file"]').change(function () {
+                  file_type = $("#file_type") .val()
+
                     var ext = this.value.match(/\.(.+)$/)[1];
                     switch (ext) {
                         case 'pdf':
@@ -133,14 +137,31 @@
                         case 'mpeg':
                         case 'wmv':
                         case 'mov':
-                        case 'rm':
-                        case 'ram':
                         case 'ogg':
                         case 'webm':
-                            $('#uploadButton').attr('disabled', false);
+                            $("#file_ext").val(ext)
+                            if (file_type == 1){
+                                if(ext != 'pdf'){
+                                    alert('Only allowed file extention for pdf file type is .pdf');
+                                    this.value = '';
+                                    $('#uploadButton').attr('disabled', true);
+                                }
+                            }
+                            if (file_type == 2){
+                                if(ext == 'pdf'){
+                                    alert('.pdf is not allowed for file type video');
+                                    this.value = '';
+                                    $('#uploadButton').attr('disabled', true);
+                                }
+                            }
+                            else{
+                                $('#uploadButton').attr('disabled', false);
+                            }
+
                             break;
                         default:
-                            alert('This is not an allowed file type.');
+                            $("#file_ext").val('')
+                            alert('Only allowed file extention are pdf,mpg,mp4,mpeg,wmv,mov,ogg,webm.');
                             this.value = '';
                     }
                 });
@@ -148,6 +169,7 @@
 
 
     $(document).on("submit", "#shared_file_form", function (event) {
+        console.log("dsfsff")
         $('#load').append('<img style="height: 100px;width: 156px;" src="/static/images/loading_icon.gif">');
             event.preventDefault();
             form_url = $(this).attr('action');

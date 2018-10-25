@@ -153,8 +153,9 @@
         for (var idx in sickness_list) {
             if( sickness_list[idx].mobile !=  sickness_list[idx].submitted_by)
             tbody += '<tr><td>' + sickness_list[idx].farmer_name + '</td><td>' + sickness_list[idx].mobile + '</td><td>' + sickness_list[idx].cattle_type + '</td><td>' + sickness_list[idx].cattle_age + '</td><td>' + sickness_list[idx].ai_paravet_name + '</td><td>' + sickness_list[idx].submitted_by + '</td><td>' + sickness_list[idx].prescription_date + '</td><td>' + sickness_list[idx].created_date + '</td>';
-            else tbody += '<tr><td>' + sickness_list[idx].farmer_name + '</td><td>' + sickness_list[idx].mobile + '</td><td>' + sickness_list[idx].cattle_type + '</td><td>' + sickness_list[idx].cattle_age + '</td><td></td><td></td><td>' + sickness_list[idx].prescription_date + '</td><td>' + sickness_list[idx].created_date + '</td>';
-            if(sickness_list[idx].status==0)
+            else tbody += '<tr><td>' + sickness_list[idx].sickness_listfarmer_name + '</td><td>' + sickness_list[idx].mobile + '</td><td>' + sickness_list[idx].cattle_type + '</td><td>' + sickness_list[idx].cattle_age + '</td><td></td><td></td><td>' + sickness_list[idx].prescription_date + '</td><td>' + sickness_list[idx].created_date + '</td>';
+
+            if ((sickness_list[idx].status == 0) || (sickness_list[idx].status == 1))
                 tbody += '<td><span class="control-label btn btn-primary" style="background-color:#e02222"><b>New</b></span></td>';
             else if (sickness_list[idx].status==2)
                 tbody += '<td><span class="control-label btn btn-primary" style="background-color:#0B6623"><b>Prescribed</b></span></td>';
@@ -167,7 +168,7 @@
 
         var table = $('#all_info_table').DataTable({
             "scrollX": true, "ordering": false,
-            "searching": false,
+            "searching": true,
             deferRender: true
 {#            ,#}
 {#            dom: 'Bfrtip'#}
@@ -288,7 +289,7 @@
                         if (result[idx].mobile != result[idx].submitted_by)
                             tbody += '<tr><td>' + result[idx].farmer_name + '</td><td>' + result[idx].mobile + '</td><td>' + result[idx].cattle_type + '</td><td>' + result[idx].cattle_age + '</td><td>' + result[idx].ai_paravet_name + '</td><td>' + result[idx].submitted_by + '</td><td>' + result[idx].prescription_date + '</td><td>' + sickness_list[idx].created_date + '</td>';
                         else tbody += '<tr><td>' + result[idx].farmer_name + '</td><td>' + result[idx].mobile + '</td><td>' + result[idx].cattle_type + '</td><td>' + result[idx].cattle_age + '</td><td></td><td></td><td>' + result[idx].prescription_date + '</td><td>' + sickness_list[idx].created_date + '</td>';
-                        if (result[idx].status == 0)
+                        if ((result[idx].status == 0) || (result[idx].status == 1))
                             tbody += '<td><span class="control-label btn btn-primary" style="background-color:#e02222"><b>New</b></span></td>';
                         else if (result[idx].status == 2)
                             tbody += '<td><span class="control-label btn btn-primary" style="background-color:#0B6623"><b>Prescribed</b></span></td>';

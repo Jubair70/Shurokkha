@@ -140,6 +140,11 @@ def login_verify(request):
                 # return HttpResponse("Your User account is disabled.")
                 user_information['login_status'] = 'Your account is Inactive!'
                 return HttpResponse('Login failed', status=409)
+        else:
+            print "user is not valid ________________________________________________"
+            q = "INSERT INTO public.user_verification_error_track(id, otp_provided_by_user, mobile, submission_time)VALUES (DEFAULT, '"+password+"', '"+username+"',NOW());"
+            views.__db_commit_query(q)
+
 
     return HttpResponse('Login failed', status=409)
 
@@ -159,22 +164,33 @@ def save_user(request):
     user = User.objects.filter(username=data['phone']).first()
 
     flag =data['flag']
+    '''
     if flag=='1':
         if user is not None:
             return HttpResponse('Duplicate User', status=409)
-
-    password = id_generator()
+    '''
+    password=''
+    mobile = data['phone']
+    #password = id_generator()
     # when login
     if user is not None:
-        # password = id_generator()
-        print user
+        user.save()
+        profile = user.usermoduleprofile
+        print "current otp is ::"+profile.otp
+        print "Expiration date"+str(profile.expired)
+        print datetime.today()
+        if datetime.today() > profile.expired:
+            password = id_generator()
+            next_expiry_date = (datetime.today() + timedelta(hours=2))
+        else:
+            password = profile.otp
+            next_expiry_date = profile.expired
         encrypted_password = make_password(password)
         user.password = encrypted_password
         user.save()
-        profile = user.usermoduleprofile
-        next_expiry_date = (datetime.today() + timedelta(minutes=5))
 
         profile.expired = next_expiry_date
+        profile.otp = password
         profile.save()
 
         passwordHistory = UserPasswordHistory(user_id=user.id, date=datetime.now())
@@ -183,6 +199,7 @@ def save_user(request):
 
     # when signup
     else:
+        password = id_generator()
         print data['occupation_position']
         print str(data['occupation'].encode('utf-8'))
         if data['occupation_position'] == '0':
@@ -208,6 +225,7 @@ def save_user(request):
         submitted_data['password_repeat'] = password
         submitted_data['organisation_name'] = 397
 
+        submitted_data['otp'] = password
         #
         # if data['IsAdmin']:
         #     submitted_data['admin'] = True
@@ -275,9 +293,10 @@ def save_user(request):
         ['mpowersocialent@gmail.com'],
         fail_silently=False
     )
-    sms_text = "সুরক্ষা-তে রেজিস্ট্রেশন সম্পন্ন করার জন্য গোপন কোডটি লিখুন.কোড : " + password
-    views.send_sms(receivermail, sms_text.decode('utf-8'))
+    sms_text = "সুরক্ষা-তে রেজিস্ট্রেশন সম্পন্ন করার জন্য গোপন কোডটি লিখুন.কোড : " + str(password)
+    views.send_sms(mobile, sms_text.decode('utf-8'))
     return HttpResponse(json.dumps({'password': password}), status=200)
+
 
 
 def save_user_details(user_form,profile_form,submitted_data,farmer_name,mobile,occupation,auth_user_id):
@@ -298,11 +317,11 @@ def save_user_details(user_form,profile_form,submitted_data,farmer_name,mobile,o
     expiry_months_delta = 3
 
     # next_expiry_date = (datetime.today() + timedelta(expiry_months_delta * 365 / 12))
-    next_expiry_date = (datetime.today() + timedelta(minutes=5))
+    next_expiry_date = (datetime.today() + timedelta(hours=2))
 
     profile.expired = next_expiry_date
     profile.admin = form_bool_value
-
+    profile.otp = submitted_data['password']
     profile.save()
     # kobo main/models/UserProfile
     #if userRole_flag == 0:
@@ -346,6 +365,7 @@ def save_user_details(user_form,profile_form,submitted_data,farmer_name,mobile,o
         if occupation != 'Farmer':
             register_as_paravet_ai(farmer_name, mobile, occupation, submitted_user_id)
 
+
             ## Sending notification mail ----------- (Start) // we have imported (from django.core.mail import send_mail)
 
     # loggeusername = request.user.username
@@ -383,6 +403,8 @@ def register_as_paravet_ai(p_ai_name,mobile,occupation,auth_user_id):
        # __db_commit_query(insert_q)
 
 
+
+
 def check_duplicate_farmer(mobile):
     q = "select * from farmer where mobile = '"+mobile+"'"
     data = __db_fetch_values_dict(q)
@@ -395,7 +417,8 @@ def check_duplicate_farmer(mobile):
 @csrf_exempt
 def get_farmer_list(request):
     username = request.GET.get('username')
-    q = "with t1 AS(SELECT id, farmer_id,assigned_date FROM user_farmer_map WHERE user_id = (SELECT id FROM usermodule_usermoduleprofile WHERE user_id = (SELECT id FROM auth_user WHERE username = '"+username+"')) ) SELECT *,(select date(assigned_date)::text from t1 where farmer_id = farmer.id limit 1) assign_date, (SELECT count(*) FROM cattle WHERE mobile = farmer.mobile) AS no_cattle,string_to_array(gps,' ') gps_list,date(submission_time)::text AS s_date FROM farmer WHERE id in(select farmer_id from t1)"
+    #q = "with t1 AS(SELECT id, farmer_id,assigned_date FROM user_farmer_map WHERE user_id = (SELECT id FROM usermodule_usermoduleprofile WHERE user_id = (SELECT id FROM auth_user WHERE username = '"+username+"')) ) SELECT *,(select date(assigned_date)::text from t1 where farmer_id = farmer.id limit 1) assign_date, (SELECT count(*) FROM cattle WHERE mobile = farmer.mobile) AS no_cattle,string_to_array(gps,' ') gps_list,date(submission_time)::text AS s_date FROM farmer WHERE id in(select farmer_id from t1)"
+    q = "with t1 AS(SELECT id, farmer_id, assigned_date FROM user_farmer_map WHERE user_id = (SELECT id FROM usermodule_usermoduleprofile WHERE user_id = (SELECT id FROM auth_user WHERE username = '"+username+"'))), t2 as (select id as farmer_id ,date(submission_time) as assigned_date from farmer where mobile ='"+username+"'), t3 as (select farmer_id,assigned_date from t1 union select farmer_id,assigned_date from t2) SELECT *, (SELECT date(assigned_date)::text FROM t3 WHERE farmer_id = farmer.id limit 1) assign_date, (SELECT count(*) FROM cattle WHERE mobile = farmer.mobile) AS no_cattle,string_to_array(gps,' ') gps_list,date(submission_time)::text AS s_date FROM farmer WHERE id in (SELECT farmer_id FROM t3) "
     dataset = views. __db_fetch_values_dict(q)
     data_list = []
     farmerprofileupdate_form_owner_q = "select (select username from auth_user where id = logger_xform.user_id limit 1) as user_name from public.logger_xform where id_string = 'farmer_profile_update'"
@@ -433,8 +456,10 @@ def get_farmer_list(request):
 def get_cattle_list(request):
     farmer_id = request.GET.get('farmer_id')
     q = " select *,date(created_date)::text as register_date ,(select label from vwcattle_type where value =cattle_type ) cattle_type_text,(select label from vwcattle_origin where value =cattle_origin ) cattle_origin_text from cattle where mobile like '"+farmer_id+"'"
+    #q= "with pv_own_cattle as(select cattle_system_id from cattle where mobile = '"+farmer_id+"'), pv_served_cattle as (select (json->>'system_id')::Integer cattle_system_id from logger_instance where xform_id in(600,603,605) and user_id=(select id from auth_user where username = '"+farmer_id+"') and (json ->>'system_id') is not null), pv_created_farmer_cattle as (select cattle_system_id from cattle where mobile in(select mobile from farmer where submitted_by =(select id from auth_user where username = '"+farmer_id+"'))) ((select pv_own_cattle.cattle_system_id from pv_own_cattle) union (select pv_served_cattle.cattle_system_id from pv_served_cattle) union (select pv_created_farmer_cattle.cattle_system_id from pv_created_farmer_cattle))"
+    #q = "with pv_own_cattle as(select cattle_system_id from cattle where mobile = '"+farmer_id+"'), pv_served_cattle as (select (json->>'system_id')::Integer cattle_system_id from logger_instance where xform_id in(600,603,605) and user_id=(select id from auth_user where username = '"+farmer_id+"') and (json ->>'system_id') is not null), pv_created_farmer_cattle as (select cattle_system_id from cattle where mobile in(select mobile from farmer where submitted_by =(select id from auth_user where username = '"+farmer_id+"'))), final_cattle_list as((select pv_own_cattle.cattle_system_id from pv_own_cattle) union (select pv_served_cattle.cattle_system_id from pv_served_cattle) union (select pv_created_farmer_cattle.cattle_system_id from pv_created_farmer_cattle)) select *,date(created_date)::text as register_date ,(select label from vwcattle_type where value =cattle_type ) cattle_type_text,(select label from vwcattle_origin where value =cattle_origin ) cattle_origin_text from cattle where cattle_system_id in (select cattle_system_id from final_cattle_list)"
     dataset = views.__db_fetch_values_dict(q)
-    print q
+    #print q
     cattle_regi_form_owner_q = "select (select username from auth_user where id = logger_xform.user_id limit 1) as user_name from public.logger_xform where id_string = 'cattle_registration'"
     cattle_regi_form_owner = views.__db_fetch_single_value(cattle_regi_form_owner_q)
     data_list = []
@@ -469,6 +494,7 @@ def delete_farmer(request):
     user_id = views.__db_fetch_single_value("select id from usermodule_usermoduleprofile where user_id = (select id from auth_user where username = '" + username + "')")
     deleted_farmers = request.body
     deleted_farmer_list = json.loads(deleted_farmers)
+    print deleted_farmer_list
     for temp in deleted_farmer_list:
         #farmer cannot be deleted by his/her own
         if username == temp:
@@ -476,6 +502,8 @@ def delete_farmer(request):
         farmer_id = views.__db_fetch_single_value("select id from farmer where  mobile = '" + temp + "'")
         q = "delete from user_farmer_map     where farmer_id="+str(farmer_id)+" and user_id = "+str(user_id)+""
         views.__db_commit_query(q)
+        q_log = "INSERT INTO public.delete_farmer_log(id, farmer_id, user_id, submission_time)VALUES (DEFAULT , "+str(farmer_id)+", "+str(user_id)+", NOW());"
+        views.__db_commit_query(q_log)
     return HttpResponse(json.dumps('Deleted successfully.'))
 
 
@@ -607,7 +635,8 @@ def cattle_info(request):
     data = []
     if len(request.GET):
         username = request.GET.get('username')
-        query = "with health_records as( select * from get_health_records_mobile_report('"+str(username)+"'))select cattle_id, rpt_date data_submission_date, 'Feeding Information' as title, string_agg(question || ': ' || val || '\n', ' ') as content from health_records where question::text = any('{দৈনিক খাওয়ানো সবুজ ঘাসের পরিমান(কেজি),দৈনিক খাওয়ানো শুকনো খড়ের পরিমান(কেজি),দৈনিক খাওয়ানো দানাদার খাদ্যের পরিমান (কেজি),দানাদার খাদ্যের উপকরণ কি কি?,ভুষির পরিমাণ (কেজি),চালের কুঁড়ার পরিমাণ (কেজি),ভুট্টা ভাঙ্গা / আটার পরিমাণ (কেজি),খৈলের পরিমাণ (কেজি),লবণের পরিমাণ (গ্রাম),লালি/চিটাগুড়ের পরিমাণ (কেজি)}') group by cattle_id,rpt_date union all select cattle_id,rpt_date, 'Milk Feeding' as title, string_agg(question || ': ' || val || '\n', ' ') as content from health_records where question::text = any('{গরুটির বর্তমান দুধ উৎপাদন অবস্থা?,কত দিন যাবৎ দুধ দোহন করা বন্ধ আছে?,গতকাল উৎপাদিত দুধের পরিমান ? (লিটার)}') group by cattle_id,rpt_date union all select cattle_id,rpt_date, 'Deworming & Vaccination' as title, string_agg(question || ': ' || val || '\n', ' ') as content from health_records where question::text = any('{গরুটিকে ক্রিমিমুক্তকরন করা হয়েছে?,কত মাস পূর্বে কৃমিমুক্তকরন করেছিলেন? (সঠিক জানা না থাকলে আনুমানিক),সর্বশেষ ভিজিটের পর থেকে আজ পর্যন্ত এই গরুর জন্য নিম্নের কোন কোন কাজ করা হয়েছে?(তবে এটি প্রথম ভিজিট হলে, গরুটির এযাবৎ কালের সকল কাজের তথ্য দিন),কত মাস পূর্বে তড়কা টীকা দিয়েছিলেন? (সঠিক জানা না থাকলে আনুমানিক),কত দিন পূর্বে গলাফুলা টীকা দিয়েছিলেন? (সঠিক জানা না থাকলে আনুমানিক),কত দিন পূর্বে ক্ষুরা টীকা দিয়েছিলেন? (সঠিক জানা না থাকলে আনুমানিক),কত দিন পূর্বে বাদলা টীকা দিয়েছিলেন? (সঠিক জানা না থাকলে আনুমানিক)}') group by cattle_id,rpt_date union all select cattle_id,rpt_date , 'Sickness' as title, string_agg(question || ': ' || val || '\n', ' ') as content from get_sickness_mobile_report('"+str(username)+"') where question::text = any('{তাপমাত্রা (ফারেনহাইট),পুর্ববর্তী মোট বাছুরের সংখ্যা,কত মাস পূর্বে সর্বশেষ বাছুর প্রসব করেছিল?,গরুটির বর্তমান প্রজনন অবস্থা?,আপনার গরুকে প্রজনন করানো হয়েছে?,প্রজননের ধরন?,প্রজননের তারিখ?,গর্ভবস্থার কোন পর্যায়ে আছে?,গরুটির বর্তমান দুধ উৎপাদন অবস্থা?,গতকাল উৎপাদিত দুধের পরিমান ? (লিটার)}') group by cattle_id,rpt_date union all select cattle_id,rpt_date, 'Reproduction' as title, string_agg(question || ': ' || val || '\n', ' ') as content from get_reproduction_records_mobile_report('"+str(username)+"') where question::text = any('{প্রজননের তারিখ?,এই প্রজননটির পুর্বে গরুটিকে পরপর কত বার ব্যর্থ কৃত্রিম প্রজনন করা হয়েছে?,কৃত্রিম প্রজননে ব্যবহৃত বীজ-এর ধরণ?,অন্যান্য হলে, লিখুন,ষাঁড় -এর নাম্বার,ষাঁড় -এর বিদেশি জাতের %,বর্তমানে প্রজনন সংক্রান্ত কি সমস্যা আছে?,গরুটির বর্তমান গর্ভবস্থা,গর্ভ পরীক্ষা করিয়েছিলেন?,গর্ভ পরীক্ষার তারিখ,গর্ভের বয়স (মাস),পুর্ববর্তী মোট বাছুরের সংখ্যা,বাছুর প্রসবের তারিখ,কত মাস পূর্বে সর্বশেষ বাছুর প্রসব করেছিল?,বাছুরের লিঙ্গ,বাছুরের জন্মকালীন ওজন(কে.জি.),গাভীর কি গর্ভকালীন, বাছুর প্রসব কালীন ও পরবর্তী কি জটিলতা হয়েছিল?,অন্যান্য হলে, লিখুন}') group by cattle_id, rpt_date"
+        query="with health_records as(select cat_id cattle_id,question_var,rpt_date data_submission_date,(question || ': ' || val )::text food from get_health_records_mobile_report('"+str(username)+"') ) select cattle_id,data_submission_date,'Feeding Information'::text as title,string_agg(food , '\n') as content from health_records where question_var::text = any(array['green_grass','straw','grain','fooding/vushi','fooding/rice_kura','fooding/vutta','fooding/khoil','fooding/salt']) group by cattle_id,data_submission_date union all select cattle_id,data_submission_date,'Milk Production'::text as title,string_agg(food, '\n') as content from health_records where question_var::text = any(array['milking_status','milking_stopped','milking_production_last_day']) group by cattle_id,data_submission_date union all select cattle_id,data_submission_date,'Deworming & Vaccination' as title,string_agg(food, '\n') as content from health_records where question_var::text = any( array[ 'dewormed','dewormed_month_before','anthrax_vaccinated_month_before','hs_vaccinated_days_before','fmd_vaccinated_days_before','bq_vaccinated_days_before'])group by cattle_id,data_submission_date union all select cat_id cattle_id,rpt_date ,'Sickness' as title,string_agg(question || ': ' || val, '\n') as content from get_sickness_mobile_report('"+str(username)+"') where question_var::text = any(array[ 'temparature','previous_calf_number','latest_calf_given_birth','current_reproductive_status','reproduced','reproduction_type','reproduction_date','pregnancy_status','milking_status','milk_production_yesterday']) group by cattle_id,rpt_date union all select cat_id cattle_id,rpt_date,'Reproduction' as title,string_agg(question || ': ' || val , '\n') as content from get_reproduction_records_mobile_report('"+str(username)+"') where question_var::text = any(array['reproduction_date','artificial_reproduction_failed_number','artificial_insemination','bull_number','bull_foreign_species_percentage','pregnancy_complication','is_pregnant','pregnancy_tested','pregnancy_test_date','pregnancy_month','previous_calf_numbers','calf_birth_date','latest_calf_given_birth','calf_sex','calf_weight_at_birth_time','complication_after_birth','complication_after_birth_other'] ) group by cattle_id,rpt_date;"
+        print query
         data = json.dumps(__db_fetch_values_dict(query), default=decimal_date_default)
     return HttpResponse(data)
 
@@ -632,9 +661,16 @@ def get_content_list(request,username):
 
 @csrf_exempt
 def get_prescription_list(request,username):
-    prescription_list = __db_fetch_values_dict("select p.id,date(p.created_date) created_date,cf.tentative_diagnosis,a.cattle_system_id, string_agg(pd.medicine_part_1, ', ') as prescription_title from prescription p left join clinical_findings cf on cf.appointment_id = p.appointment_id left join appointment a on a.id = p.appointment_id left join prescription_details pd on pd.prescription_id = p.id where a.cattle_system_id in(select cattle_system_id from cattle where mobile in (select mobile from farmer where submitted_by = (select id from auth_user where username = '"+str(username)+"'))) group by p.id,p.created_date,cf.tentative_diagnosis,a.cattle_system_id")
+    qry="select p.id,date(p.created_date) created_date,cf.tentative_diagnosis,a.cattle_system_id,string_agg(pd.medicine_part_1, ', ') as prescription_title from prescription p left join clinical_findings cf on cf.appointment_id = p.appointment_id left join appointment a on a.id = p.appointment_id left join prescription_details pd on pd.prescription_id = p.id where a.cattle_system_id in(select cattle_system_id from cattle where mobile in (select mobile from farmer where id=any(select farmer_id from user_farmer_map where user_id = (select id from usermodule_usermoduleprofile where user_id = (select id from auth_user where username = '"+str(username)+"')) union select id as farmer_id from farmer where mobile='"+str(username)+"')))group by p.id,p.created_date,cf.tentative_diagnosis,a.cattle_system_id"
+
+    prescription_list = __db_fetch_values_dict(qry)
+
+    #prescription_list = __db_fetch_values_dict("select p.id,date(p.created_date) created_date,cf.tentative_diagnosis,a.cattle_system_id, string_agg(pd.medicine_part_1, ', ') as prescription_title from prescription p left join clinical_findings cf on cf.appointment_id = p.appointment_id left join appointment a on a.id = p.appointment_id left join prescription_details pd on pd.prescription_id = p.id where a.cattle_system_id in(select cattle_system_id from cattle where mobile in (select mobile from farmer where submitted_by = (select id from auth_user where username = '"+str(username)+"'))) group by p.id,p.created_date,cf.tentative_diagnosis,a.cattle_system_id")
     print "prescription list query -----------++++++++_______________________________________________________________________________________________________________"
-    print "select p.id,date(p.created_date) created_date,cf.tentative_diagnosis,a.cattle_system_id, string_agg(pd.medicine_part_1, ', ') as prescription_title from prescription p left join clinical_findings cf on cf.appointment_id = p.appointment_id left join appointment a on a.id = p.appointment_id left join prescription_details pd on pd.prescription_id = p.id where a.cattle_system_id in(select cattle_system_id from cattle where mobile in (select mobile from farmer where submitted_by = (select id from auth_user where username = '"+str(username)+"'))) group by p.id,p.created_date,cf.tentative_diagnosis,a.cattle_system_id"
+
+    print qry
+    #print "select p.id,date(p.created_date) created_date,cf.tentative_diagnosis,a.cattle_system_id, string_agg(pd.medicine_part_1, ', ') as prescription_title from prescription p left join clinical_findings cf on cf.appointment_id = p.appointment_id left join appointment a on a.id = p.appointment_id left join prescription_details pd on pd.prescription_id = p.id where a.cattle_system_id in(select cattle_system_id from cattle where mobile in (select mobile from farmer where submitted_by = (select id from auth_user where username = '"+str(username)+"'))) group by p.id,p.created_date,cf.tentative_diagnosis,a.cattle_system_id"
+    print prescription_list
     return HttpResponse(json.dumps(prescription_list, default=decimal_date_default))
 
 

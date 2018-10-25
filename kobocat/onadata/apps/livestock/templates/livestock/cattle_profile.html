@@ -235,11 +235,14 @@
         <div class="col-xl-4 col-md-4 col-sm-12">
           <div class="veterinarian-box">
             <div class="card">
+
+                <h3 style="padding: 8px 0px 0px 10px;">Sickness image:</h3>
               <div class="card-body pb-4"  style="overflow:scroll;height: 143px;">
-                  <h3>Sickness image:</h3>
+
                   {% for data in sickness_images %}
                 <!--<img src="{{ data.picture_sinckness_sign }}" class="img-fluid"  alt="">-->
-                      <img height="100px" width="280px" src="{{ data.picture_sinckness_sign }}">
+                      <img height="200px"  width="auto" src="{{ data.picture_sinckness_sign }}">
+                        <div style="margin-bottom:10px"></div>
                   {% endfor %}
                 <div class="card-text float-right">
                   <!--<h4 class="mt-5">Sickness Image</h4>-->
@@ -522,7 +525,7 @@
                </div>
             </div>
             <div class="col-md-5 ">
-              <a href="#" class="btn btn-danger p-3">Cancel</a>
+              <!--<a href="#" class="btn btn-danger p-3">Cancel</a>-->
               <!--<a href="#" class="btn btn-primary p-3">Save</a>-->
               <button type = "submit" class="btn btn-success p-3">Submit</button>
 
@@ -540,16 +543,15 @@
 
     <!--old prescription load-->
         <div id="old_prescription_head"></div>
-        <div id = "old_prescription_div" style="overflow-y: scroll;  height:301px;margin-top:30px">
+<div id = "old_prescription_div" style="overflow-y: scroll;  height:301px;margin-top:30px">
 
 
 
-        </div>
+</div>
 
     <!--old prescription load-->
 
     </div>
-    <!--<button id="test_sms_data" onclick="get_prescription_sms()">SMS</button>-->
     <!-- /.container-fluid-->
     <!-- /.content-wrapper-->
     <!--<footer class="sticky-footer">
@@ -770,7 +772,9 @@
     
 
     <script>
-        var farmer_mobile = {{ mobile }}
+        var appointment_creation_date = '{{c_date | safe}}'
+        console.log("appointment_creation_date"+ appointment_creation_date);
+        var farmer_mobile = '{{ mobile }}'
         console.log('farmer mobileis ::'+farmer_mobile)
         var farmer_name = '{{ farmer_name }}'
         var cattle_type_text = '{{ cattle_type_text }}'
@@ -1029,6 +1033,13 @@
 
     function add_medicine() {
         $('#add_medicine_modal').modal('show');
+        $("#m_name").val('');
+        $("#p_size").val('');
+        $("#m_type").val('');
+        $("#qty").val('');
+        $("#dose").val('');
+        $("#route").val('');
+        $("#day").val('');
     }
 
     function put_medicine() {
@@ -1099,9 +1110,7 @@
                                $(this).parent().parent().remove();
                            }
                        });
-
                     }
-
                     else{
                         alert("No prescription suggested.")
                     }
@@ -1531,6 +1540,10 @@ $(window).on('load', function() {
                 },
                 error: function (xhr, status, error) {
                    // $('#error_msg_upload').html("<h5><strong>"+xhr.responseText+"</strong></h5>");
+                    alert("Duplicate Prescription!")
+                    get_old_prescription(cattle_id);
+                    $('#prescription').hide()
+                    $('#clinical_findings_div').hide();
                 }
             }); //ajax end
 
@@ -1539,7 +1552,6 @@ $(window).on('load', function() {
 
         //SMS PANEL
     $('#sms_text').on('input', update_count);
-
     function update_count() {
         var cs = $("#sms_text").val().length;
         $('#textarea_feedback').text(cs);
@@ -1580,7 +1592,7 @@ $(window).on('load', function() {
             i++
         });
         advice = $('#advice').val()
-       $("#sms_text").val(farmer_name+'\n'+cattle_type_text+'\n'+cattle_age+'\n'+med_str+'\n'+advice)
+       $("#sms_text").val(appointment_creation_date+'\n'+farmer_name+'\n'+cattle_type_text+'\n'+cattle_age+'\n'+med_str+'\n'+advice)
         update_count()
         //med_p2
         //$("input[name=med_part_1[]]").val();

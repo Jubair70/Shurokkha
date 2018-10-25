@@ -19,7 +19,9 @@ class UserModuleProfile(models.Model):
     #position = models.CharField(max_length=100)
     contact_number = models.CharField(max_length=100)
     is_req_para_ai = models.IntegerField(default=0)
-    #psu = models.OneToOneField(GeoPSU,related_name='user_psu',on_delete=models.PROTECT)
+    otp = models.CharField(max_length=100)
+    #psu = models.OneToOneField(GeoPSU,related_name='user_psu',
+    # on_delete=models.PROTECT)
     
     # Override the __unicode__() method to return out something meaningful!
     def __str__(self):

@@ -28,8 +28,8 @@
                 <thead class="flip-content">
                 <tr>
                     <th>Field Name</th>
-                    <th>Field Type</th>
                     <th>Geo Code</th>
+                    <th> Field Type</th>
                     <th class="td-center">Action</th>
                 </tr>
                 </thead>
@@ -40,9 +40,9 @@
                         <td>{{ each.2 }}</td>
                         <td>{{ each.3 }}</td>
                        <td class="td-center">
-{#                    <a class="tooltips" data-placement="top" data-original-title="Edit"#}
-{#                       href="/usermodule/edit_form/{{ each.0 }}"><i#}
-{#                            class="fa fa-2x fa-pencil-square-o"></i></a>#}
+                  <a class="tooltips" data-placement="top" data-original-title="Edit"
+                      href="/usermodule/edit_form/{{ each.0 }}"><i
+                            class="fa fa-2x fa-pencil-square-o"></i></a>
                     <a class="delete-item tooltips .delete-item"  data-placement="top" data-original-title="Delete"  href="#" data-href="/usermodule/delete_form/{{ each.0}}" data-toggle="modal"
                        data-target="#confirm-delete"><i class="fa fa-2x fa-trash-o"></i></a>
                         </td>

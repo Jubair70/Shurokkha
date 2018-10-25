@@ -1,9 +1,6 @@
 {% extends 'base_test.html' %}
 {% load i18n %}
-{% block additional-headers %}
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/semantic-ui/2.2.10/semantic.min.css">
 
-{% endblock %}
 {% block content %}
 
     <div class="portlet box red">
@@ -49,22 +46,14 @@
                         </div>
                     </div>
 
-
-
-                 <div class="row">
+                    <div class="row">
                         <div class="col-md-5">
                             <div class="form-group">
                                 <label for="Field Name">Geo Code:</label>
-                                <br>
-                                <div class="ui labeled input">
-                                    <div class="ui label" id="parent_geocode"></div>
-                                    <input type="text" maxlength="2" class="form-control" name="geocode" id="geocode"
-                                       placeholder="Geo Code" required>
-
-                                </div><br>
+                                <input type="text" class="form-control" name="geocode" id="geocode"
+                                       value="{{ geocode }}" required>
                                 <span style="color:red;font-weight:bold" id ="alert_geocode">Duplicate Geocode Not Accepted</span>
                             </div>
-
                         </div>
                     </div>
 
@@ -95,18 +84,7 @@
     </div>
 {% endblock %}
 {% block additional-javascript %}
-    <script src="https://cdn.jsdelivr.net/semantic-ui/2.2.10/semantic.min.js"></script>
     <script type="text/javascript">
-
-
-        var set_geocode = {{ geocode |safe }};
-        set_geocode = set_geocode.toString();
-        var parent_geocode = "";
-        parent_geocode = set_geocode.substr(0,set_geocode.length-2);
-        $('#parent_geocode').html(parent_geocode);
-        $('#geocode').val(set_geocode.substr(set_geocode.length-2,2));
-
-
         var list_of_both ={{ list_of_both|safe}};
 
         function ajaxcall() {
@@ -301,10 +279,6 @@
                     }
                     html_code += "</select>";
                     geocode = result.geocode;
-                    parent_geocode = result.parent_geocode;
-                    if(parent_geocode !=-1  )
-                    $('#parent_geocode').html(parent_geocode);
-                    else $('#parent_geocode').html("");
                     if (field_type_id != objet)
                         $(".field_parent").append(html_code);
 
@@ -314,17 +288,15 @@
 
         $('#alert_geocode').hide();
         var geocode={{ all_geocode|safe }};
-
+        var set_geocode = {{ geocode|safe }};
         var prev_parent = {{ field_parent_id |default_if_none:"0"}};
 
 
         $('#geocode').on('keyup', function () {
-            var geo_value = parent_geocode.concat($('#geocode').val());
+            var geo_value = $('#geocode').val();
             var curr_parent = $('.field_parent').children().last().val();
 
-
-            if (typeof curr_parent=="undefined" || curr_parent == prev_parent) {
-
+            if (curr_parent == prev_parent) {
                 if (set_geocode != geo_value && geocode.includes(geo_value))
                     $('#alert_geocode').show();
                 else $('#alert_geocode').hide();
@@ -339,16 +311,14 @@
         });
 
         $('#submit').on('click', function () {
-            var geo_value = parent_geocode.concat($('#geocode').val());
+            var geo_value = $('#geocode').val();
             var curr_parent = $('.field_parent').children().last().val();
-
             if (curr_parent == prev_parent||typeof curr_parent=="undefined") {
                 if (set_geocode != geo_value && geocode.includes(geo_value)) {
                     $('#alert_geocode').show();
                     return false;
                 }
                 else {
-                    $('#geocode').val(parent_geocode.concat($('#geocode').val()));
                     $('#alert_geocode').hide();
                     return true;
                 }
@@ -359,7 +329,6 @@
                     return false;
                 }
                 else {
-                    $('#geocode').val(parent_geocode.concat($('#geocode').val()));
                     $('#alert_geocode').hide();
                     return true;
                 }

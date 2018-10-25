@@ -354,8 +354,8 @@ def call_parave_ai_reg_api(xml,request,username,user):
         paravet_name = collection.getElementsByTagName("name")[0].__dict__['childNodes'][0].data
         occupation = collection.getElementsByTagName("occupation")[0].__dict__['childNodes'][0].data
         print mobile
-        print paravet_name
-        print occupation
+        #print paravet_name
+        #print occupation
         # 1=para,farmer=3,ai=2
         if occupation == '1':
             _occupation = 'Paravet'

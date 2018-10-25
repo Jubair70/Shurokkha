@@ -1249,9 +1249,9 @@ def get_dashboard_content(request):
     paravet_query = "select count(*)from paravet_aitechnician where user_type = 'Paravet' and coalesce(division::text,'') like '"+division+"' and coalesce(district::text,'') like '"+district+"' and  coalesce(upazila::text,'') like '"+upazila+"' and date(submission_time) BETWEEN '"+start_date+"' and '"+end_date+"'"
     ai_query = "select count(*) from paravet_aitechnician where user_type = 'AI Technicians' and coalesce(division::text,'') like '"+division+"' and coalesce(district::text,'') like '"+district+"' and  coalesce(upazila::text,'') like '"+upazila+"' and date(submission_time) BETWEEN '"+start_date+"' and '"+end_date+"'"
     vet_query = "select count(*) from vwuser_org_role where role = 'Veterinary'"
-    cattle_query = "select count(*) from cattle where date(created_date) BETWEEN '"+start_date+"' and '"+end_date+"'"
-    sickness_query = "select count (*) from appointment where appointment_type ='2' and date(created_date) BETWEEN '"+start_date+"' and '"+end_date+"'"
-    husbandry_query = "select count (*) from appointment where appointment_type ='1' or appointment_type ='3'  and date(created_date) BETWEEN '"+start_date+"' and '"+end_date+"'"
+    cattle_query = "select count(*) from vwcattle_farmer where coalesce(division::text,'') like '"+division+"' and coalesce(district::text,'') like '"+district+"' and  coalesce(upazila::text,'') like '"+upazila+"' and  date(created_date) BETWEEN '"+start_date+"' and '"+end_date+"'"
+    sickness_query = "select count (*) from vwcattle_appointment where  coalesce(division::text,'') like '"+division+"' and coalesce(district::text,'') like '"+district+"' and  coalesce(upazila::text,'') like '"+upazila+"' and appointment_type ='2' and date(created_date) BETWEEN '"+start_date+"' and '"+end_date+"'"
+    husbandry_query = "select count (*) from vwcattle_appointment where  coalesce(division::text,'') like '"+division+"' and coalesce(district::text,'') like '"+district+"' and  coalesce(upazila::text,'') like '"+upazila+"' and appointment_type ='1' or appointment_type ='3'  and date(created_date) BETWEEN '"+start_date+"' and '"+end_date+"'"
 
     farmer_count = __db_fetch_single_value(farmer_query )
     paravet_count = __db_fetch_single_value(paravet_query )

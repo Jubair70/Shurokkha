@@ -436,9 +436,9 @@ def configure_logging(logger, **kwargs):
 after_setup_logger.connect(configure_logging)
 
 MONGO_DATABASE = {
-    'HOST': 'localhost',
+    'HOST': '192.168.19.88',
     'PORT': 27017,
-    'NAME': 'shurokkha',
+    'NAME': 'shurokkha_new',
     'USER': '',
     'PASSWORD': ''
 }

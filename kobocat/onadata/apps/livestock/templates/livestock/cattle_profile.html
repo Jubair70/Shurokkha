@@ -458,7 +458,7 @@
       <div class="prescription" id ="prescription" style="display:none">
         <div class="date-block mt-3">
            <div class="date-btn float-right">
-                <div id="suggest_prescription_button_div"><button onclick="get_suggested_prescription('{{ cattle_type }}','{{ cattle_weight }}','{{ clinical_findings_data.tentative_diagnosis | safe}}')" class="btn btn-warning p-3 ">Suggested Prescription</button></div>
+                <div id="suggest_prescription_button_div"><button  id = "suggested_prescription" onclick="get_suggested_prescription('{{ cattle_type }}','{{ cattle_weight }}','{{ clinical_findings_data.tentative_diagnosis | safe}}')" class="btn btn-warning p-3 ">Suggested Prescription</button></div>
                 <button onclick="add_medicine()" class="btn btn-warning p-3">Add Medicine</button>
               </div>
               <p class="ml-3 mt-2">Prescription</p>
@@ -773,9 +773,7 @@
 
     <script>
         var appointment_creation_date = '{{c_date | safe}}'
-        console.log("appointment_creation_date"+ appointment_creation_date);
         var farmer_mobile = '{{ mobile }}'
-        console.log('farmer mobileis ::'+farmer_mobile)
         var farmer_name = '{{ farmer_name }}'
         var cattle_type_text = '{{ cattle_type_text }}'
         var cattle_age = '{{ cattle_age }}'
@@ -785,6 +783,11 @@
         var cattle_type = {{ cattle_type }}
         var appointment_status = {{ appointment_status }}
         var appointment_type = {{ appointment_type }}
+        if(appointment_id == 0){
+               $('#clinical_findings_div').hide();
+                $('#prescription').hide();
+                $('#suggest_prescription_button_div').hide()
+            }
         if ((appointment_type == 2)){
             if(appointment_status == 1){
                 $('#clinical_findings_div').show();
@@ -1115,6 +1118,7 @@
                         alert("No prescription suggested.")
                     }
                     get_prescription_sms();
+                    $("#suggested_prescription").prop("disabled",true);
                     //$('#success_msg_upload').html("");
                     //$('#success_msg_upload').html('<div class="alert alert-success fade in alert-dismissible"><strong>Success!</strong> Successfully uploaded</div>');
 

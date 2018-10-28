@@ -89,7 +89,7 @@
 
     function getfilterCriteria(){
         if($('#tentative_diagnosis').val() == ''){
-            tentative_diagnosis = '%'
+            tentative_diagnosis = ''
         }
         else{
             tentative_diagnosis = $('#tentative_diagnosis').val();
@@ -97,7 +97,7 @@
         console.log("tentative_diagnosis iis::"+tentative_diagnosis)
         cattle_type = $('#cattle_type').val();
          if($('#medicine_name').val() == ''){
-            medicine_name = '%'
+            medicine_name = ''
         }
         else{
             medicine_name = $('#medicine_name').val();

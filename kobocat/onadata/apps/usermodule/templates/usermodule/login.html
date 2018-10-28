@@ -30,7 +30,7 @@
 					<p>Welcome to SHUROKKHA Dashboard! Please enter Your User ID and Password to Sign In</p><br>
 				  <form class="login-form" method="post" action="/usermodule/login/" >
                     {% csrf_token %}
-
+                            <p style="color:red;">{{ data }}</p>
                             <input type="text" class="input"  id="user_login" autocomplete="off" placeholder="Email or Username" name="username">
                             <input type="password" class="input" id="user_pass" autocomplete="off" placeholder="Password" name="password">
                             <input type="hidden" id="redirect_url" name="redirect_url" value="{{redirect_url}}"/>

@@ -41,7 +41,7 @@ urlpatterns = patterns('',
                         url(r'^add_location/(?P<farmer_id>\d+)/$', views.add_location, name='add_location'),
                         url(r'^prescription/$', views.prescription, name='prescription'),
                         url(r'^get_prescription_table/$', views.get_prescription_table, name='get_prescription_table'),
-                        url(r'^view_ai_paravet_profile/(?P<id>\d+)/$', views.view_ai_paravet_profile, name='view_ai_paravet_profile'),
+                        url(r'^view_ai_pravet_profile/(?P<id>\d+)/$', views.view_ai_paravet_profile, name='view_ai_paravet_profile'),
                         url(r'^send_prescription_sms/$', views.send_prescription_sms, name='send_prescription_sms'),
 
 

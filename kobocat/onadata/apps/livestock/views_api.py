@@ -261,7 +261,9 @@ def save_user(request):
 
             save_user_details(user_form, profile_form,submitted_data,farmer_name,mobile,occupation,auth_user_id)
             sms_text = "সুরক্ষা-তে রেজিস্ট্রেশন সম্পন্ন করার জন্য গোপন কোডটি লিখুন.কোড : " + password
+
             views.send_sms(mobile, sms_text.decode('utf-8'))
+            '''
             send_mail(
                 'User LogIn One Time Password',
                 'Hi,\n\nWelcome to Shurokkha!!\n\nPlease use this Password given below  to access The shurokkha App.\n\n User :' + mobile + '\n\n Password :' + password + '\n\n',
@@ -269,6 +271,7 @@ def save_user(request):
                 ['mpowersocialent@gmail.com'],
                 fail_silently=False
             )
+            '''
             if occupation != 'Farmer':
                 tag = "true"
             else:
@@ -285,7 +288,7 @@ def save_user(request):
             return HttpResponse(err, status=409)
 
     receivermail = data['phone']
-
+    '''
     send_mail(
         'User LogIn One Time Password',
         'Hi,\n\nWelcome to Shurokkha!!\n\nPlease use this Password given below  to access The shurokkha App.\n\n User :' + receivermail + '\n\n Password :' + password + '\n\n',
@@ -293,6 +296,7 @@ def save_user(request):
         ['mpowersocialent@gmail.com'],
         fail_silently=False
     )
+    '''
     sms_text = "সুরক্ষা-তে রেজিস্ট্রেশন সম্পন্ন করার জন্য গোপন কোডটি লিখুন.কোড : " + str(password)
     views.send_sms(mobile, sms_text.decode('utf-8'))
     return HttpResponse(json.dumps({'password': password}), status=200)

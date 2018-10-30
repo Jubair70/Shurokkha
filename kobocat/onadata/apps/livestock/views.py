@@ -638,14 +638,22 @@ def get_cattle_info(id):
     cattle_regi_form_owner_q = "select (select username from auth_user where id = logger_xform.user_id limit 1) as user_name from public.logger_xform where id_string = 'cattle_registration'"
     cattle_regi_form_owner = __db_fetch_single_value(cattle_regi_form_owner_q)
     img = ""
-    q = "select picture,mobile,cattle_type,coalesce(round(cattle_weight::numeric,2)::text,'') cattleweight,COALESCE (AGE(current_date ,date(cattle_birth_date))::text,cattle_age||' months') cattle_age,coalesce(cattle_name,'') cattle_name,(select label from vwcattle_type where value = cattle_type limit 1) as cattletype,coalesce(calf_birth_weight,'') calf_birth_weight from cattle where cattle_system_id = " + str(id)
+    #q = "select picture,mobile,cattle_type,coalesce(round(cattle_weight::numeric,2)::text,'') cattleweight,COALESCE (AGE(current_date ,date(cattle_birth_date))::text,cattle_age||' months') cattle_age,coalesce(cattle_name,'') cattle_name,(select label from vwcattle_type where value = cattle_type limit 1) as cattletype,coalesce(calf_birth_weight,'') calf_birth_weight from cattle where cattle_system_id = " + str(id)
+    #print q
+    q = " with t1 as(select picture from cattle_images where cattle_system_id = "+ str(id)+" order by created_date desc) ,t2 as(select string_to_array((string_agg(picture,',')),',') cattle_images from t1) select picture,mobile,cattle_type,coalesce(round(cattle_weight::numeric,2)::text,'') cattleweight, COALESCE (AGE(current_date ,date(cattle_birth_date))::text,cattle_age||' months') cattle_age, coalesce(cattle_name,'') cattle_name,(select label from vwcattle_type where value = cattle_type limit 1) as cattletype,coalesce(calf_birth_weight,'') calf_birth_weight ,(select cattle_images from t2) cattle_images from cattle where cattle_system_id = "+ str(id)
+    print q
     dataset = __db_fetch_values_dict(q)
     cattle_dict = {}
+    cattle_img_list = []
     for temp in dataset:
         if temp['picture'] is not None:
             img = temp['picture']
         img = "/media/" + cattle_regi_form_owner + "/attachments/" + img
-        cattle_dict = {'cattle_type' : temp['cattle_type'],'cattle_img' : img,'mobile' : temp['mobile'],'cattle_name' : temp['cattle_name'],'cattle_weight' : temp['cattleweight'],'cattle_age' : temp['cattle_age'],'cattle_type_text': temp['cattletype'], 'calf_birth_weight' : temp['calf_birth_weight']}
+        if temp['cattle_images'] is not None:
+            for tmp in temp['cattle_images']:
+                image = "/media/" + cattle_regi_form_owner + "/attachments/" + tmp
+                cattle_img_list.append(image)
+        cattle_dict = {'cattle_type' : temp['cattle_type'],'cattle_img' : img,'mobile' : temp['mobile'],'cattle_name' : temp['cattle_name'],'cattle_weight' : temp['cattleweight'],'cattle_age' : temp['cattle_age'],'cattle_type_text': temp['cattletype'], 'calf_birth_weight' : temp['calf_birth_weight'],'cattle_img_list' :cattle_img_list}
     return cattle_dict
 
 

@@ -190,6 +190,28 @@
               <div class="card-body pb-4">
                   <h3>Cattle:</h3>
                 <img width="105px" src="{{ cattle_img }}" class="img-fluid"  alt="">
+
+
+              <!--<div id="carouselExampleControls" class="carousel slide" data-ride="carousel">
+                      <div class="carousel-inner">
+                          {% for img in cattle_img_list %}
+                        <div class="carousel-item {% if forloop.first %} active{% endif %}">
+
+                        <img height="123px" width ="100px" src="{{ img }}" alt="First slide"  class="">
+                        </div>
+                          {% endfor %}
+
+                      </div>
+                      <a class="carousel-control-prev" href="#carouselExampleControls" role="button" data-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="sr-only">Previous</span>
+                      </a>
+                      <a class="carousel-control-next" href="#carouselExampleControls" role="button" data-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="sr-only">Next</span>
+                      </a>
+                    </div>-->
+
                 <div class="card-text float-right">
 
                   <p>Cattle Name: {{ cattle_name }}<br>
@@ -200,6 +222,7 @@
                 </div>
               </div>
             </div>
+
 
             <!-- date bloc start-->
             <span class="control-label btn btn-primary" style="cursor: default;background-color: #00b755; margin-top: 10px;width: 100%; font-size: 14px;" data-original-title="" title=""><b>Sickness</b></span>
@@ -859,14 +882,23 @@
             console.log("2")
             $('#q_reproductive_problem').show()
             $('#q_milking_problem').show()
+             $("#reproductive_problem").prop('required',true);
+            $("#milking_problem").prop('required',true);
             $('#q_male_reproductive_problem').hide()
         }
 
         if (cattle_type == 3){
             console.log("3")
-            $('#q_reproductive_problem').show()
+            $('#q_reproductive_problem').hide()
             $('#q_milking_problem').hide()
             $('#q_male_reproductive_problem').show()
+        }
+
+        if (cattle_type == 4){
+            console.log("4")
+            $('#q_reproductive_problem').hide()
+            $('#q_milking_problem').hide()
+            $('#q_male_reproductive_problem').hide()
         }
 
         $(document).ready(function () {

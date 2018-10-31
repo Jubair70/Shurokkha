@@ -307,6 +307,9 @@ def reject(request,id):
     comment = request.POST.get('comment')
     q = "update approval_queue set status = 2,approve_by = "+str(request.user.id)+",approval_date = NOW(),rejection_cause = '"+comment+"' where id  ="+str(id)
     __db_commit_query(q)
+    __db_commit_query(
+        "update usermodule_usermoduleprofile set is_req_para_ai = 0 where user_id=(select id from auth_user where  username='" + mobile + "')")
+
     send_push_message(mobile, 3, 'Paravet/AI Tech rejected', 'Your request has been rejected.', '', mobile, '')
     # TO DO :: SMS Notification
     send_mail(
@@ -317,6 +320,7 @@ def reject(request,id):
         fail_silently=False,
     )
     return HttpResponse(json.dumps("Rejected Successfully."), content_type="application/json", status=200)
+
 
 def view_ai_paravet_profile(request,id):
     farmer_proupdate_form_owner_q = "select (select username from auth_user where id = logger_xform.user_id limit 1) as user_name from public.logger_xform where id_string = 'farmer_profile_update'"
@@ -1411,6 +1415,8 @@ def send_push_message(username, notification_type, title, content, cattle_id, fa
         user_information["farm_id"] = ''
         user_information["username"] = username
         user_information["paravet_flag"] = user_profile.is_req_para_ai
+        user_image = get_user_image(user.id)
+        user_information["user_image"] = user_image
 
         data_message = {
             "notif_type": notification_type,
@@ -1471,3 +1477,16 @@ def update_cattle_type(request):
     query = "select update_cattle_type()"
     __db_commit_query(query)
     return HttpResponse('')
+
+
+
+def get_user_image(user_id):
+    query = "select coalesce(user_img,'') from users_additional_info  where user_id = "+str(user_id)+" limit 1 "
+    cursor = connection.cursor()
+    cursor.execute(query)
+    fetchVal = cursor.fetchone()
+    img = ''
+    if fetchVal:
+        img = fetchVal[0]
+    cursor.close()
+    return img

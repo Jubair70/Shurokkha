@@ -123,10 +123,14 @@ def login_verify(request):
                     user_information["farm_id"] = get_farm_id(user.id)
                     user_information["username"] = username
                     user_information["paravet_flag"] =user_profile.is_req_para_ai
+                    user_image = views.get_user_image(user.id)
+                    user_information["user_image"] = user_image
                     # user_information['Organizations'] = [pro.organization.organization for pro in profile_organization]
                     # user_information['Claims'] = mobile_access(request,username)
                     print data
                     views.update_user_device(data, user_information, user_profile.id)
+                    print "user_information************************************************************************"
+                    print "****************************************************************************************"
                     print user_information
                 login(request, user)
                 UserFailedLogin.objects.filter(user_id=user.id).delete()
@@ -151,6 +155,8 @@ def login_verify(request):
 
 def id_generator(size=4):
     return ''.join(random.SystemRandom().choice(string.digits) for _ in range(size))
+
+
 
 
 # mobile save user
@@ -262,6 +268,7 @@ def save_user(request):
             save_user_details(user_form, profile_form,submitted_data,farmer_name,mobile,occupation,auth_user_id)
             sms_text = "সুরক্ষা-তে রেজিস্ট্রেশন সম্পন্ন করার জন্য গোপন কোডটি লিখুন.কোড : " + password
             views.send_sms(mobile, sms_text.decode('utf-8'))
+            '''
             send_mail(
                 'User LogIn One Time Password',
                 'Hi,\n\nWelcome to Shurokkha!!\n\nPlease use this Password given below  to access The shurokkha App.\n\n User :' + mobile + '\n\n Password :' + password + '\n\n',
@@ -269,6 +276,7 @@ def save_user(request):
                 ['mpowersocialent@gmail.com'],
                 fail_silently=False
             )
+            '''
             if occupation != 'Farmer':
                 tag = "true"
             else:
@@ -285,7 +293,7 @@ def save_user(request):
             return HttpResponse(err, status=409)
 
     receivermail = data['phone']
-
+    '''
     send_mail(
         'User LogIn One Time Password',
         'Hi,\n\nWelcome to Shurokkha!!\n\nPlease use this Password given below  to access The shurokkha App.\n\n User :' + receivermail + '\n\n Password :' + password + '\n\n',
@@ -293,6 +301,7 @@ def save_user(request):
         ['mpowersocialent@gmail.com'],
         fail_silently=False
     )
+    '''
     sms_text = "সুরক্ষা-তে রেজিস্ট্রেশন সম্পন্ন করার জন্য গোপন কোডটি লিখুন.কোড : " + str(password)
     views.send_sms(mobile, sms_text.decode('utf-8'))
     return HttpResponse(json.dumps({'password': password}), status=200)

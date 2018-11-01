@@ -752,8 +752,8 @@ def get_multiple_input_string(data_list):
 
 
 def get_diagnosis_name(request):
-    diagnosis_name = "%" + request.POST.get("diagnosis_name") + "%";
-    q = "select distinct diagnosis_name from diagnosis where diagnosis_name like '"+diagnosis_name+"'"
+    diagnosis_name =  request.POST.get("diagnosis_name") ;
+    q = "select distinct diagnosis_name from diagnosis where diagnosis_name  ~* '"+diagnosis_name+"'"
     data_list = __db_fetch_values_dict(q)
     return HttpResponse(json.dumps(data_list, default=decimal_date_default), content_type="application/json", status=200)
 

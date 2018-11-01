@@ -205,7 +205,7 @@
 
 .daterangepicker select.monthselect {
   margin-right: 2%;
-  width: 56%;
+ /* width: 56%;*/
 }
 
 .daterangepicker select.yearselect {

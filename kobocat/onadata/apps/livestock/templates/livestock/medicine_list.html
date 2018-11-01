@@ -210,6 +210,23 @@
             </div>
     </div>
 <!--modal ended-->
+
+    <!-- uploased SUCCESS MODAL-->
+    <div class="modal fade" id="uploadModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <button type="button" class="bootbox-close-button close" data-dismiss="modal" aria-hidden="true" style="margin-top: -10px;">×</button>
+                        <h4 class="modal-title" id="myModalLabel">Medicine has been added successfully.</h4>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn  btn-success" data-dismiss="modal">Close</button>
+                        </button>
+                    </div>
+                </div>
+            </div>
+    </div>
+<!--modal ended-->
 {% endblock %}
 
 {% block additional-javascript %}
@@ -273,6 +290,7 @@
             success: function (data) {
                 $('#add_med_form_modal').modal('toggle');
                 get_medicine_data_table()
+                $('#uploadModal').modal('show');
 
             },
             error: function (xhr, status, error) {
@@ -293,7 +311,8 @@
             processData: false,
             data: data,
             success: function (data) {
-                get_medicine_data_table()
+                get_medicine_data_table();
+                $('#uploadModal').modal('show');
             },
             error: function (xhr, status, error) {
                 $('#error_msg_upload').html("<h5><strong>"+xhr.responseText+"</strong></h5>");

@@ -13,6 +13,7 @@
             <td>{{data.content_type_name }}</td>
             <td> {{ data.file_name }}</td>
             <td>
+                <a  href = "/media/content/{{ data.file_name }}"   class="btn btn-primary btn-md" type="button" data-original-title="" title="">View</a>
                 <button onclick="delete_entity('{{ data.id }}')" id = ""  class="btn btn-danger" data-original-title="" title="">Delete</button>
         </tr>
         {% endfor %}

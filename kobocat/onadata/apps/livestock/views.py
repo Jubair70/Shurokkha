@@ -1103,7 +1103,8 @@ def upload_shared_file(file,title):
         #get file extention from file name
         file_extention =  os.path.splitext(file.name)[1]
         millis = int(round(time.time() * 1000))
-        filePath = title+'_'+str(millis)+file_extention
+        #filePath = title+'_'+str(millis)+file_extention
+        filePath = file.name
         destination = open('onadata/media/content/'+filePath, 'w+')
         for chunk in file.chunks():
             destination.write(chunk)

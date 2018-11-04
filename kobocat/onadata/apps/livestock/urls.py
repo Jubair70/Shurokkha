@@ -41,7 +41,7 @@ urlpatterns = patterns('',
                         url(r'^add_location/(?P<farmer_id>\d+)/$', views.add_location, name='add_location'),
                         url(r'^prescription/$', views.prescription, name='prescription'),
                         url(r'^get_prescription_table/$', views.get_prescription_table, name='get_prescription_table'),
-                        url(r'^view_ai_paravet_profile/(?P<id>\d+)/$', views.view_ai_paravet_profile, name='view_ai_paravet_profile'),
+                        url(r'^view_ai_pravet_profile/(?P<id>\d+)/$', views.view_ai_paravet_profile, name='view_ai_paravet_profile'),
                         url(r'^send_prescription_sms/$', views.send_prescription_sms, name='send_prescription_sms'),
 
 
@@ -71,5 +71,10 @@ urlpatterns = patterns('',
                            name='get_content_list'),
                         url(r"^assign_farmer/$", views_api.assign_farmer, name='assign_farmer'),
                         url(r"^update_token/$", views.update_token, name='update_token'),
+                        url(r"^get_cattle_info$", views_api.get_cattle_info, name='get_cattle_info'),
+                        url(r"^cattle_prescription_list/(?P<cattle_id>\d+)/$", views_api.cattle_prescription_list, name='cattle_prescription_list'),
+
+
+
 
                        )

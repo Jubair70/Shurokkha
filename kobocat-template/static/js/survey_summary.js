@@ -182,9 +182,9 @@ console.log(isOwner+'--'+dataObj);
     if (Can_View){
       details = '<a href="/usermodule/'+jsonOwner[dataObj][1]+'/projects-views/' + dataObj + '/" class="btn red btn-md" type="button"> Details </a>';
     }
-    if(Can_submit){
+    /*if(Can_submit){
        newSubmission = '<a href="/'+jsonOwner[dataObj][1]+'/'+'forms'+'/'+dataObj+'/'+'enter-data'+'" target="_blank" class="btn red btn-md" type="button">New Submission</a>';
-    }
+    }*/
 
     operation_status = '<a class="proj_submission" href="/approve-status/operational-status/"> Op-Status </a>';
     var table = $('#tg-xY4Sf');

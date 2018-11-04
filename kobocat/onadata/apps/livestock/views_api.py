@@ -123,10 +123,14 @@ def login_verify(request):
                     user_information["farm_id"] = get_farm_id(user.id)
                     user_information["username"] = username
                     user_information["paravet_flag"] =user_profile.is_req_para_ai
+                    user_image = views.get_user_image(user.id)
+                    user_information["user_image"] = user_image
                     # user_information['Organizations'] = [pro.organization.organization for pro in profile_organization]
                     # user_information['Claims'] = mobile_access(request,username)
                     print data
                     views.update_user_device(data, user_information, user_profile.id)
+                    print "user_information************************************************************************"
+                    print "****************************************************************************************"
                     print user_information
                 login(request, user)
                 UserFailedLogin.objects.filter(user_id=user.id).delete()
@@ -151,6 +155,8 @@ def login_verify(request):
 
 def id_generator(size=4):
     return ''.join(random.SystemRandom().choice(string.digits) for _ in range(size))
+
+
 
 
 # mobile save user
@@ -262,6 +268,7 @@ def save_user(request):
             save_user_details(user_form, profile_form,submitted_data,farmer_name,mobile,occupation,auth_user_id)
             sms_text = "সুরক্ষা-তে রেজিস্ট্রেশন সম্পন্ন করার জন্য গোপন কোডটি লিখুন.কোড : " + password
             views.send_sms(mobile, sms_text.decode('utf-8'))
+            '''
             send_mail(
                 'User LogIn One Time Password',
                 'Hi,\n\nWelcome to Shurokkha!!\n\nPlease use this Password given below  to access The shurokkha App.\n\n User :' + mobile + '\n\n Password :' + password + '\n\n',
@@ -269,6 +276,7 @@ def save_user(request):
                 ['mpowersocialent@gmail.com'],
                 fail_silently=False
             )
+            '''
             if occupation != 'Farmer':
                 tag = "true"
             else:
@@ -285,7 +293,7 @@ def save_user(request):
             return HttpResponse(err, status=409)
 
     receivermail = data['phone']
-
+    '''
     send_mail(
         'User LogIn One Time Password',
         'Hi,\n\nWelcome to Shurokkha!!\n\nPlease use this Password given below  to access The shurokkha App.\n\n User :' + receivermail + '\n\n Password :' + password + '\n\n',
@@ -293,6 +301,7 @@ def save_user(request):
         ['mpowersocialent@gmail.com'],
         fail_silently=False
     )
+    '''
     sms_text = "সুরক্ষা-তে রেজিস্ট্রেশন সম্পন্ন করার জন্য গোপন কোডটি লিখুন.কোড : " + str(password)
     views.send_sms(mobile, sms_text.decode('utf-8'))
     return HttpResponse(json.dumps({'password': password}), status=200)
@@ -472,9 +481,16 @@ def get_cattle_list(request):
         data_dict['cattle_age'] = temp['cattle_age']
         data_dict['register_date'] = temp['register_date']
         data_dict['cattle_birth_date'] = temp['cattle_birth_date']
-        data_dict['weight'] = temp['cattle_weight']
+        #data_dict['weight'] = temp['cattle_weight']
+        #data_dict['calf_birth_weight'] = temp['calf_birth_weight']
         data_dict['cattle_type'] = temp['cattle_type_text']
         data_dict['cattle_system_id'] = temp['cattle_system_id']
+        if temp['cattle_weight'] == None:
+            if temp['cattle_type'] =='4':
+                if temp['calf_birth_weight'] is not None:
+                    data_dict['weight'] = temp['calf_birth_weight']
+        else:
+            data_dict['weight'] = temp['cattle_weight']
         img_path = None
         if temp['picture'] is not None:
             img = temp['picture']
@@ -483,7 +499,6 @@ def get_cattle_list(request):
 
         data_list.append(data_dict.copy())
         data_dict.clear()
-    print data_list
     return HttpResponse(json.dumps(data_list))
 
 
@@ -635,7 +650,7 @@ def cattle_info(request):
     data = []
     if len(request.GET):
         username = request.GET.get('username')
-        query="with health_records as(select cat_id cattle_id,question_var,rpt_date data_submission_date,(question || ': ' || val )::text food from get_health_records_mobile_report('"+str(username)+"') ) select cattle_id,data_submission_date,'Feeding Information'::text as title,string_agg(food , '\n') as content from health_records where question_var::text = any(array['green_grass','straw','grain','fooding/vushi','fooding/rice_kura','fooding/vutta','fooding/khoil','fooding/salt']) group by cattle_id,data_submission_date union all select cattle_id,data_submission_date,'Milk Production'::text as title,string_agg(food, '\n') as content from health_records where question_var::text = any(array['milking_status','milking_stopped','milking_production_last_day']) group by cattle_id,data_submission_date union all select cattle_id,data_submission_date,'Deworming & Vaccination' as title,string_agg(food, '\n') as content from health_records where question_var::text = any( array[ 'dewormed','dewormed_month_before','anthrax_vaccinated_month_before','hs_vaccinated_days_before','fmd_vaccinated_days_before','bq_vaccinated_days_before'])group by cattle_id,data_submission_date union all select cat_id cattle_id,rpt_date ,'Sickness' as title,string_agg(question || ': ' || val, '\n') as content from get_sickness_mobile_report('"+str(username)+"') where question_var::text = any(array[ 'temparature','previous_calf_number','latest_calf_given_birth','current_reproductive_status','reproduced','reproduction_type','reproduction_date','pregnancy_status','milking_status','milk_production_yesterday']) group by cattle_id,rpt_date union all select cat_id cattle_id,rpt_date,'Reproduction' as title,string_agg(question || ': ' || val , '\n') as content from get_reproduction_records_mobile_report('"+str(username)+"') where question_var::text = any(array['reproduction_date','artificial_reproduction_failed_number','artificial_insemination','bull_number','bull_foreign_species_percentage','pregnancy_complication','is_pregnant','pregnancy_tested','pregnancy_test_date','pregnancy_month','previous_calf_numbers','calf_birth_date','latest_calf_given_birth','calf_sex','calf_weight_at_birth_time','complication_after_birth','complication_after_birth_other'] ) group by cattle_id,rpt_date;"
+        query="with health_records as(select cat_id cattle_id,question_var,rpt_date data_submission_date,(question || ': ' || val )::text food from get_health_records_mobile_report('"+str(username)+"') ) select cattle_id,data_submission_date,'Feeding Information'::text as title,string_agg(food , '\n') as content from health_records where question_var::text = any(array['green_grass','straw','grain','fooding/vushi','fooding/rice_kura','fooding/vutta','fooding/khoil','fooding/salt','fooding/packaged_food','fooding/dcp_powder','fooding/others','fooding_cow_fattening','fooding_cow_fattening_for_months']) group by cattle_id,data_submission_date union all select cattle_id,data_submission_date,'Milk Production'::text as title,string_agg(food, '\n') as content from health_records where question_var::text = any(array['milking_status','milking_stopped','milking_production_last_day']) group by cattle_id,data_submission_date union all select cattle_id,data_submission_date,'Deworming & Vaccination' as title,string_agg(food, '\n') as content from health_records where question_var::text = any( array[ 'dewormed','dewormed_month_before','anthrax_vaccinated_month_before','hs_vaccinated_days_before','fmd_vaccinated_days_before','bq_vaccinated_days_before','vaccination_list_up_to_date'])group by cattle_id,data_submission_date union all select cat_id cattle_id,rpt_date ,'Sickness' as title,string_agg(question || ': ' || val, '\n') as content from get_sickness_mobile_report('"+str(username)+"') where question_var::text = any(array[ 'temparature','previous_calf_number','latest_calf_given_birth','current_reproductive_status','reproduced','reproduction_type','reproduction_date','pregnancy_status','milking_status','milk_production_yesterday']) group by cattle_id,rpt_date union all select cat_id cattle_id,rpt_date,'Reproduction' as title,string_agg(question || ': ' || val , '\n') as content from get_reproduction_records_mobile_report('"+str(username)+"') where question_var::text = any(array['reproduction_date','artificial_reproduction_failed_number','artificial_insemination','bull_number','bull_foreign_species_percentage','pregnancy_complication','is_pregnant','pregnancy_tested','pregnancy_test_date','pregnancy_month','previous_calf_numbers','calf_birth_date','latest_calf_given_birth','calf_sex','calf_weight_at_birth_time','complication_after_birth','complication_after_birth_other'] ) group by cattle_id,rpt_date;"
         print query
         data = json.dumps(__db_fetch_values_dict(query), default=decimal_date_default)
     return HttpResponse(data)
@@ -656,6 +671,15 @@ def get_content_list(request,username):
 
 
 
+
+def get_cattle_info(request):
+    data = []
+    if len(request.GET):
+        cattle_id = request.GET.get('cattle_id')
+        query="with health_records as(select cat_id cattle_id,question_var,rpt_date data_submission_date,(question || ': ' || val )::text food from get_health_records_mobile_report_cattle('"+str(cattle_id)+"') ) select cattle_id,data_submission_date,'Feeding Information'::text as title,string_agg(food , '\n') as content from health_records where question_var::text = any(array['green_grass','straw','grain','fooding/vushi','fooding/rice_kura','fooding/vutta','fooding/khoil','fooding/salt','fooding/packaged_food','fooding/dcp_powder','fooding/others','fooding_cow_fattening','fooding_cow_fattening_for_months']) group by cattle_id,data_submission_date union all select cattle_id,data_submission_date,'Milk Production'::text as title,string_agg(food, '\n') as content from health_records where question_var::text = any(array['milking_status','milking_stopped','milking_production_last_day']) group by cattle_id,data_submission_date union all select cattle_id,data_submission_date,'Deworming & Vaccination' as title,string_agg(food, '\n') as content from health_records where question_var::text = any( array[ 'dewormed','dewormed_month_before','anthrax_vaccinated_month_before','hs_vaccinated_days_before','fmd_vaccinated_days_before','bq_vaccinated_days_before','vaccination_list_up_to_date'])group by cattle_id,data_submission_date union all select cat_id cattle_id,rpt_date ,'Sickness' as title,string_agg(question || ': ' || val, '\n') as content from get_sickness_mobile_report_cattle('"+str(cattle_id)+"') where question_var::text = any(array[ 'temparature','previous_calf_number','latest_calf_given_birth','current_reproductive_status','reproduced','reproduction_type','reproduction_date','pregnancy_status','milking_status','milk_production_yesterday']) group by cattle_id,rpt_date union all select cat_id cattle_id,rpt_date,'Reproduction' as title,string_agg(question || ': ' || val , '\n') as content from get_reproduction_records_mobile_report_cattle('"+str(cattle_id)+"') where question_var::text = any(array['reproduction_date','artificial_reproduction_failed_number','artificial_insemination','bull_number','bull_foreign_species_percentage','pregnancy_complication','is_pregnant','pregnancy_tested','pregnancy_test_date','pregnancy_month','previous_calf_numbers','calf_birth_date','latest_calf_given_birth','calf_sex','calf_weight_at_birth_time','complication_after_birth','complication_after_birth_other'] ) group by cattle_id,rpt_date;"
+        print query
+        data = json.dumps(__db_fetch_values_dict(query), default=decimal_date_default)
+    return HttpResponse(data)
 
 # ---------------------------------- Shahin ------------------------------- #
 
@@ -735,6 +759,15 @@ def get_prescription_details(request,prescription_id):
 
 
 
+
+@csrf_exempt
+def cattle_prescription_list(request,cattle_id):
+
+    q="SELECT p.id, date(p.created_date) created_date, cf.tentative_diagnosis, a.cattle_system_id, string_agg(pd.medicine_part_1, ', ') AS prescription_title FROM prescription p LEFT JOIN clinical_findings cf ON cf.appointment_id = p.appointment_id LEFT JOIN appointment a ON a.id = p.appointment_id LEFT JOIN prescription_details pd ON pd.prescription_id = p.id WHERE a.cattle_system_id = "+str(cattle_id)+" group by p.id,p.created_date,cf.tentative_diagnosis,a.cattle_system_id "
+
+    prescription_list = __db_fetch_values_dict(q)
+
+    return HttpResponse(json.dumps(prescription_list, default=decimal_date_default))
 
 
 

@@ -307,6 +307,9 @@ def reject(request,id):
     comment = request.POST.get('comment')
     q = "update approval_queue set status = 2,approve_by = "+str(request.user.id)+",approval_date = NOW(),rejection_cause = '"+comment+"' where id  ="+str(id)
     __db_commit_query(q)
+    __db_commit_query(
+        "update usermodule_usermoduleprofile set is_req_para_ai = 0 where user_id=(select id from auth_user where  username='" + mobile + "')")
+
     send_push_message(mobile, 3, 'Paravet/AI Tech rejected', 'Your request has been rejected.', '', mobile, '')
     # TO DO :: SMS Notification
     send_mail(
@@ -317,6 +320,7 @@ def reject(request,id):
         fail_silently=False,
     )
     return HttpResponse(json.dumps("Rejected Successfully."), content_type="application/json", status=200)
+
 
 def view_ai_paravet_profile(request,id):
     farmer_proupdate_form_owner_q = "select (select username from auth_user where id = logger_xform.user_id limit 1) as user_name from public.logger_xform where id_string = 'farmer_profile_update'"
@@ -377,6 +381,7 @@ def get_cattle_list(request,id):
             age_cattle = temp['cattle_age']
         data_dict['cattle_type_text'] = temp['cattle_type_text']
         data_dict['cattle_age'] = age_cattle
+        data_dict['cattle_system_id'] = temp['cattle_system_id']
         img = ""
         if temp['picture'] is not None:
             img = temp['picture']
@@ -510,7 +515,7 @@ def get_prescription_table(request):
     tentative_diagnosis = request.POST.get('tentative_diagnosis')
     cattle_type = request.POST.get('cattle_type')
     medicine_name = request.POST.get('medicine_name')
-    q  = "SELECT diagnosis.*,diagnosis_medicine.*,(select name from medicine_type where id =diagnosis_medicine.medicine_type limit 1 ) m_type,(select label from vwcattle_type where value::Integer =diagnosis.cattle_type limit 1)cattle,(select advice from diagnosis_advice where diagnosis_id = diagnosis.id limit 1) advice FROM diagnosis LEFT JOIN diagnosis_medicine ON diagnosis.id = diagnosis_medicine.diagnosis_id where diagnosis.diagnosis_name like '"+tentative_diagnosis+"' and cattle_type::text like '"+str(cattle_type)+"' and diagnosis_medicine.medicine_name like '"+medicine_name+"' order by diagnosis.id"
+    q  = "SELECT diagnosis.*,diagnosis_medicine.*,(select name from medicine_type where id =diagnosis_medicine.medicine_type limit 1 ) m_type,(select label from vwcattle_type where value::Integer =diagnosis.cattle_type limit 1)cattle,(select advice from diagnosis_advice where diagnosis_id = diagnosis.id limit 1) advice FROM diagnosis LEFT JOIN diagnosis_medicine ON diagnosis.id = diagnosis_medicine.diagnosis_id where diagnosis.diagnosis_name ~* '"+tentative_diagnosis+"' and cattle_type::text like '"+str(cattle_type)+"' and diagnosis_medicine.medicine_name ~* '"+medicine_name+"' order by diagnosis.id"
     dataset = __db_fetch_values_dict(q)
     return render(request, 'livestock/prescription_table.html',{'dataset' :dataset})
 
@@ -541,6 +546,8 @@ def cattle_profile(request,cattle_id,appointment_id):
     data = __db_fetch_values_dict(q)
     clinical_findings_data = []
     c_date = ''
+    appointment_status = 0
+    appointment_type = 0
     for temp in data:
         c_date = temp['c_date']
         appointment_status = temp['status']
@@ -552,7 +559,9 @@ def cattle_profile(request,cattle_id,appointment_id):
     cattle_info = get_cattle_info(cattle_id)
     farmer_mobile = cattle_info.get('mobile')
     farmer_info= get_farmer_info(farmer_mobile)
-
+    sick_img = []
+    if appointment_id != '0':
+        sick_img = get_sickness_images(cattle_id, appointment_id)
 
 
     option_dict = {
@@ -573,7 +582,7 @@ def cattle_profile(request,cattle_id,appointment_id):
         'megot': get_option_list('megot'),
         'disease_pattern': get_option_list('disease_pattern'),
         'clinical_findings_data' : get_clinical_findings_dict(clinical_findings_data),
-        'sickness_images' : get_sickness_images(cattle_id,appointment_id)
+        'sickness_images' : sick_img
     }
 
     data = {'data':get_accoridian_dict(cattle_id)}
@@ -633,14 +642,22 @@ def get_cattle_info(id):
     cattle_regi_form_owner_q = "select (select username from auth_user where id = logger_xform.user_id limit 1) as user_name from public.logger_xform where id_string = 'cattle_registration'"
     cattle_regi_form_owner = __db_fetch_single_value(cattle_regi_form_owner_q)
     img = ""
-    q = "select picture,mobile,cattle_type,coalesce(round(cattle_weight::numeric,2)::text,'') cattleweight,COALESCE (AGE(current_date ,date(cattle_birth_date))::text,cattle_age||' months') cattle_age,coalesce(cattle_name,'') cattle_name,(select label from vwcattle_type where value = cattle_type limit 1) as cattletype,coalesce(calf_birth_weight,'') calf_birth_weight from cattle where cattle_system_id = " + str(id)
+    #q = "select picture,mobile,cattle_type,coalesce(round(cattle_weight::numeric,2)::text,'') cattleweight,COALESCE (AGE(current_date ,date(cattle_birth_date))::text,cattle_age||' months') cattle_age,coalesce(cattle_name,'') cattle_name,(select label from vwcattle_type where value = cattle_type limit 1) as cattletype,coalesce(calf_birth_weight,'') calf_birth_weight from cattle where cattle_system_id = " + str(id)
+    #print q
+    q = " with t1 as(select picture from cattle_images where cattle_system_id = "+ str(id)+" order by created_date desc) ,t2 as(select string_to_array((string_agg(picture,',')),',') cattle_images from t1) select picture,mobile,cattle_type,coalesce(round(cattle_weight::numeric,2)::text,'') cattleweight, COALESCE (AGE(current_date ,date(cattle_birth_date))::text,cattle_age||' months') cattle_age, coalesce(cattle_name,'') cattle_name,(select label from vwcattle_type where value = cattle_type limit 1) as cattletype,coalesce(calf_birth_weight,'') calf_birth_weight ,(select cattle_images from t2) cattle_images from cattle where cattle_system_id = "+ str(id)
+    print q
     dataset = __db_fetch_values_dict(q)
     cattle_dict = {}
+    cattle_img_list = []
     for temp in dataset:
         if temp['picture'] is not None:
             img = temp['picture']
         img = "/media/" + cattle_regi_form_owner + "/attachments/" + img
-        cattle_dict = {'cattle_type' : temp['cattle_type'],'cattle_img' : img,'mobile' : temp['mobile'],'cattle_name' : temp['cattle_name'],'cattle_weight' : temp['cattleweight'],'cattle_age' : temp['cattle_age'],'cattle_type_text': temp['cattletype'], 'calf_birth_weight' : temp['calf_birth_weight']}
+        if temp['cattle_images'] is not None:
+            for tmp in temp['cattle_images']:
+                image = "/media/" + cattle_regi_form_owner + "/attachments/" + tmp
+                cattle_img_list.append(image)
+        cattle_dict = {'cattle_type' : temp['cattle_type'],'cattle_img' : img,'mobile' : temp['mobile'],'cattle_name' : temp['cattle_name'],'cattle_weight' : temp['cattleweight'],'cattle_age' : temp['cattle_age'],'cattle_type_text': temp['cattletype'], 'calf_birth_weight' : temp['calf_birth_weight'],'cattle_img_list' :cattle_img_list}
     return cattle_dict
 
 
@@ -735,8 +752,8 @@ def get_multiple_input_string(data_list):
 
 
 def get_diagnosis_name(request):
-    diagnosis_name = "%" + request.POST.get("diagnosis_name") + "%";
-    q = "select distinct diagnosis_name from diagnosis where diagnosis_name like '"+diagnosis_name+"'"
+    diagnosis_name =  request.POST.get("diagnosis_name") ;
+    q = "select distinct diagnosis_name from diagnosis where diagnosis_name  ~* '"+diagnosis_name+"'"
     data_list = __db_fetch_values_dict(q)
     return HttpResponse(json.dumps(data_list, default=decimal_date_default), content_type="application/json", status=200)
 
@@ -1086,7 +1103,8 @@ def upload_shared_file(file,title):
         #get file extention from file name
         file_extention =  os.path.splitext(file.name)[1]
         millis = int(round(time.time() * 1000))
-        filePath = title+'_'+str(millis)+file_extention
+        #filePath = title+'_'+str(millis)+file_extention
+        filePath = file.name
         destination = open('onadata/media/content/'+filePath, 'w+')
         for chunk in file.chunks():
             destination.write(chunk)
@@ -1124,7 +1142,8 @@ def delete_content(request,id):
 #######################################################################
 import pandas
 def advisory_list(request):
-    query = "select count(*) num from appointment where status = 0 and appointment_type =any('{1,3}')"
+    #query = "select count(*) num from appointment where status = 0 and appointment_type =any('{1,3}')"
+    query = "select count(*) num from appointment where status = 0 and appointment_type =1"
     df = pandas.DataFrame()
     df = pandas.read_sql(query, connection)
     num = df.num.tolist()[0]
@@ -1134,7 +1153,11 @@ def advisory_list(request):
     ai_paravet_id = df.ai_paravet_id.tolist()
     ai_paravet_name = df.ai_paravet_name.tolist()
     ai_paravets = zip(ai_paravet_id,ai_paravet_name)
+<<<<<<< HEAD
     query = "WITH t AS( SELECT id, To_char(created_date, 'MM-DD-YYYY HH24:MI:SS') created_date, ( SELECT created_date FROM prescription WHERE appointment_id = appointment.id limit 1) prescription_date, cattle_system_id, ( select cattle_type from cattle where cattle_system_id = appointment.cattle_system_id limit 1), ( SELECT (json->>'mobile') mobile FROM logger_instance WHERE id = healthrecord_sickness_system_id limit 1), ( SELECT (json->>'_submitted_by') submitted_by FROM logger_instance WHERE id = healthrecord_sickness_system_id limit 1), status FROM appointment WHERE appointment_type =ANY('{1,3}') ORDER BY id DESC) SELECT id, created_date, cattle_system_id, ( SELECT first_name || ' ' || last_name FROM auth_user WHERE username = t.mobile limit 1) farmer_name, mobile, ( SELECT label FROM vwcattle_type WHERE value = t.cattle_type limit 1) cattle_type, ( SELECT CASE WHEN cattle_birth_date IS NULL THEN cattle_age ELSE age(CURRENT_DATE ,date(cattle_birth_date))::text END cattle_age FROM cattle WHERE cattle_system_id = t.cattle_system_id limit 1), COALESCE(substring(prescription_date::text FROM 0 FOR 20),'') prescription_date, ( SELECT first_name || ' ' || last_name FROM auth_user WHERE username = t.submitted_by limit 1)ai_paravet_name, submitted_by, status FROM t WHERE status = ANY('{0,2}')"
+=======
+    query = "WITH t AS( SELECT id, To_char(created_date, 'MM-DD-YYYY HH24:MI:SS') created_date, ( SELECT created_date FROM prescription WHERE appointment_id = appointment.id limit 1) prescription_date, cattle_system_id, ( select cattle_type from cattle where cattle_system_id = appointment.cattle_system_id limit 1), ( SELECT (json->>'mobile') mobile FROM logger_instance WHERE id = healthrecord_sickness_system_id limit 1), ( SELECT (json->>'_submitted_by') submitted_by FROM logger_instance WHERE id = healthrecord_sickness_system_id limit 1), status FROM appointment WHERE appointment_type =1 ORDER BY id DESC) SELECT id, created_date, cattle_system_id, ( SELECT first_name || ' ' || last_name FROM auth_user WHERE username = t.mobile limit 1) farmer_name, mobile, ( SELECT label FROM vwcattle_type WHERE value = t.cattle_type limit 1) cattle_type, ( SELECT CASE WHEN cattle_birth_date IS NULL THEN cattle_age ELSE age(CURRENT_DATE ,date(cattle_birth_date))::text END cattle_age FROM cattle WHERE cattle_system_id = t.cattle_system_id limit 1), COALESCE(substring(prescription_date::text FROM 0 FOR 20),'') prescription_date, ( SELECT first_name || ' ' || last_name FROM auth_user WHERE username = t.submitted_by limit 1)ai_paravet_name, submitted_by, status FROM t WHERE status = ANY('{0,2}')"
+>>>>>>> 4c07ef49940c51133405491ef7d3b46f9ca6783e
     df = pandas.DataFrame()
     df = pandas.read_sql(query,connection)
     advisory_list = json.dumps(__db_fetch_values_dict(query), default=decimal_date_default)
@@ -1152,7 +1175,11 @@ def getAdvisoryData(request):
         filter_query += "and status = " + str(status) + " "
     if ai_paravet != "":
         filter_query += "and submitted_by = '" + str(ai_paravet) + "' and submitted_by != mobile"
+<<<<<<< HEAD
     query = "WITH t AS( SELECT id, created_date appointment_date, ( SELECT created_date FROM prescription WHERE appointment_id = appointment.id limit 1) prescription_date, cattle_system_id, ( select cattle_type from cattle where cattle_system_id = appointment.cattle_system_id limit 1), ( SELECT (json->>'mobile') mobile FROM logger_instance WHERE id = healthrecord_sickness_system_id limit 1), ( SELECT (json->>'_submitted_by') submitted_by FROM logger_instance WHERE id = healthrecord_sickness_system_id limit 1), status FROM appointment WHERE appointment_type =ANY('{1,3}') order by id desc) SELECT id, cattle_system_id, appointment_date::date, ( SELECT first_name || ' ' || last_name FROM auth_user WHERE username = t.mobile limit 1) farmer_name, mobile, ( SELECT label FROM vwcattle_type WHERE value = t.cattle_type limit 1) cattle_type, ( SELECT CASE WHEN cattle_birth_date IS NULL THEN cattle_age ELSE age(CURRENT_DATE ,date(cattle_birth_date))::text END cattle_age FROM cattle WHERE cattle_system_id = t.cattle_system_id limit 1), COALESCE(substring(prescription_date::text FROM 0 FOR 20),'') prescription_date, ( SELECT first_name || ' ' || last_name FROM auth_user WHERE username = t.submitted_by limit 1)ai_paravet_name, submitted_by, status FROM t WHERE status = ANY('{0,2}') "+str(filter_query)
+=======
+    query = "WITH t AS( SELECT id, created_date appointment_date, ( SELECT created_date FROM prescription WHERE appointment_id = appointment.id limit 1) prescription_date, cattle_system_id, ( select cattle_type from cattle where cattle_system_id = appointment.cattle_system_id limit 1), ( SELECT (json->>'mobile') mobile FROM logger_instance WHERE id = healthrecord_sickness_system_id limit 1), ( SELECT (json->>'_submitted_by') submitted_by FROM logger_instance WHERE id = healthrecord_sickness_system_id limit 1), status FROM appointment WHERE appointment_type =1 order by id desc) SELECT id, cattle_system_id, appointment_date::date, ( SELECT first_name || ' ' || last_name FROM auth_user WHERE username = t.mobile limit 1) farmer_name, mobile, ( SELECT label FROM vwcattle_type WHERE value = t.cattle_type limit 1) cattle_type, ( SELECT CASE WHEN cattle_birth_date IS NULL THEN cattle_age ELSE age(CURRENT_DATE ,date(cattle_birth_date))::text END cattle_age FROM cattle WHERE cattle_system_id = t.cattle_system_id limit 1), COALESCE(substring(prescription_date::text FROM 0 FOR 20),'') prescription_date, ( SELECT first_name || ' ' || last_name FROM auth_user WHERE username = t.submitted_by limit 1)ai_paravet_name, submitted_by, status FROM t WHERE status = ANY('{0,2}') "+str(filter_query)
+>>>>>>> 4c07ef49940c51133405491ef7d3b46f9ca6783e
 
     data = json.dumps(__db_fetch_values_dict(query), default=decimal_date_default)
     return HttpResponse(data)
@@ -1249,9 +1276,9 @@ def get_dashboard_content(request):
     paravet_query = "select count(*)from paravet_aitechnician where user_type = 'Paravet' and coalesce(division::text,'') like '"+division+"' and coalesce(district::text,'') like '"+district+"' and  coalesce(upazila::text,'') like '"+upazila+"' and date(submission_time) BETWEEN '"+start_date+"' and '"+end_date+"'"
     ai_query = "select count(*) from paravet_aitechnician where user_type = 'AI Technicians' and coalesce(division::text,'') like '"+division+"' and coalesce(district::text,'') like '"+district+"' and  coalesce(upazila::text,'') like '"+upazila+"' and date(submission_time) BETWEEN '"+start_date+"' and '"+end_date+"'"
     vet_query = "select count(*) from vwuser_org_role where role = 'Veterinary'"
-    cattle_query = "select count(*) from cattle where date(created_date) BETWEEN '"+start_date+"' and '"+end_date+"'"
-    sickness_query = "select count (*) from appointment where appointment_type ='2' and date(created_date) BETWEEN '"+start_date+"' and '"+end_date+"'"
-    husbandry_query = "select count (*) from appointment where appointment_type ='1' or appointment_type ='3'  and date(created_date) BETWEEN '"+start_date+"' and '"+end_date+"'"
+    cattle_query = "select count(*) from vwcattle_farmer where coalesce(division::text,'') like '"+division+"' and coalesce(district::text,'') like '"+district+"' and  coalesce(upazila::text,'') like '"+upazila+"' and  date(created_date) BETWEEN '"+start_date+"' and '"+end_date+"'"
+    sickness_query = "select count (*) from vwcattle_appointment where  coalesce(division::text,'') like '"+division+"' and coalesce(district::text,'') like '"+district+"' and  coalesce(upazila::text,'') like '"+upazila+"' and appointment_type ='2' and date(created_date) BETWEEN '"+start_date+"' and '"+end_date+"'"
+    husbandry_query = "select count (*) from vwcattle_appointment where  coalesce(division::text,'') like '"+division+"' and coalesce(district::text,'') like '"+district+"' and  coalesce(upazila::text,'') like '"+upazila+"' and appointment_type ='1' or appointment_type ='3'  and date(created_date) BETWEEN '"+start_date+"' and '"+end_date+"'"
 
     farmer_count = __db_fetch_single_value(farmer_query )
     paravet_count = __db_fetch_single_value(paravet_query )
@@ -1398,6 +1425,8 @@ def send_push_message(username, notification_type, title, content, cattle_id, fa
         user_information["farm_id"] = ''
         user_information["username"] = username
         user_information["paravet_flag"] = user_profile.is_req_para_ai
+        user_image = get_user_image(user.id)
+        user_information["user_image"] = user_image
 
         data_message = {
             "notif_type": notification_type,
@@ -1458,3 +1487,16 @@ def update_cattle_type(request):
     query = "select update_cattle_type()"
     __db_commit_query(query)
     return HttpResponse('')
+
+
+
+def get_user_image(user_id):
+    query = "select coalesce(user_img,'') from users_additional_info  where user_id = "+str(user_id)+" limit 1 "
+    cursor = connection.cursor()
+    cursor.execute(query)
+    fetchVal = cursor.fetchone()
+    img = ''
+    if fetchVal:
+        img = fetchVal[0]
+    cursor.close()
+    return img

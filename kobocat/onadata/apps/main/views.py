@@ -1651,7 +1651,7 @@ def survey_summary(request):
         owner_data.append(xform.user.username)
         owner_data.append(request.user.username)
         ownership[form_id] = owner_data
-        submission_date_query = "SELECT (json->>'_submission_time')::timestamp::date AS day_of_submission FROM logger_instance WHERE xform_id="+str(xform.id)+""
+        submission_date_query = "SELECT (json->>'_submission_time')::timestamp::date AS day_of_submission FROM logger_instance WHERE deleted_at is null and xform_id="+str(xform.id)+""
         cursor.execute(submission_date_query)
         fetchVal = cursor.fetchall();
         rowcount = cursor.rowcount

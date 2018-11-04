@@ -1,7 +1,7 @@
 {% extends 'base_test.html' %}
 <head>
     <meta charset="utf-8"/>
-    <title>{% block title %}Sickness list{% endblock %}</title>
+    <title>Sickness list</title>
 </head>
 {% load i18n %}
 {% block additional-headers %}
@@ -67,6 +67,7 @@
                             <option value="">Select One</option>
                                 <option value="0">New</option>
                             <option value="2">Prescribed</option>
+                            <option value="4">Viewed</option>
                         </select>
                     </div>
                 </div>
@@ -82,19 +83,17 @@
             </div>
             <br>
         <div id="container"></div>
-            <table id="all_info_table" class="table table-bordered table-striped table-condensed flip-content nowrap">
-                <thead class="flip-content">
-                <tr>
-                    <th>Farmer Name</th>
-                    <th>Farmer Phone No</th>
-                    <th>Cattle Type</th>
-                    <th>Age</th>
-                    <th>Paravet/AI Technician</th>
-                    <th>Phone No</th>
-                    <th>Prescription Date & Time</th>
-                    <th>Created Date</th>
-                    <th>Status</th>
-                    <th>Action</th>
+            <table id="all_info_table" class="table table-bordered table-hover">
+                <thead class="">
+                <tr class="">
+                    <th class="td-center">Farmer Name</th>
+                    <th class="td-center">Farmer's Phone No</th>
+                    <th class="td-center">Cattle Type</th>
+                    <th class="td-center">Paravet/AI Technician</th>
+                    <th class="td-center">Phone No</th>
+                    <th style="width: 70px" class="td-center">Prescription Date & Time</th>
+                    <th  style="width: 83px" class="td-center">Created Date & Time</th>
+                    <th class="td-center">Status</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -156,15 +155,22 @@
 
         for (var idx in sickness_list) {
             if( sickness_list[idx].mobile !=  sickness_list[idx].submitted_by)
-            tbody += '<tr><td>' + sickness_list[idx].farmer_name + '</td><td>' + sickness_list[idx].mobile + '</td><td>' + sickness_list[idx].cattle_type + '</td><td>' + sickness_list[idx].cattle_age + '</td><td>' + sickness_list[idx].ai_paravet_name + '</td><td>' + sickness_list[idx].submitted_by + '</td><td>' + sickness_list[idx].prescription_date + '</td><td>' + sickness_list[idx].created_date + '</td>';
-            else tbody += '<tr><td>' + sickness_list[idx].sickness_listfarmer_name + '</td><td>' + sickness_list[idx].mobile + '</td><td>' + sickness_list[idx].cattle_type + '</td><td>' + sickness_list[idx].cattle_age + '</td><td></td><td></td><td>' + sickness_list[idx].prescription_date + '</td><td>' + sickness_list[idx].created_date + '</td>';
+            tbody += '<tr><td>' + sickness_list[idx].farmer_name + '</td><td>' + sickness_list[idx].mobile + '</td><td>' + sickness_list[idx].cattle_type + '</td><td>' + sickness_list[idx].ai_paravet_name + '</td><td>' + sickness_list[idx].submitted_by + '</td><td>' + sickness_list[idx].prescription_date + '</td><td>' + sickness_list[idx].created_date + '</td>';
+            else tbody += '<tr><td>' + sickness_list[idx].farmer_name + '</td><td>' + sickness_list[idx].mobile + '</td><td>' + sickness_list[idx].cattle_type + '</td><td></td><td></td><td>' + sickness_list[idx].prescription_date + '</td><td>' + sickness_list[idx].created_date + '</td>';
 
-            if ((sickness_list[idx].status == 0) || (sickness_list[idx].status == 1))
-                tbody += '<td><span class="control-label btn btn-primary" style="background-color:#e02222"><b>New</b></span></td>';
+            if ((sickness_list[idx].status == 0))
+                tbody += '<td><a href="/livestock/cattle_profile/' + sickness_list[idx].cattle_system_id + '/'+sickness_list[idx].id +'"><span class="control-label btn btn-primary" style="background-color:#e02222"><b>New</b></span></a></td>';
             else if (sickness_list[idx].status==2)
-                tbody += '<td><span class="control-label btn btn-primary" style="background-color:#0B6623"><b>Prescribed</b></span></td>';
+                tbody += '<td><a href="/livestock/cattle_profile/' + sickness_list[idx].cattle_system_id + '/'+sickness_list[idx].id +'"><span class="control-label btn btn-primary" style="background-color:#0B6623"><b>Prescribed</b></span></a></td>';
+            else if (sickness_list[idx].status==4 || sickness_list[idx].status==1)
+            {
+{#                console.log(sickness_list[idx].status,sickness_list[idx].cattle_system_id,sickness_list[idx].id)#}
+                tbody += '<td><a href="/livestock/cattle_profile/' + sickness_list[idx].cattle_system_id + '/'+sickness_list[idx].id +'"><span class="control-label btn btn-primary" style="background-color:#FFFF00;color:black"><b>Viewed</b></span></a></td>';
+            }
+
+
             else tbody
-            tbody+='<td class="td-center"><a class="tooltips" data-container="body" data-placement="top" data-original-title="View" href="/livestock/cattle_profile/' + sickness_list[idx].cattle_system_id + '/'+sickness_list[idx].id +'"><i class="fa fa-2x fa-file-text"></i></a></td></tr>'
+            tbody+='</tr>'
 
         }
 
@@ -284,23 +290,33 @@
                             '  </div>');
                     },
                 success: function (result) {
-                    console.log(result);
+{#                    console.log(result);#}
                     $('#container').hide();
                     var tbody = '';
 
 
-                    for (var idx in result) {
-                        if (result[idx].mobile != result[idx].submitted_by)
-                            tbody += '<tr><td>' + result[idx].farmer_name + '</td><td>' + result[idx].mobile + '</td><td>' + result[idx].cattle_type + '</td><td>' + result[idx].cattle_age + '</td><td>' + result[idx].ai_paravet_name + '</td><td>' + result[idx].submitted_by + '</td><td>' + result[idx].prescription_date + '</td><td>' + sickness_list[idx].created_date + '</td>';
-                        else tbody += '<tr><td>' + result[idx].farmer_name + '</td><td>' + result[idx].mobile + '</td><td>' + result[idx].cattle_type + '</td><td>' + result[idx].cattle_age + '</td><td></td><td></td><td>' + result[idx].prescription_date + '</td><td>' + sickness_list[idx].created_date + '</td>';
-                        if ((result[idx].status == 0) || (result[idx].status == 1))
-                            tbody += '<td><span class="control-label btn btn-primary" style="background-color:#e02222"><b>New</b></span></td>';
-                        else if (result[idx].status == 2)
-                            tbody += '<td><span class="control-label btn btn-primary" style="background-color:#0B6623"><b>Prescribed</b></span></td>';
-                        else tbody
-                        tbody += '<td class="td-center"><a class="tooltips" data-container="body" data-placement="top" data-original-title="View" href="/livestock/cattle_profile/' + result[idx].cattle_system_id + '/' + result[idx].id + '"><i class="fa fa-2x fa-file-text"></i></a></td></tr>'
+                    var sickness_list = result;
 
-                    }
+        for (var idx in sickness_list) {
+            if( sickness_list[idx].mobile !=  sickness_list[idx].submitted_by)
+            tbody += '<tr><td>' + sickness_list[idx].farmer_name + '</td><td>' + sickness_list[idx].mobile + '</td><td>' + sickness_list[idx].cattle_type + '</td><td>' + sickness_list[idx].ai_paravet_name + '</td><td>' + sickness_list[idx].submitted_by + '</td><td>' + sickness_list[idx].prescription_date + '</td><td>' + sickness_list[idx].created_date + '</td>';
+            else tbody += '<tr><td>' + sickness_list[idx].farmer_name + '</td><td>' + sickness_list[idx].mobile + '</td><td>' + sickness_list[idx].cattle_type + '</td><td></td><td></td><td>' + sickness_list[idx].prescription_date + '</td><td>' + sickness_list[idx].created_date + '</td>';
+
+            if ((sickness_list[idx].status == 0))
+                tbody += '<td><a href="/livestock/cattle_profile/' + sickness_list[idx].cattle_system_id + '/'+sickness_list[idx].id +'"><span class="control-label btn btn-primary" style="background-color:#e02222"><b>New</b></span></a></td>';
+            else if (sickness_list[idx].status==2)
+                tbody += '<td><a href="/livestock/cattle_profile/' + sickness_list[idx].cattle_system_id + '/'+sickness_list[idx].id +'"><span class="control-label btn btn-primary" style="background-color:#0B6623"><b>Prescribed</b></span></a></td>';
+            else if (sickness_list[idx].status==4 || sickness_list[idx].status==1)
+            {
+{#                console.log(sickness_list[idx].status,sickness_list[idx].cattle_system_id,sickness_list[idx].id)#}
+                tbody += '<td><a href="/livestock/cattle_profile/' + sickness_list[idx].cattle_system_id + '/'+sickness_list[idx].id +'"><span class="control-label btn btn-primary" style="background-color:#FFFF00;color:black"><b>Viewed</b></span></a></td>';
+            }
+
+
+            else tbody
+            tbody+='</tr>'
+
+        }
 
 
 
@@ -326,7 +342,7 @@
         }
 
         function datatable_reitialize() {
-            return $('#all_info_table').DataTable({
+            table = $('#all_info_table').DataTable({
                 "scrollX": true, "ordering": false
 {#                ,deferRender: true,#}
 {#                dom: 'Bfrtip',#}
@@ -340,6 +356,7 @@
 {#                ]#}
 
             });
+            return table;
         }
 
         function ajaxcall() {

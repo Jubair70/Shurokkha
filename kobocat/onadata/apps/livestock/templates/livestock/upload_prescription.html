@@ -14,6 +14,26 @@
     .thumbnail{
         border: 0;
     }
+    .loader {
+  border: 16px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 16px solid #3498db;
+  width: 120px;
+  height: 120px;
+  -webkit-animation: spin 2s linear infinite; /* Safari */
+  animation: spin 2s linear infinite;
+}
+
+/* Safari */
+/*@-webkit-keyframes spin {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}*/
 
     </style>
 
@@ -44,6 +64,7 @@
                     <div class="row"><div id="error_msg_upload" style="color:red;margin-left: 10px;margin-top: 10px;"> </div></div>
             <div id="success_msg_upload">
                     </div>
+            <div id="loading"></div>
                     <div class="row">
                         <div class="col-md-4">
                             <div class="form-group">
@@ -95,7 +116,6 @@
         //  Page Loading First Time
 
         $(document).ready(function () {
-            get_approval_table()
             $('#date_range').daterangepicker({ showDropdowns: true,maxDate: new Date()});
 
         });
@@ -110,16 +130,57 @@
             contentType: false,
             processData: false,
             data: data,
-            success: function (data) {
+            beforeSend: function () {
+                    $('#error_msg_upload').html("");
                 $('#success_msg_upload').html("");
-               $('#success_msg_upload').html('<div class="alert alert-success fade in alert-dismissible"><strong>Success!</strong> Successfully uploaded</div>');
+                 $('#loading').show();
+                    $("#loading").html('<h3>Please wait......</h3></div>\n' +
+                            '  ');
+                    },
+
+            success: function (data) {
+                $('#loading').html("")
+                $('#error_msg_upload').html("")
+                $('#success_msg_upload').html("");
+                $('#success_msg_upload').html('<div class="alert alert-success fade in alert-dismissible"><strong>Success!</strong> Successfully uploaded</div>');
 
             },
             error: function (xhr, status, error) {
+                $('#loading').html("")
+                $('#success_msg_upload').html("");
                 $('#error_msg_upload').html("<h5><strong>"+xhr.responseText+"</strong></h5>");
             }
         }); //ajax end
     });
+
+
+
+      function ajaxcall() {
+            $.ajaxSetup({
+                beforeSend: function (xhr, settings) {
+                    function getCookie(name) {
+                        var cookieValue = null;
+                        if (document.cookie && document.cookie != '') {
+                            var cookies = document.cookie.split(';');
+                            for (var i = 0; i < cookies.length; i++) {
+                                var cookie = jQuery.trim(cookies[i]);
+                                // Does this cookie string begin with the name we want?
+                                if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                    break;
+                                }
+                            }
+                        }
+                        return cookieValue;
+                    }
+
+                    if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+                        // Only send the token to relative URLs i.e. locally.
+                        xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                    }
+                }
+            });
+        }
 </script>
 
 {% endblock %}

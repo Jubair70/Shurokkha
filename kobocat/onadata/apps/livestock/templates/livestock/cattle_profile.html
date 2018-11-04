@@ -815,11 +815,12 @@
                 $('#suggest_prescription_button_div').hide()
             }
         if ((appointment_type == 2)){
-            if(appointment_status == 1){
+            /*if(appointment_status == 1){
                 $('#clinical_findings_div').show();
                 $('#prescription').hide();
-            }
+            }*/
             if(appointment_status == 1){
+                $('#clinical_findings_div').show();
                 if ('{{ clinical_findings_data }}'){
                     $('#clinical_findings_id_prescription').val('{{ clinical_findings_data.id }}')
                     $('#clinical_findings_id').val('{{ clinical_findings_data.id }}')
@@ -857,7 +858,7 @@
             }
         }
         if (((appointment_type == 1) || (appointment_type == 3))){
-            if(appointment_status == 0){
+            if((appointment_status == 0) || ((appointment_status == 4))){
                 $('#clinical_findings_div').hide();
                 $('#prescription').show();
                 $('#suggest_prescription_button_div').hide();

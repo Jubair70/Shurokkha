@@ -30,6 +30,8 @@ from datetime import date, timedelta, datetime
 from pyfcm import FCMNotification
 import requests
 from django.views.decorators.csrf import csrf_exempt
+from onadata.apps.livestock.tasks import prescription_upload
+
 
 
 push_service = FCMNotification(api_key="AAAA1dBJQYk:APA91bGQf5qjEkdhxxcjnvodj-xMKVWmRPQ2UbBw_qsp4XlxGratkzemLNbF6JYnTIZ1jfRIZ-1e1IaqSZctL_n_i338zF5_5swkRBAiW0PEc4fW_DOl-03jq-aKLKOfOVcHcZMqDLctAXVKOT-kx4XdRRekuIofqg")
@@ -404,6 +406,10 @@ def upload_prescription(request):
         des = filePath
         xlsx = pd.ExcelFile(des)  # open the file
         df = xlsx.parse(0)  # get the first sheet as an object
+        async_result = prescription_upload.delay(df,request.user.id)
+        return_value = async_result.get()
+        print return_value
+        '''
         df = df.fillna({'Medicine Type':0,'Type':0,'Advices' :0,'Dose' : 0,'Route' : 0,'Days' :0,'Medine Name' : 0}, inplace=True)
 
         duplicate_diagnosis = []
@@ -489,20 +495,18 @@ def upload_prescription(request):
             duplicate_item = ", ".join(x for x in duplicate_diagnosis)
             #duplicate_item = duplicate_item + " already exist."
             return HttpResponse(json.dumps(duplicate_item), content_type="application/json", status=500)
+    '''
+        if return_value == 1:
+            return HttpResponse(json.dumps('ok'), content_type="application/json", status=200)
+        else:
+            return HttpResponse(json.dumps('Error Occured.'), content_type="application/json", status=500)
+
+
 
     return render(request,'livestock/upload_prescription.html')
 
 
 
-def delete_duplicate_presciption_diagnosis(data):
-    for tmp in data:
-        delete_advice_q = "delete from diagnosis_advice where diagnosis_id = " + str(tmp['id'])
-        __db_commit_query(delete_advice_q)
-        delete_medicine_q = "delete from diagnosis_medicine where diagnosis_id = " + str(tmp['id'])
-        __db_commit_query(delete_medicine_q)
-        delete_q = "delete from diagnosis where id = "+str(tmp['id'])
-        __db_commit_query(delete_q)
-    return "1"
 
 
 @login_required
@@ -540,6 +544,13 @@ def get_clinical_findings(request):
 
 @login_required
 def cattle_profile(request,cattle_id,appointment_id):
+    #If the case is new ,it set to be view  :: status=4
+    '''
+    if appointment_id !=0:
+        app_status = __db_fetch_single_value("select status from appointment where id = "+str(appointment_id) )
+        if app_status == 0:
+            __db_commit_query("update appointment set status = 4  where id = "+str(appointment_id) )
+    '''
     division_q = "select distinct division as name, div_code id from vwunion_code"
     div_list = makeTableList(division_q)
     q = "select *,date(created_date)::text c_date from appointment where id=" + str(appointment_id)

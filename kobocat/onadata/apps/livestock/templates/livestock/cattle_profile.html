@@ -105,6 +105,11 @@
 
               <p class="ml-2" id="health_date" >Date: </p>
                 <a id="health_right" class="btn btn-success p-3 pull-right"><i class="fa fa-angle-right"></i></a>
+                <audio controls>
+  <source src="/media/sh_admin/attachments/1531898426179.mp3" type="audio/mp3">
+
+Your browser does not support the audio element.
+</audio>
 {#                <p class="float-right mr-3 mt-3">Health Records</p>#}
             </div>
 
@@ -244,6 +249,7 @@
             <!-- date bloc start-->
 
             <div class="date-block pt-2">
+
               <p class="ml-3 mt-2" style=" padding-left: 90px;">Clinical Findings</p>
             </div>
             <p class="px-3 py-3"  style="overflow-y: scroll; height: 338px" id="clinical_findings"></p>
@@ -263,16 +269,22 @@
             <div class="card">
 
                 <h3 style="padding: 8px 0px 0px 10px;">Sickness image:</h3>
-              <div class="card-body pb-4"  style="overflow:scroll;height: 143px;">
+              <div class="card-body pb-4"  style="height: 175px; padding-top: 1px; background-color: #d1d1d1;">
+<div id="sickness_image_carousel" class="carousel slide" data-ride="carousel" style="width: 290px ">
 
-                  {% for data in sickness_images %}
-                <!--<img src="{{ data.picture_sinckness_sign }}" class="img-fluid"  alt="">-->
-                      <img height="200px"  width="auto" src="{{ data.picture_sinckness_sign }}">
-                        <div style="margin-bottom:10px"></div>
-                  {% endfor %}
-                <div class="card-text float-right">
-                  <!--<h4 class="mt-5">Sickness Image</h4>-->
-                </div>
+
+  <div class="carousel-inner" id="sickness-inner" style="text-align: center;min-height: 173px;">
+
+  </div>
+  <a class="carousel-control-prev" href="#sickness_image_carousel" style="color:yellowgreen!important;" role="button" data-slide="prev">
+    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+    <span class="sr-only">Previous</span>
+  </a>
+  <a class="carousel-control-next" href="#sickness_image_carousel" role="button" data-slide="next">
+    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+    <span class="sr-only">Next</span>
+  </a>
+</div>
               </div>
 
 
@@ -804,7 +816,7 @@
         var cattle_type_text = '{{ cattle_type_text }}'
         var cattle_age = '{{ cattle_age }}'
         var cattle_id = {{ cattle_id }}
-        console.log(cattle_id)
+{#        console.log(cattle_id)#}
         var appointment_id = {{ appointment_id }}
         var cattle_type = {{ cattle_type }}
         var appointment_status = {{ appointment_status }}
@@ -876,14 +888,14 @@
 
 
         if (cattle_type == 1){
-            console.log("1")
+{#            console.log("1")#}
             $('#q_reproductive_problem').show()
             $('#q_milking_problem').hide()
             $('#q_male_reproductive_problem').hide()
         }
 
         if (cattle_type == 2){
-            console.log("2")
+{#            console.log("2")#}
             $('#q_reproductive_problem').show()
             $('#q_milking_problem').show()
              $("#reproductive_problem").prop('required',true);
@@ -892,14 +904,14 @@
         }
 
         if (cattle_type == 3){
-            console.log("3")
+{#            console.log("3")#}
             $('#q_reproductive_problem').hide()
             $('#q_milking_problem').hide()
             $('#q_male_reproductive_problem').show()
         }
 
         if (cattle_type == 4){
-            console.log("4")
+{#            console.log("4")#}
             $('#q_reproductive_problem').hide()
             $('#q_milking_problem').hide()
             $('#q_male_reproductive_problem').hide()
@@ -952,7 +964,7 @@
                                 },
                                 type : "POST",
                                 success: function( data ) {
-                                    console.log(data)
+{#                                    console.log(data)#}
                                      $.each(data, function(i, item) {
                                          output.push( item.medicine_name );
                                      });
@@ -979,7 +991,7 @@
                                 },
                                 type : "POST",
                                 success: function( data ) {
-                                    console.log(data)
+{#                                    console.log(data)#}
                                      $.each(data, function(i, item) {
                                          output.push( item.m_type );
                                      });
@@ -1006,7 +1018,7 @@
                                 },
                                 type : "POST",
                                 success: function( data ) {
-                                    console.log(data)
+{#                                    console.log(data)#}
                                      $.each(data, function(i, item) {
                                          output.push( item.packsize );
                                      });
@@ -1108,18 +1120,18 @@
     }
 
     function get_suggested_prescription(type,weight,diagnosis) {
-        console.log(type)
-        console.log(weight)
-        console.log(diagnosis)
+{#        console.log(type)#}
+{#        console.log(weight)#}
+{#        console.log(diagnosis)#}
 
         $.ajax({
                 type: 'POST',
                 url: '/livestock/get_suggested_prescription/',
                 data: {'cattle_type' : type, 'weight' : weight, 'diagnosis' : diagnosis},
                 success: function (data) {
-                    console.log(data.a_data);
-                    console.log("*************************************");
-                    console.log(data.m_data);
+{#                    console.log(data.a_data);#}
+{#                    console.log("*************************************");#}
+{#                    console.log(data.m_data);#}
                     //$('.loop_class input[value=""]').remo()
                      /*$('div.loop_class :input').filter('input:text[value=""]')
                    .parent(':first')
@@ -1132,12 +1144,12 @@
                         $.each(data.m_data, function(i, item) {
                             m_p_1 = item.mpart_1
                             m_p_2 = item.mpart_2
-                            console.log(arr)
+{#                            console.log(arr)#}
                             var arr = [m_p_1, m_p_2];
                             i=0;
                             $("#loop").clone().appendTo("#container_loop").find('input').each(function (e){
                                 $(this).val(arr[i]);
-                                console.log(arr[i])
+{#                                console.log(arr[i])#}
                                 i++;
                             });
                             $(this).focus().select();
@@ -1167,17 +1179,17 @@
 
 
     function get_old_prescription(cattle_id) {
-        console.log("Trigger old prescription");
+{#        console.log("Trigger old prescription");#}
 
         $.ajax({
                 type: 'POST',
                 url: '/livestock/get_old_prescription/'+cattle_id+'/',
                 success: function (data) {
-                    console.log("data")
-                    console.log(data)
+{#                    console.log("data")#}
+{#                    console.log(data)#}
                     $("#old_prescription_div").html(data);
                     $("#old_prescription_head").html("<h2>Old Prescription</h2>");
-                    console.log("data ended________________________________")
+{#                    console.log("data ended________________________________")#}
                 },
                 error: function (xhr, status, error) {
 
@@ -1208,7 +1220,7 @@
                 'division' : division,'district':district,'upazila' : upazila
             },
             success: function (data) {
-                console.log(data)
+{#                console.log(data)#}
                 $('#add_loc_modal').modal('toggle');
                 $('#addModal').modal('show');
                 $('#add_location_btn').text('Edit Location');
@@ -1282,7 +1294,7 @@
                 },
                 success: function (data) {
                    list = JSON.parse(data)
-                    console.log(list)
+{#                    console.log(list)#}
                     $('#upazila').find('option').remove()
                     $('#upazila').append('<option value = "">Select One </option>')
 
@@ -1327,6 +1339,7 @@ $(window).on('load', function() {
     var sickness_data = [];
     var reproduction_data = [];
     var health_dates = [];
+    var sickness_images_path = "/media/sh_admin/attachments/"
 
     var data = {{ data |safe }};
 
@@ -1390,6 +1403,9 @@ $(window).on('load', function() {
 
     if(sickness_data.length)
     {
+{#        console.log(sickness_data[0].images);#}
+        $('#sickness-inner').html(sickness_data[0].images);
+        $('#sickness-inner').children( "div:first" ).addClass("active");
         date_set(sickness_data,sickness_date,0);
         content_set(sickness_data,sickness,0);
         ajaxcall();
@@ -1484,6 +1500,9 @@ $(window).on('load', function() {
             {
                 $('#sickness_date').text('Date: ' + sickness_data[sickness_index].rpt_date);
                 content_set(sickness_data, sickness, sickness_index);
+                $('#sickness-inner').html(sickness_data[sickness_index].images);
+                $('#sickness-inner').children( "div:first" ).addClass("active");
+
                 ajaxcall();
                    logger_id =  sickness_data[sickness_index].logger_id;
 
@@ -1507,6 +1526,8 @@ $(window).on('load', function() {
             {
                 $('#sickness_date').text('Date: ' + sickness_data[sickness_index].rpt_date);
                    content_set(sickness_data, sickness, sickness_index);
+                   $('#sickness-inner').html(sickness_data[sickness_index].images);
+                    $('#sickness-inner').children( "div:first" ).addClass("active");
                    ajaxcall();
                    logger_id =  sickness_data[sickness_index].logger_id;
 
@@ -1552,7 +1573,7 @@ $(window).on('load', function() {
         $(document).on("submit", "#prescription_form", function (event) {
             event.preventDefault();
             form_url = $(this).attr('action');
-            console.log(form_url)
+{#            console.log(form_url)#}
             var data = new FormData(this); // <-- 'this' is form element
             //return formData;
             if(confirm("Are you sure  to submit the prescription?")){
@@ -1599,7 +1620,7 @@ $(window).on('load', function() {
      $(document).on("submit", "#send_pres_form", function (event) {
         event.preventDefault();
         form_url = $(this).attr('action');
-        console.log(form_url)
+{#        console.log(form_url)#}
         var data = new FormData(this); // <-- 'this' is form element
         //return formData;
         if(confirm("Are you sure  to send  the prescription?")){

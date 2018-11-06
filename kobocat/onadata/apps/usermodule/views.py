@@ -217,10 +217,16 @@ def register(request):
         # Print problems to the terminal.
         # They'll also be shown to the user.
         else:
+            query_for_supervisor = "select (select (select username from auth_user where id = user_id)user_id from usermodule_usermoduleprofile where id = t.user_id)user_id,(select (select first_name || ' ' || last_name from auth_user where id = user_id)user_id from usermodule_usermoduleprofile where id = t.user_id)username from usermodule_userrolemap t where role_id = 53"
+            df = pandas.DataFrame()
+            df = pandas.read_sql(query_for_supervisor, connection)
+            user_id = df.user_id.tolist()
+            username = df.username.tolist()
+            supervisors = zip(user_id, username)
             #print user_form.errors, profile_form.errors
             return render_to_response(
                 'usermodule/register.html',
-                {'user_form': user_form, 'profile_form': profile_form},
+                {'user_form': user_form, 'profile_form': profile_form,'supervisors':supervisors},
                 context)
             # profile_form = UserProfileForm(admin_check=admin_check)
 

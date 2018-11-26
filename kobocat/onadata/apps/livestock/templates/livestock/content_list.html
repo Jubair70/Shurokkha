@@ -73,47 +73,34 @@
         });
 
 
-    function get_content_table(){
-        $.ajax({
-            url: '/livestock/get_content_table/',
-            type: 'POST',
-
-            success: function (data) {
-                $("#content_table_block").html(data);
-                $('#content_table').dataTable({
-                            "retrieve": true,
-                            "bFilter": true,
-                            "paging": true,
-                            "scrollCollapse": true,
-                            select: true,
-                            // dom: 'Bfrtip',
-                            dom: 'Blfrtip',
-                            buttons: [{extend: 'excel', text: "Export to excel", title: 'Direct Beneficiary list'}],
-                            ordering: true,
-                            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
-                            "scrollX": true
-
-                        });
-
-            }
-        });
-    //}
-    }
-
-
-
-     function delete_entity(id) {
-         if(confirm("Are you sure you want to approve this?")){
+        function get_content_table(){
             $.ajax({
-                type : 'POST',
-                url : "/livestock/delete_content/"+id+"/",
-                success : function(data) {
-                    get_content_table();
+                url: '/livestock/get_content_table/',
+                type: 'POST',
+
+                success: function (data) {
+                    $("#content_table_block").html(data);
+                    $('#content_table').dataTable({
+                                "retrieve": true,
+                                "bFilter": true,
+                                "paging": true,
+                                "scrollCollapse": true,
+                                select: true,
+                                // dom: 'Bfrtip',
+                                dom: 'Blfrtip',
+                                buttons: [{extend: 'excel', text: "Export to excel", title: 'Direct Beneficiary list'}],
+                                ordering: true,
+                                "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+                                "scrollX": true
+
+                            });
+
                 }
-            }); //ajax end
+            });
+        //}
         }
 
-     }
+
 
 
 

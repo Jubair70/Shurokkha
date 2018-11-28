@@ -1,38 +1,31 @@
-
-
-{% if prescription_data_list%}
+{% if prescription_data_list %}
     {% for data in prescription_data_list %}
-
-
         <div class="col-12">
-                <h3>Prescription:</h3>
-                <p>খামারী : {{ data.prescription.farmer_name }}, তারিখ: {{ data.prescription.created_date | safe }} </p>
-                <p>গরু: {{ data.prescription.cattle_type }}, {{ data.prescription.age_year }} বছর {{ data.prescription.age_month }} মাস {{ data.prescription.age_day }} days</p>
-                <h3>Rx:</h3>
-
-                    <p> {{ data.prescription.mp_1 }}</p>
-                    <p> {{ data.prescription.mp_2 }}</p>
-
-                <!--<p> 2. medicine 1 syringe, rbtpp</p>
-                <p> 2 doses, 3 times a day</p>-->
-              </div>
-              <div class="col-12">
-
-                <h3>Advice:</h3>
-                 <p>{{ data.prescription.advice }}</p>
-
-                 <h4>{{ data.prescription.next_appointment_after }} দিন পর পুনরায় তথ্য পাঠিয়ে ডাক্তারের সাথে যোগাযোগ করুন</h4>
-              </div>
-
-              <div class="col-md-2 col-sm-12" style=" text-align: center; padding-bottom: 100px; float: right"><img src="{{ data.prescription.signature_img }}" width="200" height="74"><br>{{ data.prescription.prescribey_by }}</div>
-
-
-
-                <div class="col-md-12" style="margin-bottom: 100px"></div>
-
-{% endfor %}
-
-              <div class="col-md-12 col-sm-12" style=" text-align: center; padding: 50px; margin-top:150px;">জরুরী প্রয়জনে ০১২৪৫৮৭৯৬৫২ নাম্বারে যোগাযোগ করুন </div>
-            <!-- Prescription panel end-->
-
- {% endif %}
+            <p>তারিখ: &nbsp;{{ data.prescription.created_date | safe }}</p>
+            <p>খামারী: &nbsp;{{ data.prescription.farmer_name }}</p>
+            <p>গরু: &nbsp;&nbsp;&nbsp;&nbsp;{{ data.prescription.cattle_type }}</p>
+            <p>বয়স: &nbsp;&nbsp;&nbsp;{{ data.prescription.age_year }} বছর {{ data.prescription.age_month }}
+                মাস {{ data.prescription.age_day }} days</p><br>
+            <h3>Rx:</h3>
+            <p> {{ data.prescription.mp_1|safe }}</p>
+            <p> {{ data.prescription.mp_2 }}</p>
+            <br>
+            <!--<p> 2. medicine 1 syringe, rbtpp</p>
+            <p> 2 doses, 3 times a day</p>-->
+        </div>
+        <div class="col-12">
+            <h3>Advice:</h3>
+            <p>{{ data.prescription.advice }}</p>
+            <p>{{ data.prescription.next_appointment_after }} দিন পর পুনরায় তথ্য পাঠিয়ে ডাক্তারের সাথে যোগাযোগ
+                করুন</p>
+        </div>
+        <div class="col-md-2 col-sm-12" style=" text-align: center; padding-bottom: 100px;padding-top: 19px;"><img
+                src="{{ data.prescription.signature_img }}"
+                style="max-width: 150px">&nbsp;{{ data.prescription.prescribey_by }}</div>
+        <div class="col-md-12"></div>
+    {% endfor %}
+    <div class="col-md-12 col-sm-12" style=" text-align: center; padding: 50px; margin-top:100px;">জরুরী প্রয়োজনে
+        ০১২৪৫৮৭৯৬৫২ নাম্বারে যোগাযোগ করুন
+    </div>
+    <!-- Prescription panel end-->
+{% endif %}

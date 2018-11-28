@@ -18,7 +18,7 @@
   <link href="/static/bootstrap4/css/sb-admin.min.css" rel="stylesheet">
     <link href="/static/bootstrap4/css/sb-admin.css" rel="stylesheet">
     <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-
+    <link rel="stylesheet" media="all" type="text/css" href="/static/css/jquery-rebox.css" />
 
 
     <style type="text/css">
@@ -98,18 +98,15 @@
             </div>
 
             <!-- date bloc start-->
-              <span class="control-label btn btn-primary" style="cursor: default;background-color: #00b755; margin-top: 10px;width: 100%; font-size: 14px;" data-original-title="" title=""><b>Health Records</b></span>
+              <span class="control-label btn btn-primary" id="health_records_span" style="background-color: #00b755; margin-top: 10px;width: 100%; font-size: 14px;" data-original-title="" title=""><b>Health Records</b></span>
+          <div id="health_records_block">
+
             <div class="date-block mt-3">
 
                 <a id="health_left" class="btn btn-success p-3 "><i class="fa fa-angle-left"></i></a>
 
               <p class="ml-2" id="health_date" >Date: </p>
                 <a id="health_right" class="btn btn-success p-3 pull-right"><i class="fa fa-angle-right"></i></a>
-                <audio controls>
-  <source src="/media/sh_admin/attachments/1531898426179.mp3" type="audio/mp3">
-
-Your browser does not support the audio element.
-</audio>
 {#                <p class="float-right mr-3 mt-3">Health Records</p>#}
             </div>
 
@@ -161,20 +158,27 @@ Your browser does not support the audio element.
                 </div>
               </div>
             </div>
+      <div  id="health_records_audio" style="padding-top: 6px;">
+
+      </div>
+
+          </div>
 
             <!-- info collapse end-->
 
             <!-- date bloc start-->
-            <span class="control-label btn btn-primary" style="cursor: default;background-color: #00b755; margin-top: 10px;width: 100%; font-size: 14px;" data-original-title="" title=""><b>Reproduction</b></span>
-            <div class="date-block mt-3">
-
+            <span class="control-label btn btn-primary" id="reproduction_span" style="background-color: #00b755; margin-top: 10px;width: 100%; font-size: 14px;" data-original-title="" title=""><b>Reproduction</b></span>
+            <div id="reproduction_block">
+              <div class="date-block mt-3">
                 <a id="reproduction_left" class="btn btn-success p-3 "><i class="fa fa-angle-left"></i></a>
-
-
               <p class="ml-2" id="reproduction_date">Date: </p>
                   <a id="reproduction_right" class="btn btn-success p-3 pull-right"><i class="fa fa-angle-right"></i></a>
             </div>
-              <p class="px-3 py-3" style="overflow-y: scroll; height: 330px" id="reproduction"></p>
+              <p class="px-3 py-3" style="overflow-y: scroll; height: 423px;" id="reproduction"></p>
+                 <div id="reproduction_audio" style="padding-top: 6px;">
+
+      </div>
+            </div>
             <!-- date bloc end-->
 
              <!-- info collapse start-->
@@ -201,11 +205,13 @@ Your browser does not support the audio element.
 
 
               <div id="carouselExampleControls" class="carousel slide" data-ride="carousel">
-                      <div class="carousel-inner">
+                      <div class="carousel-inner gallery" id="cattle_image_inner">
                           {% for img in cattle_img_list %}
                         <div class="carousel-item {% if forloop.first %} active{% endif %}">
-
+                            <a href="{{ img }}">
                         <img height="123px" width ="100px" src="{{ img }}" alt="First slide"  class="">
+                            </a>
+
                         </div>
                           {% endfor %}
 
@@ -233,14 +239,17 @@ Your browser does not support the audio element.
 
 
             <!-- date bloc start-->
-            <span class="control-label btn btn-primary" style="cursor: default;background-color: #00b755; margin-top: 10px;width: 100%; font-size: 14px;" data-original-title="" title=""><b>Sickness</b></span>
-            <div class="date-block mt-3">
+            <span class="control-label btn btn-primary" id="sickness_span"  style="background-color: #00b755; margin-top: 14px;width: 100%; font-size: 14px;" data-original-title="" title=""><b>Sickness</b></span>
+          <div id="sickness_block">
+               <div class="date-block mt-3">
               <a id="sickness_left" class="btn btn-success p-3 "><i class="fa fa-angle-left"></i></a>
               <p class="ml-2" id="sickness_date">Date: </p>
               <a id="sickness_right" class="btn btn-success p-3 pull-right"><i class="fa fa-angle-right"></i></a>
             </div>
             <p class="px-3 py-3" id="sickness" style="overflow-y: scroll; height: 180px"></p>
+<div id="sickness_audio" style="padding-top: 6px;">
 
+      </div>
 
             <!-- date bloc end-->
 
@@ -252,10 +261,13 @@ Your browser does not support the audio element.
 
               <p class="ml-3 mt-2" style=" padding-left: 90px;">Clinical Findings</p>
             </div>
-            <p class="px-3 py-3"  style="overflow-y: scroll; height: 338px" id="clinical_findings"></p>
+            <p class="px-3 py-3"  style="overflow-y: scroll; height: 303px" id="clinical_findings"></p>
 {#            <p class="px-3">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.</p>#}
 
             <!-- date bloc end-->
+
+          </div>
+
 
           </div>
         </div>
@@ -268,26 +280,29 @@ Your browser does not support the audio element.
           <div class="veterinarian-box">
             <div class="card">
 
-                <h3 style="padding: 8px 0px 0px 10px;">Sickness image:</h3>
-              <div class="card-body pb-4"  style="height: 175px; padding-top: 1px; background-color: #d1d1d1;">
-<div id="sickness_image_carousel" class="carousel slide" data-ride="carousel" style="width: 290px ">
+
+                <div class="card-body pb-4" style="height: 175px; padding-top: 1px; background-color: #d1d1d1;">
+                    <div id="sickness_image_carousel" class="carousel slide" data-ride="carousel" style="width: 290px ">
 
 
-  <div class="carousel-inner" id="sickness-inner" style="text-align: center;min-height: 173px;">
+                        <div class="carousel-inner gallery" id="sickness-inner" style="text-align: center;min-height: 173px;">
 
-  </div>
-  <a class="carousel-control-prev" href="#sickness_image_carousel" style="color:yellowgreen!important;" role="button" data-slide="prev">
-    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-    <span class="sr-only">Previous</span>
-  </a>
-  <a class="carousel-control-next" href="#sickness_image_carousel" role="button" data-slide="next">
-    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-    <span class="sr-only">Next</span>
-  </a>
-</div>
-              </div>
+                        </div>
+                        <a class="carousel-control-prev" href="#sickness_image_carousel"
+                           style="color:yellowgreen!important;" role="button" data-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="sr-only">Previous</span>
+                        </a>
+                        <a class="carousel-control-next" href="#sickness_image_carousel" role="button"
+                           data-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="sr-only">Next</span>
+                        </a>
+                    </div>
 
+                </div>
 
+                    <div id="pay_div" style="padding-top: 4px; padding-left: 3px;"></div>
             <!-- date bloc start-->
             <div id = "clinical_findings_div">
 
@@ -297,7 +312,7 @@ Your browser does not support the audio element.
             <!-- date bloc end-->
 
             <!-- clinical finding form start-->
-            <form style="overflow-y: scroll; height: 606px" id="clinical_diagnosis_form" class="py-3 px-3" action="/livestock/clinical_findings/{{ appointment_id }}" method="post">
+            <form style="overflow-y: scroll; max-height: 537px;" id="clinical_diagnosis_form" class="py-3 px-3" action="/livestock/clinical_findings/{{ appointment_id }}" method="post">
             {% csrf_token %}
             <input type="hidden" value="" id="clinical_findings_id" name = "clinical_findings_id">
 
@@ -581,7 +596,7 @@ Your browser does not support the audio element.
 
     <!--old prescription load-->
         <div id="old_prescription_head"></div>
-<div id = "old_prescription_div" style="overflow-y: scroll;  height:301px;margin-top:30px">
+<div id = "old_prescription_div" style="margin-top:30px">
 
 
 
@@ -600,9 +615,9 @@ Your browser does not support the audio element.
       </div>
     </footer>-->
     <!-- Scroll to Top Button-->
-    <a class="scroll-to-top rounded" href="#page-top">
-      <i class="fa fa-angle-up"></i>
-    </a>
+{#    <a class="scroll-to-top rounded" href="#page-top">#}
+{#      <i class="fa fa-angle-up"></i>#}
+{#    </a>#}
     <!-- Logout Modal-->
     <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
       <div class="modal-dialog" role="document">
@@ -807,9 +822,13 @@ Your browser does not support the audio element.
     <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-multiselect.js"></script>
 
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script type="text/javascript" src="/static/js/jquery-litelighter.js"></script>
+		<script type="text/javascript" src="/static/js/jquery-rebox.js"></script>
     
 
     <script>
+        $('#sickness-inner').rebox({ selector: 'a' });
+        $('#cattle_image_inner').rebox({selector: 'a'});
         var appointment_creation_date = '{{c_date | safe}}'
         var farmer_mobile = '{{ mobile }}'
         var farmer_name = '{{ farmer_name }}'
@@ -918,7 +937,7 @@ Your browser does not support the audio element.
         }
 
         $(document).ready(function () {
-            get_old_prescription(cattle_id);
+{#            get_old_prescription(cattle_id);#}
             $('.multiselect_class').multiselect({
                 onDropdownHidden: function(event) {
                 //alert('Dropdown closed.');
@@ -1186,9 +1205,11 @@ Your browser does not support the audio element.
                 url: '/livestock/get_old_prescription/'+cattle_id+'/',
                 success: function (data) {
 {#                    console.log("data")#}
-{#                    console.log(data)#}
+                    console.log(data.length)
                     $("#old_prescription_div").html(data);
-                    $("#old_prescription_head").html("<h2>Old Prescription</h2>");
+                    if(data.length>2)
+                    $("#old_prescription_head").html("<br><h2 style=\"color:#17a2b8\"><strong>Previous Prescription</strong></h2>");
+                    else $("#old_prescription_head").html("");
 {#                    console.log("data ended________________________________")#}
                 },
                 error: function (xhr, status, error) {
@@ -1342,25 +1363,21 @@ $(window).on('load', function() {
     var sickness_images_path = "/media/sh_admin/attachments/"
 
     var data = {{ data |safe }};
+    console.log(data);
 
     for(idx in data)
     {
         if(data[idx].title=='feeding_information')
         {
-            if(!health_dates.includes(data[idx].rpt_date))
-                health_dates.push(data[idx].rpt_date);
+            health_dates.push(data[idx].rpt_date);
             feeding_information_data.push(data[idx]);
         }
         else if( data[idx].title=='milk_production' )
         {
-            if(!health_dates.includes(data[idx].rpt_date))
-                health_dates.push(data[idx].rpt_date);
             milk_production_data.push(data[idx]);
         }
         else if(data[idx].title=='deworming_vaccination')
         {
-            if(!health_dates.includes(data[idx].rpt_date))
-                health_dates.push(data[idx].rpt_date);
             deworming_vaccination_data.push(data[idx]);
         }
         else if (data[idx].title=='sickness')
@@ -1372,8 +1389,6 @@ $(window).on('load', function() {
             reproduction_data.push(data[idx]);
         }
     }
-
-
     // sorting date in descending order
         health_dates.sort(function (a, b) {
             return new Date(b) - new Date(a);
@@ -1403,13 +1418,10 @@ $(window).on('load', function() {
 
     if(sickness_data.length)
     {
-{#        console.log(sickness_data[0].images);#}
-        $('#sickness-inner').html(sickness_data[0].images);
-        $('#sickness-inner').children( "div:first" ).addClass("active");
         date_set(sickness_data,sickness_date,0);
         content_set(sickness_data,sickness,0);
         ajaxcall();
-                   logger_id =  sickness_data[sickness_index].logger_id;
+                   logger_id =  sickness_data[0].logger_id;
 
                 $.ajax({
                     url: '/livestock/get_clinical_findings/',
@@ -1426,9 +1438,75 @@ $(window).on('load', function() {
         date_set(reproduction_data,reproduction_date,0);
         content_set(reproduction_data,reproduction,0);
     }
+    $('#sickness_block').hide();
+    $('#health_records_block').hide();
+    $('#reproduction_block').hide();
+
+    $('#sickness_span').on('click',function () {
+
+       $('#sickness_block').slideDown('slow');
+       $('#health_records_block').slideUp('slow');
+       $('#reproduction_block').slideUp('slow');
+       $('#sickness-inner').html("");
+       $('#pay_div').html("");
+       $("#old_prescription_div").html("");
+       $("#old_prescription_head").html("");
+       if(sickness_data.length)
+       {
+             get_old_prescription(sickness_data[0].logger_id);
+        $('#pay_div').html(sickness_data[0].pay);
+        $('#sickness-inner').html(sickness_data[0].images);
+        $('#sickness-inner').children("div:first").addClass("active");
+       }
+
+    });
+    $('#health_records_span').on('click',function () {
+       $('#health_records_block').slideDown('slow');
+       $('#sickness_block').slideUp('slow');
+       $('#reproduction_block').slideUp('slow');
+       $('#sickness-inner').html("");
+        $('#pay_div').html("");
+        $('#health_records_audio').html("");
+        $("#old_prescription_div").html("");
+       $("#old_prescription_head").html("");
+       if(feeding_information_data.length)
+       {
+           get_old_prescription(feeding_information_data[0].logger_id);
+           $('#health_records_audio').html(feeding_information_data[0].audio);
+           $('#pay_div').html(feeding_information_data[0].pay);
+           $('#sickness-inner').html(feeding_information_data[0].images);
+           $('#sickness-inner').children("div:first").addClass("active");
+       }
+
+    });
+
+    $('#reproduction_span').on('click',function () {
+       $('#reproduction_block').slideDown('slow');
+       $('#sickness_block').slideUp('slow');
+       $('#health_records_block').slideUp('slow');
+       $('#sickness-inner').html("");
+       $('#pay_div').html("");
+       $('#reproduction_audio').html("");
+       $("#old_prescription_div").html("");
+       $("#old_prescription_head").html("");
+       if(reproduction_data.length)
+       {
+           get_old_prescription(reproduction_data[0].logger_id);
+       $('#reproduction_audio').html(reproduction_data[0].audio);
+       $('#sickness-inner').html(reproduction_data[0].images);
+       $('#sickness-inner').children("div:first").addClass("active");
+       }
+
+    });
 
 
         $('#health_left').on('click', function () {
+            $("#old_prescription_div").html("");
+            $("#old_prescription_head").html("");
+            $('#pay_div').html("");
+            $('#health_records_audio').html("");
+            $('#sickness-inner').html("");
+
             if (feeding_information_index > 0)
                 feeding_information_index--;
             if (milk_production_index > 0)
@@ -1439,10 +1517,22 @@ $(window).on('load', function() {
                 health_dates_index--;
 
             if (health_dates.length)
+            {
                 $('#health_date').text('Date: ' + health_dates[health_dates_index]);
+            }
+
+
 
             if (feeding_information_data.length && feeding_information_data[feeding_information_index].rpt_date == health_dates[health_dates_index])
+            {
+                get_old_prescription(feeding_information_data[feeding_information_index].logger_id);
+                $('#health_records_audio').html(feeding_information_data[feeding_information_index].audio);
+                $('#pay_div').html(feeding_information_data[feeding_information_index].pay);
+                $('#sickness-inner').html(feeding_information_data[feeding_information_index].images);
+                $('#sickness-inner').children( "div:first" ).addClass("active");
                 content_set(feeding_information_data, feeding_information, feeding_information_index);
+            }
+
             if (milk_production_data.length && milk_production_data[milk_production_index].rpt_date == health_dates[health_dates_index])
                 content_set(milk_production_data, milk_production, milk_production_index);
             if (deworming_vaccination_data.length && deworming_vaccination_data[deworming_vaccination_index].rpt_date == health_dates[health_dates_index])
@@ -1450,6 +1540,11 @@ $(window).on('load', function() {
         });
 
         $('#health_right').on('click', function () {
+             $("#old_prescription_div").html("");
+            $("#old_prescription_head").html("");
+            $('#pay_div').html("");
+            $('#health_records_audio').html("");
+            $('#sickness-inner').html("");
             if (feeding_information_index < feeding_information_data.length - 1)
                 feeding_information_index++;
             if (milk_production_index < milk_production_data.length - 1)
@@ -1461,8 +1556,17 @@ $(window).on('load', function() {
             if (health_dates.length)
                 $('#health_date').text('Date: ' + health_dates[health_dates_index]);
 
+
+
             if (feeding_information_data.length && feeding_information_data[feeding_information_index].rpt_date == health_dates[health_dates_index])
-                content_set(feeding_information_data, feeding_information, feeding_information_index);
+                {
+                    get_old_prescription(feeding_information_data[feeding_information_index].logger_id);
+                    $('#health_records_audio').html(feeding_information_data[feeding_information_index].audio);
+                    $('#pay_div').html(feeding_information_data[feeding_information_index].pay);
+                    $('#sickness-inner').html(feeding_information_data[feeding_information_index].images);
+                    $('#sickness-inner').children("div:first").addClass("active");
+                    content_set(feeding_information_data, feeding_information, feeding_information_index);
+                }
             if (milk_production_data.length && milk_production_data[milk_production_index].rpt_date == health_dates[health_dates_index])
                 content_set(milk_production_data, milk_production, milk_production_index);
             if (deworming_vaccination_data.length && deworming_vaccination_data[deworming_vaccination_index].rpt_date == health_dates[health_dates_index])
@@ -1474,8 +1578,18 @@ $(window).on('load', function() {
             if (reproduction_index > 0)
                 reproduction_index--;
 
+            $("#old_prescription_div").html("");
+            $("#old_prescription_head").html("");
+            $('#pay_div').html("");
+            $('#reproduction_audio').html("");
+            $('#sickness-inner').html("");
             if (reproduction_data.length)
             {
+                get_old_prescription(reproduction_data[reproduction_index].logger_id);
+                $('#reproduction_audio').html(reproduction_data[reproduction_index].audio);
+                $('#pay_div').html(reproduction_data[reproduction_index].pay);
+                 $('#sickness-inner').html(reproduction_data[reproduction_index].images);
+                $('#sickness-inner').children( "div:first" ).addClass("active");
                 $('#reproduction_date').text('Date: ' + reproduction_data[reproduction_index].rpt_date);
                 content_set(reproduction_data, reproduction, reproduction_index);
             }
@@ -1484,9 +1598,18 @@ $(window).on('load', function() {
         $('#reproduction_right').on('click', function () {
             if (reproduction_index < reproduction_data.length - 1)
                 reproduction_index++;
-
+            $("#old_prescription_div").html("");
+            $("#old_prescription_head").html("");
+            $('#pay_div').html("");
+            $('#reproduction_audio').html("");
+            $('#sickness-inner').html("");
             if (reproduction_data.length)
             {
+                get_old_prescription(reproduction_data[reproduction_index].logger_id);
+                $('#reproduction_audio').html(reproduction_data[reproduction_index].audio);
+                $('#pay_div').html(reproduction_data[reproduction_index].pay);
+                $('#sickness-inner').html(reproduction_data[reproduction_index].images);
+                $('#sickness-inner').children( "div:first" ).addClass("active");
                 $('#reproduction_date').text('Date: ' + reproduction_data[reproduction_index].rpt_date);
                    content_set(reproduction_data, reproduction, reproduction_index);
             }
@@ -1495,9 +1618,15 @@ $(window).on('load', function() {
         $('#sickness_left').on('click', function () {
             if (sickness_index > 0)
                 sickness_index--;
+            $("#old_prescription_div").html("");
+            $("#old_prescription_head").html("");
+            $('#pay_div').html("");
+            $('#sickness-inner').html("");
 
             if (sickness_data.length)
             {
+                get_old_prescription(sickness_data[sickness_index].logger_id);
+                $('#pay_div').html(sickness_data[sickness_index].pay);
                 $('#sickness_date').text('Date: ' + sickness_data[sickness_index].rpt_date);
                 content_set(sickness_data, sickness, sickness_index);
                 $('#sickness-inner').html(sickness_data[sickness_index].images);
@@ -1522,14 +1651,20 @@ $(window).on('load', function() {
             if (sickness_index < sickness_data.length - 1)
                 sickness_index++;
 
+            $("#old_prescription_div").html("");
+            $("#old_prescription_head").html("");
+            $('#pay_div').html("");
+            $('#sickness-inner').html("");
             if (sickness_data.length)
             {
+                get_old_prescription(sickness_data[sickness_index].logger_id);
+                $('#pay_div').html(sickness_data[sickness_index].pay);
                 $('#sickness_date').text('Date: ' + sickness_data[sickness_index].rpt_date);
-                   content_set(sickness_data, sickness, sickness_index);
-                   $('#sickness-inner').html(sickness_data[sickness_index].images);
-                    $('#sickness-inner').children( "div:first" ).addClass("active");
-                   ajaxcall();
-                   logger_id =  sickness_data[sickness_index].logger_id;
+                content_set(sickness_data, sickness, sickness_index);
+                $('#sickness-inner').html(sickness_data[sickness_index].images);
+                $('#sickness-inner').children( "div:first" ).addClass("active");
+                ajaxcall();
+                logger_id =  sickness_data[sickness_index].logger_id;
 
                 $.ajax({
                     url: '/livestock/get_clinical_findings/',
@@ -1587,8 +1722,8 @@ $(window).on('load', function() {
                     //prescription = data.pres_html
                     //farmerid = data.farmerid
                     //console.log("farmer id===="+farmerid)
-                    get_old_prescription(cattle_id);
-                    $('#prescription').hide()
+                    //get_old_prescription(cattle_id);
+                    $('#prescription').hide();
                     $('#clinical_findings_div').hide();
                     /*
                     $('#sms_modal').modal('show');
@@ -1602,8 +1737,8 @@ $(window).on('load', function() {
                 error: function (xhr, status, error) {
                    // $('#error_msg_upload').html("<h5><strong>"+xhr.responseText+"</strong></h5>");
                     alert("Duplicate Prescription!")
-                    get_old_prescription(cattle_id);
-                    $('#prescription').hide()
+                    //get_old_prescription(cattle_id);
+                    $('#prescription').hide();
                     $('#clinical_findings_div').hide();
                 }
             }); //ajax end

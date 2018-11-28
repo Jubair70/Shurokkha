@@ -425,7 +425,7 @@
 
                 <div class="form-group " id="q_reproductive_problem"  style="display: none">
               <label for="exampleInputEmail1">বর্তমানে প্রজনন সংক্রান্ত কি সমস্যা আছে?:</label>
-              <select  class="form-control multiselect_class" multiple="multiple"  name="reproductive_problem[]" id="reproductive_problem" aria-describedby="emailHelp" >
+              <select  class="form-control " multiple="multiple"  name="reproductive_problem[]" id="reproductive_problem" aria-describedby="emailHelp" >
                      {% for data in reproductive_problem %}
                     <option value="{{ data.0 }}">{{ data.1 }}</option>
                     {% endfor %}
@@ -434,7 +434,7 @@
 
                 <div class="form-group" id="q_milking_problem"  style="display: none">
               <label for="exampleInputEmail1">দুধ উৎপাদন সম্পর্কিত কোন সমস্যা আছে? থাকলে কি কি ?:</label>
-              <select  class="form-control multiselect_class" multiple="multiple" name ="milking_problem[]" id="milking_problem" aria-describedby="emailHelp" >
+              <select  class="form-control " multiple="multiple" name ="milking_problem[]" id="milking_problem" aria-describedby="emailHelp" >
                      {% for data in milking_problem %}
                     <option value="{{ data.0 }}">{{ data.1 }}</option>
                     {% endfor %}
@@ -937,6 +937,73 @@
         }
 
         $(document).ready(function () {
+
+
+            $('#reproductive_problem').multiselect({
+                      numberDisplayed: 1,
+                      onChange: function(option, checked) {
+                          //if uncheck " প্রযোজ্য নয়" then enable all checkboxes
+                          if (!checked){
+                              $('#reproductive_problem option').each(function() {
+                                    var input = $('input[value="' + $(this).val() + '"]');
+                                    input.prop('disabled', false);
+                                    input.parent('li').removeClass('disabled');
+
+                              });
+                          }
+                        // Get selected options.
+                        var selectedOptions = $('#reproductive_problem option:selected');
+                          selectedOptions.each(function() {
+
+                              if($(this).val() == '98'){
+                                  $('#reproductive_problem option').each(function() {
+                                      if($(this).val() != '98'){
+                                          var input = $('input[value="' + $(this).val() + '"]');
+                                          $('#reproductive_problem').multiselect('deselect', $(this).val());
+                                            input.prop('disabled', true);
+                                            input.parent('li').addClass('disabled');
+                                      }
+
+                            });
+                              }
+
+                          });
+
+                        }
+            });
+
+            $('#milking_problem').multiselect({
+                numberDisplayed: 1,
+                  onChange: function(option, checked) {
+                      //if uncheck " প্রযোজ্য নয়" then enable all checkboxes
+                      if (!checked){
+                          $('#milking_problem option').each(function() {
+                                var input = $('input[value="' + $(this).val() + '"]');
+                                input.prop('disabled', false);
+                                input.parent('li').removeClass('disabled');
+
+                          });
+                      }
+                    // Get selected options.
+                    var selectedOptions = $('#milking_problem option:selected');
+                      selectedOptions.each(function() {
+
+                          if($(this).val() == '98'){
+                              $('#milking_problem option').each(function() {
+                                  if($(this).val() != '98'){
+                                      var input = $('input[value="' + $(this).val() + '"]');
+                                      $('#milking_problem').multiselect('deselect', $(this).val());
+                                        input.prop('disabled', true);
+                                        input.parent('li').addClass('disabled');
+                                  }
+
+                        });
+                          }
+
+                      });
+
+                    }
+            });
 {#            get_old_prescription(cattle_id);#}
             $('.multiselect_class').multiselect({
                 onDropdownHidden: function(event) {

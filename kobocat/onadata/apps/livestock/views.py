@@ -567,7 +567,7 @@ def get_clinical_findings(request):
 @login_required
 def cattle_profile(request, cattle_id, appointment_id):
     # If the case is new ,it set to be view  :: status=4
-    if appointment_id !=0:
+    if appointment_id !='0':
         app_status = __db_fetch_single_value("select status from appointment where id = "+str(appointment_id) )
         if app_status == 0:
             __db_commit_query("update appointment set status = 4  where id = "+str(appointment_id) )
@@ -776,7 +776,7 @@ def clinical_findings(request, appointment_id):
         tentative_diagnosis = request.POST.get('tentative_diagnosis')
         if edit_id:
             q = "update public.clinical_findings set complain_details = '" + complain_details + "', treatment_history='" + treatment_history + "', deworming_history='" + deworming_history + "', feeding_history='" + feeding_history + "', wrong_feeding_last_days='" + wrong_feeding_last_days + "', rumination='" + rumination + "',  sickness_sign='" + sickness_sign + "', behavioral_signs='" + behavioral_signs + "', mouth_digestion_sign='" + mouth_digestion_sign + "', stool_condition='" + stool_condition + "', repiratory_sign='" + repiratory_sign + "', reproductive_problem='" + reproductive_problem + "', milking_problem='" + milking_problem + "', male_reproductive_problem='" + male_reproductive_problem + "', skin_problem='" + skin_problem + "', foot_problem='" + foot_problem + "', megot='" + megot + "', disease_pattern='" + disease_pattern + "', tentative_diagnosis='" + tentative_diagnosis + "',updated_by=" + str(
-                request.user.id) + ",updated_date=NOW()"
+                request.user.id) + ",updated_date=NOW() where id = "+str(edit_id)
             __db_commit_query(q)
         else:
             q = "INSERT INTO public.clinical_findings(id, appointment_id, complain_details,  treatment_history, deworming_history, feeding_history, wrong_feeding_last_days, rumination,  sickness_sign, behavioral_signs, mouth_digestion_sign, stool_condition, repiratory_sign, reproductive_problem, milking_problem, male_reproductive_problem, skin_problem, foot_problem, megot, disease_pattern, tentative_diagnosis, created_by, created_date)VALUES (DEFAULT , " + str(

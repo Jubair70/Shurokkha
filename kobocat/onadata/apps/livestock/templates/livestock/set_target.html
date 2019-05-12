@@ -1,0 +1,352 @@
+{% extends "base_test.html" %}
+{% block additional-headers %}
+    <link href="/static/css/datepicker.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="/static/js/DataTables/datatables.css">
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.29.0/mapbox-gl.css' rel='stylesheet'/>
+    <link rel="stylesheet" type="text/css" href="/static/js/DataTables/datatables.css">
+    <style type="text/css">
+     div.dataTables_scrollHeadInner thead th {
+        /*height: 55px;*/
+
+
+    }
+
+    </style>
+{% endblock %}
+
+{% block content %}
+
+
+    <div class="">
+
+        <div class ="col-md-12" style = "">
+
+                <div class="page-header align">
+                   <h4>AI/Paravet Information</h4>
+                </div>
+        <!--{{ dataset }}-->
+
+        {% for data in dataset %}
+        <div class="row box">
+         <div class="col-md-2">
+            <img src="{{ data.image_url }}" class="img-responsive" alt=""  style="border: 3px solid #f9f9f9;width: 97%;height:50%;margin: 0 auto;">
+            <!--<img src="/media/oxfam/attachments/{{ image }}" class="img-responsive" alt=""  style="border: 3px solid #f9f9f9;width: 97%;margin: 0 auto;"><br>
+            <!--<img src="{{ STATIC_URL }}assets/img/profile/defaultavatar.jpg" class="img-responsive" alt=""  style="border: 3px solid #f9f9f9;width: 97%;margin: 0 auto;"><br>-->
+
+        </div>
+        <div class="col-md-6">
+            <table class="table table-striped table-hover">
+                <tr><th>Date of registration </th>
+                <td id="profile_hh_id"> {{data.id_cattle}}</td>
+                <th>{{ data.s_date| safe}}</th>
+                <td id="profile_hh_head">{{ data.cattle_breed_text }}</td></tr>
+
+                <tr><th>Name </th>
+                <td id="profile_hh_id"> {{data.id_cattle}}</td>
+                <th>{{ data.name }}</th>
+                <td id="profile_hh_head">{{ data.cattle_breed_text }}</td></tr>
+
+                <tr><th>Phone No </th>
+                <td id="profile_hh_id"> {{data.id_cattle}}</td>
+                <th>{{ data.mobile }}</th>
+                <td id="profile_hh_head">{{ data.cattle_breed_text }}</td></tr>
+
+                <tr><th>Division </th>
+                <td id="profile_hh_id"> {{data.id_cattle}}</td>
+                <th>{{ data.div_text }}</th>
+                <td id="profile_hh_head">{{ data.cattle_breed_text }}</td></tr>
+
+                <tr><th>District </th>
+                <td id="profile_hh_id"> {{data.id_cattle}}</td>
+                <th>{{ data.dist_text }}</th>
+                <td id="profile_hh_head">{{ data.cattle_breed_text }}</td></tr>
+
+                <tr><th>Upazila</th>
+                <td id="profile_hh_id"> {{data.id_cattle}}</td>
+                <th>{{ data.up_text }}</th>
+                <td id="profile_hh_head">{{ data.cattle_breed_text }}</td></tr>
+            </table>
+        </div>
+
+        </div>
+ <hr>
+
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="page-header align">
+                   <h4>Target</h4>
+
+
+                <form action="/livestock/targetCreate/" enctype="multipart/form-data" method="post">
+                    {% csrf_token %}
+
+                    <input type="hidden" value="" id="isEdit" name="isEdit">
+                    <input type="hidden" value="{{ user_id | safe }}" id="user_id" name="user_id">
+                    <input type="hidden" value="{{ approval_queue_id | safe }}" id="approval_queue_id" name="approval_queue_id">
+
+                    <div class="form-body">
+
+                        <div class="row">
+                            <div class="col-md-5">
+                                <div class="form-group">
+                                    <label>Year: </label>
+                                    <select class="form-control" name="trgt_yr" id="trgt_yr" required>
+                                        <option value="">Select One</option>
+                                        <option value="2018">2018</option>
+                                        <option value="2019">2019</option>
+                                        <option value="2020">2020</option>
+                                        <option value="2021">2021</option>
+                                        <option value="2022">2022</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>January:</label>
+                                    <input type="number" min="0" value="0" class="form-control" name="trgt_january" id="trgt_january">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>February:</label>
+                                    <input type="number" min="0" value="0" class="form-control" name="trgt_february" id="trgt_february">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>March:</label>
+                                    <input type="number" min="0" value="0" class="form-control" name="trgt_march" id="trgt_march">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>April:</label>
+                                    <input type="number" min="0" value="0" class="form-control" name="trgt_april" id="trgt_april">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>May:</label>
+                                    <input type="number" min="0" value="0" class="form-control" name="trgt_may" id="trgt_may">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>June:</label>
+                                    <input type="number" min="0" value="0" class="form-control" name="trgt_june" id="trgt_june">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>July:</label>
+                                    <input type="number" min="0" value="0" class="form-control" name="trgt_july" id="trgt_july">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>August:</label>
+                                    <input type="number" min="0" value="0" class="form-control" name="trgt_august" id="trgt_august">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>September:</label>
+                                    <input type="number" min="0" value="0" class="form-control" name="trgt_september" id="trgt_september">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>October:</label>
+                                    <input type="number" min="0" value="0" class="form-control" name="trgt_october" id="trgt_october">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>November:</label>
+                                    <input type="number" min="0" value="0" class="form-control" name="trgt_november" id="trgt_november">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>December:</label>
+                                    <input type="number" min="0" value="0" class="form-control" name="trgt_december" id="trgt_december">
+                                </div>
+                            </div>
+
+                        </div>
+
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <button class="btn btn-danger pull-left" id="submit" name="submit" type="submit"
+                                        data-original-title=""
+                                        title="">Submit
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+
+
+                </form>
+
+            </div>
+
+
+
+            <div class="row">
+                <div class="form-group col-md-12">
+                    <span class="control-label btn btn-primary"><b>Target List</b></span>
+                </div>
+            </div>
+
+
+            <div class="row">
+
+                <div class="row">
+
+                    <br>
+
+                </div>
+
+                <div class="col-md-12">
+                    <table id="donorNameListTable" class="table table-bordered table-hover exportMargin">
+                        <caption class="textAlign">
+
+                        </caption>
+                        <thead>
+                        <tr>
+                            <th> Year</th>
+                            <th> January</th>
+                            <th> February</th>
+                            <th> March</th>
+                            <th> April</th>
+                            <th> May</th>
+                            <th> June</th>
+                            <th> July</th>
+                            <th> August</th>
+                            <th> September</th>
+                            <th> October</th>
+                            <th> November</th>
+                            <th> December</th>
+
+                            <th></th>
+                        </tr>
+
+
+                        </thead>
+                        <tbody>
+
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+
+
+
+
+{% endfor %}
+{% endblock %}
+
+{% block additional-javascript %}
+ <script type="text/javascript" src="https://cdn.datatables.net/1.10.15/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.3.1/js/dataTables.buttons.min.js"></script>
+    <script type="text/javascript" src="//cdn.datatables.net/buttons/1.3.1/js/buttons.flash.min.js"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+    <script type="text/javascript" src="//cdn.rawgit.com/bpampuch/pdfmake/0.1.27/build/pdfmake.min.js"></script>
+    <script type="text/javascript" src="//cdn.rawgit.com/bpampuch/pdfmake/0.1.27/build/vfs_fonts.js"></script>
+    <script type="text/javascript" src="//cdn.datatables.net/buttons/1.3.1/js/buttons.html5.min.js"></script>
+    <script type="text/javascript" src="//cdn.datatables.net/buttons/1.3.1/js/buttons.print.min.js"></script>
+        <script>
+        var jsonTargetList = {{ jsonTargetList | safe }}
+        var target_list = jsonTargetList.target_list
+
+        console.log(target_list)
+
+{#        $(document).ready(function () {#}
+
+            getDonorNameList(target_list)  // Getting the Table
+
+{#        });#}
+
+
+        function getDonorNameList(target_list) {
+            console.log(target_list)
+
+            var count = 1
+            var tbody = ''
+
+            for (var i = 0; i < target_list.length; i++) {
+
+                editlink = ''
+
+                tbody += '<tr><td>' + target_list[i][2] + '</td><td>'+target_list[i][3]+'</td><td>'+target_list[i][4]+'</td><td>'+target_list[i][5]+'</td><td>'+target_list[i][6]+'</td><td>'+target_list[i][7]+'</td><td>'+target_list[i][8]+'</td><td>'+target_list[i][9]+'</td><td>'+target_list[i][10]+'</td><td>'+target_list[i][11]+'</td><td>'+target_list[i][12]+'</td><td>'+target_list[i][13]+'</td><td>'+target_list[i][14]+'</td><td><button onclick="getEditId('+target_list[i][0]+')" class="btn btn-primary" role="button" >Edit</button></td></tr>'
+
+                count++;
+            }
+
+             $('#donorNameListTable').find('tbody').html(tbody);
+            dTablewithData = $('#donorNameListTable').DataTable({
+                "retrieve": true,
+                "bFilter": true,
+                "paging": true,
+                "scrollCollapse": true,
+                "searching": true,
+                select: true,
+              // ordering: true,
+               // "aaSorting": [[0, 'desc', 0]],
+                "scrollX": true,
+                "bLengthChange": true,
+                "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+                "pageLength": 50
+
+            });
+        }
+
+
+
+        function getEditId(id){
+
+            console.log("Donor ID" + id)
+            $('#isEdit').attr("value", id);
+
+            $.ajax({
+                type: 'POST',
+                url: '/livestock/targetEdit/',
+                data: {
+
+                    'id': id,
+                },
+                success: function (data) {
+
+                    list = JSON.parse(data);
+                    console.log(list.getFetchSpecific);
+                    $('#trgt_yr').val(list.getFetchSpecific[2]);
+                    $('#trgt_january').val(list.getFetchSpecific[3]);
+                    $('#trgt_february').val(list.getFetchSpecific[4]);
+                    $('#trgt_march').val(list.getFetchSpecific[5]);
+                    $('#trgt_april').val(list.getFetchSpecific[6]);
+                    $('#trgt_may').val(list.getFetchSpecific[7]);
+                    $('#trgt_june').val(list.getFetchSpecific[8]);
+                    $('#trgt_july').val(list.getFetchSpecific[9]);
+                    $('#trgt_august').val(list.getFetchSpecific[10]);
+                    $('#trgt_september').val(list.getFetchSpecific[11]);
+                    $('#trgt_october').val(list.getFetchSpecific[12]);
+                    $('#trgt_november').val(list.getFetchSpecific[13]);
+                    $('#trgt_december').val(list.getFetchSpecific[14]);
+
+
+                }
+
+            });
+
+
+        }
+
+
+    </script>
+{% endblock %}

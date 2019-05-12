@@ -43,7 +43,15 @@ urlpatterns = patterns('',
                         url(r'^get_prescription_table/$', views.get_prescription_table, name='get_prescription_table'),
                         url(r'^view_ai_pravet_profile/(?P<id>\d+)/$', views.view_ai_paravet_profile, name='view_ai_paravet_profile'),
                         url(r'^send_prescription_sms/$', views.send_prescription_sms, name='send_prescription_sms'),
-
+                        url(r'^set_target/(?P<id>\d+)/$', views.set_target, name='set_target'),
+                        url(r'^targetCreate/$', views.targetCreate, name="targetCreate"),
+                        url(r'^targetEdit/$', views.targetEdit, name="targetEdit"),
+                        url(r'^bull_list/$', views.bull_list, name='bull_list'),
+                        url(r'^add_bull_form/$', views.add_bull_form, name='add_bull_form'),
+                        url(r'^insert_bull_form/$', views.insert_bull_form, name='insert_bull_form'),
+                        url(r'^edit_bull_form/(?P<id>\d+)/$', views.edit_bull_form,name='edit_bull_form'),
+                        url(r'^update_bull_form/$', views.update_bull_form, name='update_bull_form'),
+                        url(r'^delete_bull_form/(?P<id>\d+)/$', views.delete_bull_form,name='delete_bull_form'),
 
                        ##############################
 

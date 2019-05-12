@@ -42,6 +42,7 @@
                 </div>
             </div>
             <div class="portlet-body">
+                <img style="display:none; margin-left: 404px; height:70px;width:70px" id="container" src="{{ STATIC_URL }}images/Spinner.gif">
                 <form class="horizontal-form" method="post" action="/usermodule/catchment_data_insert/" id=""
                       enctype="multipart/form-data">
                     {% csrf_token %}
@@ -141,7 +142,7 @@
                     dataSource: datasource,
                     checkboxes: true,
                     cascadeCheck: false,
-             lazyLoading: true
+                    lazyLoading: true
                 });
 
                 mapboxgl.accessToken = 'pk.eyJ1IjoianViYWlyNzAiLCJhIjoiY2o2YWUxZnFjMTBpcTMxbnk3bW9qaGhiYiJ9.Z4xUKQkyzrALVFRNNofvTQ';
@@ -167,23 +168,27 @@
                         type: 'POST',
                         dataType: 'json',
                         beforeSend: function () {
-                            $('#loading').show();
-                        {#                    $("#container").html('<div class="alert alert-success">Please Wait...loading....</div>');#}
-                        $("#loading").html('<div class="ui active inverted dimmer">\n' +
-                            '    <div class="ui text loader">Loading</div>\n' +
-                            '  </div>');
+{#                            if(i>parent_list.length)#}
+{#                            {#}
+{#                            $('#loading').show();#}
+{#                            $("#loading").html('<div class="ui active inverted dimmer"><div class="ui text loader">Loading</div></div>');#}
+{#                            console.log(i);#}
+{#                            }#}
 
+
+{#                                            $("#container").html('<div class="alert alert-success">Please Wait...loading....</div>');#}
 
                     },
                         data: {'id': id},
                         success: function (result) {
-
-                            $('#loading').hide(500);
+{#                            if(i>=parent_list.length)#}
+{#                            $('#loading').hide(500);#}
                             for (each in result['list_of_dictionary'])
                                 tree.addNode(result['list_of_dictionary'][each], node);
                             getchecked();
-                            if(i<parent_list.length-1)
+                            if(i<parent_list.length)
                             tree.expand(tree.getNodeById(parent_list[i++]));
+                            else $('#container').hide();
                             {#                        console.log(tree.getChildren(node));#}
                         }
                     });
@@ -201,12 +206,19 @@
                         }
                         catch (es) {
                         }
-
                     }
                 }
-                i = 0;
+                var i = 0;
+                console.log(parent_list);
                 if(parent_list.length)
-            tree.expand(tree.getNodeById(parent_list[i++]));
+                {
+{#                    $("#intial_loading").html('<div class="ui active inverted dimmer"><div class="ui text loader">Loading</div></div>');#}
+{#                    $('#intial_loading').show();#}
+                    $('#container').show();
+                    tree.expand(tree.getNodeById(parent_list[i++]));
+                }
+{#                i = parent_list.length;#}
+
 
                 var json_content = {{ json_content|safe }};
                 var map_data = [];

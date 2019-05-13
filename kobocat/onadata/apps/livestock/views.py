@@ -904,7 +904,7 @@ def get_cattle_info(id):
     # q = "select picture,mobile,cattle_type,coalesce(round(cattle_weight::numeric,2)::text,'') cattleweight,COALESCE (AGE(current_date ,date(cattle_birth_date))::text,cattle_age||' months') cattle_age,coalesce(cattle_name,'') cattle_name,(select label from vwcattle_type where value = cattle_type limit 1) as cattletype,coalesce(calf_birth_weight,'') calf_birth_weight from cattle where cattle_system_id = " + str(id)
     # print q
     q = " with t1 as(select picture from cattle_images where cattle_system_id = " + str(
-        id) + " order by created_date desc) ,t2 as(select string_to_array((string_agg(picture,',')),',') cattle_images from t1) select picture,mobile,cattle_type,coalesce(round(cattle_weight::numeric,2)::text,'') cattleweight, COALESCE (AGE(current_date ,date(cattle_birth_date))::text,cattle_age||' months') cattle_age, coalesce(cattle_name,'') cattle_name,(select label from vwcattle_type where value = cattle_type limit 1) as cattletype,coalesce(calf_birth_weight,'') calf_birth_weight ,(select cattle_images from t2) cattle_images from cattle where cattle_system_id = " + str(
+        id) + " order by created_date desc) ,t2 as(select string_to_array((string_agg(picture,',')),',') cattle_images from t1) select picture,mobile,cattle_type,coalesce(round(cattle_weight::numeric,2)::text,'') cattleweight, COALESCE (AGE(current_date ,date(cattle_birth_date))::text,cattle_age||' months') cattle_age, coalesce(cattle_name,'') cattle_name,(select label from vwcattle_type where value = cattle_type limit 1) as cattletype,coalesce(calf_birth_weight,'') calf_birth_weight ,(select cattle_images from t2) cattle_images,sl_final,hf_final,local_final from cattle where cattle_system_id = " + str(
         id)
     dataset = __db_fetch_values_dict(q)
     cattle_dict = {}
@@ -917,12 +917,43 @@ def get_cattle_info(id):
             for tmp in temp['cattle_images']:
                 image = "/media/" + cattle_regi_form_owner + "/attachments/" + tmp
                 cattle_img_list.append(image)
+
+        shahiwal = ''
+        frizian = ''
+        breed_type = ''
+
+        if temp['local_final'] != '100':
+
+            if temp['sl_final']:
+                shahiwal = unicode('শাহীওয়াল ', 'utf-8') + temp['sl_final'] + '%'
+            else:
+                shahiwal = ''
+
+            if temp['hf_final']:
+                frizian = unicode('ফ্রিজিয়ান ', 'utf-8') + temp['hf_final'] + '%'
+            else:
+                frizian = ''
+
+            if temp['sl_final'] and temp['hf_final']:
+                breed_type = shahiwal + ' X ' + frizian
+
+            elif temp['sl_final'] or temp['hf_final']:
+                if temp['sl_final']:
+                    breed_type = shahiwal
+                if temp['hf_final']:
+                    breed_type = frizian
+
+            else:
+                breed_type = ''
+
+        else:
+            breed_type = unicode('দেশী ', 'utf-8') + 'local_final' + '%'
+
         cattle_dict = {'cattle_type': temp['cattle_type'], 'cattle_img': img, 'mobile': temp['mobile'],
                        'cattle_name': temp['cattle_name'], 'cattle_weight': temp['cattleweight'],
                        'cattle_age': temp['cattle_age'], 'cattle_type_text': temp['cattletype'],
-                       'calf_birth_weight': temp['calf_birth_weight'], 'cattle_img_list': cattle_img_list}
+                       'calf_birth_weight': temp['calf_birth_weight'], 'cattle_img_list': cattle_img_list,'breed_type' : breed_type}
     return cattle_dict
-
 
 def get_farmer_info(mobile):
     farmerprofileupdate_form_owner_q = "select (select username from auth_user where id = logger_xform.user_id limit 1) as user_name from public.logger_xform where id_string = 'farmer_profile_update'"

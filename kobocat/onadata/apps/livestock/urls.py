@@ -59,6 +59,18 @@ urlpatterns = patterns('',
                         url(r'^group_performance_dashboard/ai/service_per_conception/$', views.get_group_performance_dashboard_ai_service_per_conception, name='get_group_performance_dashboard_ai_service_per_conception'),
                         url(r'^individual_performance_dashboard/ai/(?P<ai_id>\d+)/(?P<category_id>\d+)/$', views.get_individual_ai_performance_dashboard, name='get_individual_ai_performance_dashboard'),
 
+
+                        url(r'^set_target/(?P<id>\d+)/$', views.set_target, name='set_target'),
+                        url(r'^targetCreate/$', views.targetCreate, name="targetCreate"),
+                        url(r'^targetEdit/$', views.targetEdit, name="targetEdit"),
+                        url(r'^bull_list/$', views.bull_list, name='bull_list'),
+                        url(r'^add_bull_form/$', views.add_bull_form, name='add_bull_form'),
+                        url(r'^insert_bull_form/$', views.insert_bull_form, name='insert_bull_form'),
+                        url(r'^edit_bull_form/(?P<id>\d+)/$', views.edit_bull_form,name='edit_bull_form'),
+                        url(r'^update_bull_form/$', views.update_bull_form, name='update_bull_form'),
+                        url(r'^delete_bull_form/(?P<id>\d+)/$', views.delete_bull_form,name='delete_bull_form'),
+
+
                        ##############################
 
                        url(r'^getAdvisoryData/$', views.getAdvisoryData, name='getAdvisoryData'),

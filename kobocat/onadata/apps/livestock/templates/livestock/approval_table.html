@@ -27,7 +27,9 @@
                 <button onclick="edit_entity('{{ data.id }}')" id = ""  class="btn btn-primary green"  data-original-title="" title="">Update</button>
 
             </td>-->
-            <td><a  href = "/livestock/view_ai_pravet_profile/{{ data.id }}"  target="_blank" class="btn btn-red"  data-original-title="" title="">View Details</a>
+            <td>{% if data.status == 1 %} <a  href = "/livestock/set_target/{{ data.id }}"  target="_blank" class="btn btn-success" >Set Target</a> {% endif %}
+
+                <a  href = "/livestock/view_ai_pravet_profile/{{ data.id }}"  target="_blank" class="btn btn-primary"  data-original-title="" title="">View Details</a>
 </td>
         </tr>
         {% endfor %}

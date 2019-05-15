@@ -231,7 +231,8 @@
                   <p>Cattle Name: {{ cattle_name }}<br>
                      Cattle type: {{ cattle_type_text }}<br>
                      Age: {{ cattle_age | safe}}<br>
-                     Weight: {{ cattle_weight }}<br>Birth weight:  {{calf_birth_weight  }}
+                     Weight: {{ cattle_weight }}<br>Birth weight:  {{calf_birth_weight  }}<br>
+                      {% if breed_type %} Breed : {{breed_type}} {% endif %}
                   </p>
                 </div>
               </div>

@@ -55,7 +55,7 @@ import pandas
 from django.core.mail import send_mail, BadHeaderError
 import smtplib
 from onadata.apps.livestock.views import __db_commit_query
-
+import time
 
 def get_farm_id(auth_user_id):
     farm_id = 0
@@ -1361,23 +1361,23 @@ def add_children(request):
 
 
 @login_required
-def catchment_tree_test(request, user_id):
+def catchment_tree_test(request,user_id):
     query = "select * from geo_data where field_parent_id is null"
     df = pandas.DataFrame()
     df = pandas.read_sql(query, connection)
     id = df.id.tolist()
     name = df.field_name.tolist()
-    all = zip(id, name)
+    all = zip(id,name)
     list_of_dictionary = []
-    start = time.time()
-    for id, name in all:
-        query = "select id from geo_data where field_parent_id =" + str(id) + "limit 1"
+    start  = time.time()
+    for id,name in all:
+        query = "select id from geo_data where field_parent_id =" + str(id)+ "limit 1"
         df = pandas.read_sql(query, connection)
         if len(df.id.tolist()):
             true = True
         else:
             true = False
-        temp = {"id": id, "text": name, "hasChildren": true, "children": []}
+        temp = {"id": id, "text": name,"hasChildren":true, "children": []}
         list_of_dictionary.append(temp)
     datasource = json.dumps({'list_of_dictionary': list_of_dictionary})
     check_nodes = get_check_nodes(user_id)
@@ -1395,7 +1395,7 @@ def catchment_tree_test(request, user_id):
             else:
                 json_content = "{}"
             json_content_dictionary.append(json_content)
-    print("END    " + str(time.time() - start))
+    print("END    "+str(time.time()-start))
     query = "select (SELECT  organization FROM public.usermodule_organizations where id = (select organisation_name_id from usermodule_usermoduleprofile where user_id = " + str(
         user_id) + ")) ,(select employee_id from usermodule_usermoduleprofile where user_id = " + str(
         user_id) + "),(select country from usermodule_usermoduleprofile where user_id = " + str(
@@ -1409,6 +1409,16 @@ def catchment_tree_test(request, user_id):
     position = df.position.tolist()[0]
     username = df.username.tolist()[0]
     email = df.email.tolist()[0]
+    query = "with recursive t as( select id,field_name,field_parent_id from geo_data where id in (select geoid from public.usermodule_catchment_area where user_id = " + str(
+        user_id) + ") union all select geo_data.id,geo_data.field_name,geo_data.field_parent_id from geo_data,t where t.field_parent_id = geo_data.id) select distinct id,field_name,field_parent_id from t order by id"
+    df = pandas.DataFrame()
+    df = pandas.read_sql(query, connection)
+    parent_list = df.field_parent_id.unique().tolist()
+    parent_list = [x for x in parent_list if str(x) != 'None' and str(x) != 'nan' ]
+    query = "select node_name from geo_definition"
+    df = pandas.DataFrame()
+    df = pandas.read_sql(query, connection)
+    geo_def_list = df.node_name.tolist()
     return render(request, "usermodule/catchment_tree_test.html", {'datasource': datasource
         , 'organization': organization
         , 'employee_id': employee_id
@@ -1417,7 +1427,7 @@ def catchment_tree_test(request, user_id):
         , 'username': username
         , 'email': email
         , 'user_id': user_id
-        , 'check_nodes': check_nodes, 'json_content': json_content_dictionary})
+        , 'check_nodes': check_nodes,'json_content': json_content_dictionary,'parent_list':parent_list,'geo_def_list':json.dumps(geo_def_list)})
 
 
 @login_required
@@ -1459,8 +1469,7 @@ def catchment_tree(request, user_id):
         , 'username': username
         , 'email': email
         , 'user_id': user_id
-        , 'check_nodes': check_nodes
-                                                              })
+        , 'check_nodes': check_nodes})
 
 
 @login_required
@@ -1508,7 +1517,6 @@ def database(query):
 @login_required
 def catchment_data_insert(request):
     result_set = request.POST.get('result_set').split(',')
-    print result_set
     user_id = int(request.POST.get('user_id'))
     delete_prev_catchment_record(user_id)
     result_set = list(set(result_set))

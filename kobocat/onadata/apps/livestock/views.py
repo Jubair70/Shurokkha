@@ -363,6 +363,225 @@ def view_ai_paravet_profile(request, id):
     return render(request, 'livestock/ai_paravet_profile.html',
                   {'dataset': data_list})
 
+@login_required
+def set_target(request,id):
+    farmer_proupdate_form_owner_q = "select (select username from auth_user where id = logger_xform.user_id limit 1) as user_name from public.logger_xform where id_string = 'farmer_profile_update'"
+    farmer_proupdate_form_owner = __db_fetch_single_value(farmer_proupdate_form_owner_q)
+    q = "select *,date(submission_time) as s_date, coalesce((select division from vwunion_code where div_code=approval_queue.division limit 1),'') as div_text, coalesce((select district from vwunion_code where dist_code=approval_queue.district limit 1),'')as dist_text, coalesce((select upazila from vwunion_code where up_code=approval_queue.upazila limit 1),'')as up_text from approval_queue where id = " + str(
+        id)
+    # print q
+    dataset = __db_fetch_values_dict(q)
+    data_list = []
+    age_cattle = 0
+    for temp in dataset:
+        data_dict = {}
+        '''
+        if temp['cattle_birth_date'] is not None:
+            dob_cattle = temp['cattle_birth_date']
+            dob_cf = dt.strptime(temp['cattle_birth_date'], '%Y-%m-%d')
+            age_cattle = ((dt.today() - dob_cf).days / 30)
+            '''
+        data_dict['name'] = temp['name']
+        data_dict['mobile'] = temp['mobile']
+        data_dict['s_date'] = temp['s_date']
+        data_dict['div_text'] = temp['div_text']
+        data_dict['dist_text'] = temp['dist_text']
+        data_dict['up_text'] = temp['up_text']
+        img = ""
+        if temp['image'] is not None:
+            img = temp['image']
+        data_dict['image_url'] = "/media/" + farmer_proupdate_form_owner + "/attachments/" + img
+        data_list.append(data_dict.copy())
+        data_dict.clear()
+
+    usr_qry = "select submitted_by from approval_queue where id ="+str(id)
+    df = pandas.read_sql(usr_qry,connection)
+    user_id = df.submitted_by.tolist()[0]
+
+
+    query = 'select * from user_ai_target where user_id = '+str(user_id)+' order by id'
+    target_list = multipleValuedQuryExecution(query)
+    jsonTargetList = json.dumps({'target_list': target_list}, default=decimal_date_default)
+    return render(request, 'livestock/set_target.html',{'dataset': data_list,'jsonTargetList':jsonTargetList,'user_id':user_id,'approval_queue_id':id})
+
+def multipleValuedQuryExecution(query):
+    cursor = connection.cursor()
+    cursor.execute(query)
+    value = cursor.fetchall()
+    cursor.close()
+    return value
+
+def singleValuedQuryExecution(query):
+    cursor = connection.cursor()
+    cursor.execute(query)
+    value = cursor.fetchone()
+    cursor.close()
+    return value
+
+@login_required
+def targetCreate(request):
+    user_id = request.POST.get('user_id')
+    approval_queue_id  = request.POST.get('approval_queue_id')
+    trgt_yr = request.POST.get('trgt_yr')
+    trgt_january = request.POST.get('trgt_january')
+    trgt_february = request.POST.get('trgt_february')
+    trgt_march = request.POST.get('trgt_march')
+    trgt_april = request.POST.get('trgt_april')
+    trgt_may = request.POST.get('trgt_may')
+    trgt_june = request.POST.get('trgt_june')
+    trgt_july = request.POST.get('trgt_july')
+    trgt_august = request.POST.get('trgt_august')
+    trgt_september = request.POST.get('trgt_september')
+    trgt_october = request.POST.get('trgt_october')
+    trgt_november = request.POST.get('trgt_november')
+    trgt_december = request.POST.get('trgt_december')
+
+    isEdit = request.POST.get('isEdit')
+
+    if isEdit != '':
+        queryEdit = "UPDATE public.user_ai_target SET trgt_yr='" + str(trgt_yr) + "',trgt_january = "+str(trgt_january)+",trgt_february= " + str(trgt_february) + ",trgt_march= " + str(trgt_march) + " ,trgt_april= " + str(trgt_april) + " ,trgt_may= " + str(trgt_may) + ",trgt_june=" + str(trgt_june) + ",trgt_july=" + str(trgt_july) + ",trgt_august=" + str(trgt_august) + ",trgt_september=" + str(trgt_september) + ",trgt_october=" + str(trgt_october) + ",trgt_november=" + str(trgt_november) + ",trgt_december=" + str(trgt_december) + " WHERE id= " + isEdit
+        __db_commit_query(queryEdit)  ## Query Execution Function
+    else:
+        queryCreateTarget = "INSERT INTO public.user_ai_target (user_id, trgt_yr, trgt_january, trgt_february, trgt_march, trgt_april, trgt_may, trgt_june, trgt_july, trgt_august, trgt_september, trgt_october, trgt_november, trgt_december) " \
+                            "VALUES(" + str(user_id) + ", '" + str(trgt_yr) + "'," + str(trgt_january) + ", " + str(trgt_february) + ", " + str(trgt_march) + ", " + str(trgt_april) + ", " + str(trgt_may) + ", " + str(trgt_june) + ", " + str(trgt_july) + ", " + str(trgt_august) + ", " + str(trgt_september) + ", " + str(trgt_october) + ", " + str(trgt_november) + ", " + str(trgt_december) + ")"
+        __db_commit_query(queryCreateTarget)  ## Query Execution Function
+
+    return HttpResponseRedirect('/livestock/set_target/'+str(approval_queue_id))
+
+@login_required
+def targetEdit(request):
+    id = request.POST.get('id')
+    queryFetchSpecific= " SELECT * FROM public.user_ai_target where id = " + str(id)
+    getFetchSpecific = singleValuedQuryExecution(queryFetchSpecific)
+    jsonFetchSpecific = json.dumps({'getFetchSpecific': getFetchSpecific}, default=decimal_date_default)
+    return HttpResponse(jsonFetchSpecific)
+
+@login_required
+def bull_list(request):
+    query = "select id,bull_id ,case when substring(breed from 1 for 1) between '0' and '9' then(select breed_name from breed where id = breed::int) else breed end ,(select organization from usermodule_organizations where id = org_id) ,coalesce(ebp,'') ebp,coalesce(ebpf,'') ebpf, coalesce(ebps,'') ebps from bull"
+    bull_list = json.dumps(__db_fetch_values_dict(query), default=decimal_date_default)
+    return render(request, 'livestock/bull_list.html', {
+        'bull_list': bull_list
+    })
+
+
+@login_required
+def add_bull_form(request):
+    query = "select * from breed"
+    breeds = json.dumps(__db_fetch_values_dict(query), default=decimal_date_default)
+    df = pandas.read_sql(query,connection)
+    breed_id_name = zip(df.id.tolist(),df.breed_name.tolist())
+
+    query = "select * from usermodule_organizations"
+    df = pandas.read_sql(query, connection)
+    org_list = zip(df.id.tolist(), df.organization.tolist())
+
+    query = "select bull_id from bull"
+    df = pandas.read_sql(query, connection)
+    bull_ids = json.dumps(df.bull_id.tolist())
+
+    return render(request, 'livestock/add_bull_form.html',{'breeds': breeds,'breed_id_name':breed_id_name,'org_list':org_list,'bull_ids':bull_ids})
+
+@login_required
+def insert_bull_form(request):
+    if request.POST:
+        bull_id = request.POST.get('bull_id')
+        breed = request.POST.get('breed')
+        if breed == '11':
+            breed = request.POST.get('other_breed')
+
+        org_id = request.POST.get('organization')
+        ebp = request.POST.get('ebp',None)
+        ebpf = request.POST.get('ebpf', None)
+        ebps = request.POST.get('ebps', None)
+        ins_qry = "INSERT INTO public.bull (bull_id, breed, org_id) VALUES('"+str(bull_id)+"', '"+str(breed)+"', "+str(org_id)+") returning id"
+        id = __db_fetch_single_value(ins_qry)
+
+        if ebp !='':
+            updt_qry = "UPDATE public.bull SET  ebp='" + str(ebp) + "' WHERE id=" + str(id)
+            __db_commit_query(updt_qry)
+        if ebpf !='':
+            updt_qry = "UPDATE public.bull SET  ebpf='" + str(ebpf) + "' WHERE id=" + str(id)
+            __db_commit_query(updt_qry)
+        if ebps !='':
+            updt_qry = "UPDATE public.bull SET  ebps='" + str(ebps) + "' WHERE id=" + str(id)
+            __db_commit_query(updt_qry)
+        messages.success(request, '<i class="fa fa-check-circle"></i> New Bull Info has been added successfully!',
+                             extra_tags='alert-success crop-both-side')
+    return HttpResponseRedirect("/livestock/bull_list/")
+
+@login_required
+def edit_bull_form(request,id):
+    qry = "select * from bull where id = "+str(id)
+    df = pandas.DataFrame()
+    df = pandas.read_sql(qry,connection)
+    bull_id = df.bull_id.tolist()[0]
+    breed = df.breed.tolist()[0]
+    org_id = df.org_id.tolist()[0]
+    ebp = df.ebp.tolist()[0] if len(df.ebp.tolist()) else ''
+    ebpf = df.ebpf.tolist()[0] if len(df.ebpf.tolist()) else ''
+    ebps = df.ebps.tolist()[0] if len(df.ebps.tolist()) else ''
+
+    query = "select * from breed"
+    breeds = json.dumps(__db_fetch_values_dict(query), default=decimal_date_default)
+    df = pandas.read_sql(query, connection)
+    breed_id_name = zip(df.id.tolist(), df.breed_name.tolist())
+
+    query = "select * from usermodule_organizations"
+    df = pandas.read_sql(query, connection)
+    org_list = zip(df.id.tolist(), df.organization.tolist())
+
+    query = "select bull_id from bull where id !="+str(id)
+    df = pandas.read_sql(query, connection)
+    bull_ids = json.dumps(df.bull_id.tolist())
+
+    return render(request, 'livestock/edit_bull_form.html',
+                  {'id':id,'bull_id':bull_id,'breed':breed,'org_id':org_id,'ebp':ebp,'ebpf':ebpf,'ebps':ebps,'breeds': breeds, 'breed_id_name': breed_id_name, 'org_list': org_list, 'bull_ids': bull_ids})
+
+def update_bull_form(request):
+    if request.POST:
+        id = request.POST.get('id')
+        bull_id = request.POST.get('bull_id')
+        breed = request.POST.get('breed')
+        if breed == '11':
+            breed = request.POST.get('other_breed')
+
+        org_id = request.POST.get('organization')
+        ebp = request.POST.get('ebp', None)
+        ebpf = request.POST.get('ebpf', None)
+        ebps = request.POST.get('ebps', None)
+
+        updt_qry = "UPDATE public.bull SET bull_id='" + str(bull_id) + "', breed='" + str(breed) + "', org_id=" + str(org_id) + " WHERE id="+str(id)
+        __db_commit_query(updt_qry)
+        if ebp !='':
+            updt_qry = "UPDATE public.bull SET  ebp='" + str(ebp) + "' WHERE id=" + str(id)
+            __db_commit_query(updt_qry)
+        else:
+            updt_qry = "UPDATE public.bull SET  ebp=null WHERE id=" + str(id)
+            __db_commit_query(updt_qry)
+        if ebpf !='':
+            updt_qry = "UPDATE public.bull SET  ebpf='" + str(ebpf) + "' WHERE id=" + str(id)
+            __db_commit_query(updt_qry)
+        else:
+            updt_qry = "UPDATE public.bull SET  ebpf=null WHERE id=" + str(id)
+            __db_commit_query(updt_qry)
+        if ebps !='':
+            updt_qry = "UPDATE public.bull SET  ebps='" + str(ebps) + "' WHERE id=" + str(id)
+            __db_commit_query(updt_qry)
+        else:
+            updt_qry = "UPDATE public.bull SET  ebps=null WHERE id=" + str(id)
+            __db_commit_query(updt_qry)
+        messages.success(request, '<i class="fa fa-check-circle"></i> Bull Info has been updated successfully!',
+                         extra_tags='alert-success crop-both-side')
+    return HttpResponseRedirect("/livestock/bull_list/")
+
+
+@login_required
+def delete_bull_form(request,id):
+    qry = "delete from bull where id = "+str(id)
+    __db_commit_query(qry)
+    messages.success(request, '<i class="fa fa-check-circle"></i> Bull Info has been deleted successfully!',extra_tags='alert-success crop-both-side')
+    return HttpResponseRedirect("/livestock/bull_list/")
 
 def farmer_profile(request, id):
     cattle_proupdate_form_owner_q = "select (select username from auth_user where id = logger_xform.user_id limit 1) as user_name from public.logger_xform where id_string = 'farmer_profile_update'"
@@ -686,7 +905,7 @@ def get_cattle_info(id):
     # q = "select picture,mobile,cattle_type,coalesce(round(cattle_weight::numeric,2)::text,'') cattleweight,COALESCE (AGE(current_date ,date(cattle_birth_date))::text,cattle_age||' months') cattle_age,coalesce(cattle_name,'') cattle_name,(select label from vwcattle_type where value = cattle_type limit 1) as cattletype,coalesce(calf_birth_weight,'') calf_birth_weight from cattle where cattle_system_id = " + str(id)
     # print q
     q = " with t1 as(select picture from cattle_images where cattle_system_id = " + str(
-        id) + " order by created_date desc) ,t2 as(select string_to_array((string_agg(picture,',')),',') cattle_images from t1) select picture,mobile,cattle_type,coalesce(round(cattle_weight::numeric,2)::text,'') cattleweight, COALESCE (AGE(current_date ,date(cattle_birth_date))::text,cattle_age||' months') cattle_age, coalesce(cattle_name,'') cattle_name,(select label from vwcattle_type where value = cattle_type limit 1) as cattletype,coalesce(calf_birth_weight,'') calf_birth_weight ,(select cattle_images from t2) cattle_images from cattle where cattle_system_id = " + str(
+        id) + " order by created_date desc) ,t2 as(select string_to_array((string_agg(picture,',')),',') cattle_images from t1) select picture,mobile,cattle_type,coalesce(round(cattle_weight::numeric,2)::text,'') cattleweight, COALESCE (AGE(current_date ,date(cattle_birth_date))::text,cattle_age||' months') cattle_age, coalesce(cattle_name,'') cattle_name,(select label from vwcattle_type where value = cattle_type limit 1) as cattletype,coalesce(calf_birth_weight,'') calf_birth_weight ,(select cattle_images from t2) cattle_images,sl_final,hf_final,local_final from cattle where cattle_system_id = " + str(
         id)
     dataset = __db_fetch_values_dict(q)
     cattle_dict = {}
@@ -699,12 +918,43 @@ def get_cattle_info(id):
             for tmp in temp['cattle_images']:
                 image = "/media/" + cattle_regi_form_owner + "/attachments/" + tmp
                 cattle_img_list.append(image)
+
+        shahiwal = ''
+        frizian = ''
+        breed_type = ''
+
+        if temp['local_final'] != '100':
+
+            if temp['sl_final']:
+                shahiwal = unicode('শাহীওয়াল ', 'utf-8') + temp['sl_final'] + '%'
+            else:
+                shahiwal = ''
+
+            if temp['hf_final']:
+                frizian = unicode('ফ্রিজিয়ান ', 'utf-8') + temp['hf_final'] + '%'
+            else:
+                frizian = ''
+
+            if temp['sl_final'] and temp['hf_final']:
+                breed_type = shahiwal + ' X ' + frizian
+
+            elif temp['sl_final'] or temp['hf_final']:
+                if temp['sl_final']:
+                    breed_type = shahiwal
+                if temp['hf_final']:
+                    breed_type = frizian
+
+            else:
+                breed_type = ''
+
+        else:
+            breed_type = unicode('দেশী ', 'utf-8') + 'local_final' + '%'
+
         cattle_dict = {'cattle_type': temp['cattle_type'], 'cattle_img': img, 'mobile': temp['mobile'],
                        'cattle_name': temp['cattle_name'], 'cattle_weight': temp['cattleweight'],
                        'cattle_age': temp['cattle_age'], 'cattle_type_text': temp['cattletype'],
-                       'calf_birth_weight': temp['calf_birth_weight'], 'cattle_img_list': cattle_img_list}
+                       'calf_birth_weight': temp['calf_birth_weight'], 'cattle_img_list': cattle_img_list,'breed_type' : breed_type}
     return cattle_dict
-
 
 def get_farmer_info(mobile):
     farmerprofileupdate_form_owner_q = "select (select username from auth_user where id = logger_xform.user_id limit 1) as user_name from public.logger_xform where id_string = 'farmer_profile_update'"

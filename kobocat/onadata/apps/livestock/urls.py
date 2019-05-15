@@ -36,13 +36,30 @@ urlpatterns = patterns('',
                         url(r'^get_content_table/$', views.get_content_table, name='get_content_table'),
                         url(r'^delete_content/(?P<id>\d+)/$', views.delete_content, name='delete_content'),
                         url(r'^get_district/$', views.get_district, name='get_district'),
+                        url(r'^getDistricts/$', views.getDistricts, name='getDistricts'),
                         url(r'^get_upazila/$', views.get_upazila, name='get_upazila'),
+                        url(r'^getUpazillas/$', views.getUpazillas, name='getUpazillas'),
                         url(r'^get_dashboard_content/$', views.get_dashboard_content, name='get_dashboard_content'),
                         url(r'^add_location/(?P<farmer_id>\d+)/$', views.add_location, name='add_location'),
                         url(r'^prescription/$', views.prescription, name='prescription'),
                         url(r'^get_prescription_table/$', views.get_prescription_table, name='get_prescription_table'),
                         url(r'^view_ai_pravet_profile/(?P<id>\d+)/$', views.view_ai_paravet_profile, name='view_ai_paravet_profile'),
                         url(r'^send_prescription_sms/$', views.send_prescription_sms, name='send_prescription_sms'),
+
+                        #DASHBOARD
+                        url(r'^ai_dashboard_content/$', views.ai_dashboard_content, name='ai_dashboard_content'),
+                        url(r'^get_percentage_dashboard/$', views.get_ai_percentage_dashboard, name='get_ai_percentage_dashboard'),
+                        url(r'^get_individual_bull_data/$', views.get_individual_bull_data, name='get_individual_bull_data'),
+
+                        url(r'^group_performance_dashboard/bull/conception_rate/$', views.get_group_performance_dashboard_bull_conception_rate, name='get_group_performance_dashboard_bull_conception_rate'),
+                        url(r'^group_performance_dashboard/bull/service_per_conception/$', views.get_group_performance_dashboard_bull_service_per_conception, name='get_group_performance_dashboard_bull_service_per_conception'),
+                        url(r'^individual_performance_dashboard/bull/(?P<bull_id>\d+)/(?P<category_id>\d+)/$', views.get_individual_bull_performance_dashboard, name='get_individual_bull_performance_dashboard'),
+
+                        url(r'^group_performance_dashboard/ai/conception_rate/$', views.get_group_performance_dashboard_ai_conception_rate, name='get_group_performance_dashboard_ai_conception_rate'),
+                        url(r'^group_performance_dashboard/ai/service_per_conception/$', views.get_group_performance_dashboard_ai_service_per_conception, name='get_group_performance_dashboard_ai_service_per_conception'),
+                        url(r'^individual_performance_dashboard/ai/(?P<ai_id>\d+)/(?P<category_id>\d+)/$', views.get_individual_ai_performance_dashboard, name='get_individual_ai_performance_dashboard'),
+
+
                         url(r'^set_target/(?P<id>\d+)/$', views.set_target, name='set_target'),
                         url(r'^targetCreate/$', views.targetCreate, name="targetCreate"),
                         url(r'^targetEdit/$', views.targetEdit, name="targetEdit"),
@@ -52,6 +69,7 @@ urlpatterns = patterns('',
                         url(r'^edit_bull_form/(?P<id>\d+)/$', views.edit_bull_form,name='edit_bull_form'),
                         url(r'^update_bull_form/$', views.update_bull_form, name='update_bull_form'),
                         url(r'^delete_bull_form/(?P<id>\d+)/$', views.delete_bull_form,name='delete_bull_form'),
+
 
                        ##############################
 

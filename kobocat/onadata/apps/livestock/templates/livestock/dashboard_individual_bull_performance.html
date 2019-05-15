@@ -1,0 +1,442 @@
+{% extends 'base_test.html' %}
+<head>
+    <meta charset="utf-8"/>
+    <title>{% block title %}AI Dashboard{% endblock %}</title>
+</head>
+{% load i18n %}
+{% block additional-headers %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css">
+<link href="https://cdn.datatables.net/buttons/1.4.2/css/buttons.dataTables.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/semantic-ui/2.2.10/semantic.min.css">
+<link href="/static/css/calendar.min.css" rel="stylesheet" type="text/css"/>
+<link href="/static/bootstrap4/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+<!-- Custom fonts for this template-->
+<link href="/static/bootstrap4/vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+<!-- Custom styles for this template-->
+<link href="/static/bootstrap4/css/sb-admin.css" rel="stylesheet">
+<link rel="stylesheet" type="text/css" media="all" href="/static/css/Date-Range-Picker-For-Twitter-Bootstrap/daterangepicker.css">
+
+<style>
+     .e:hover{
+             background-color:#00d06d;
+             color: white;
+        }
+</style>
+
+
+{% endblock %}
+
+
+
+{% block content %}
+<div class="portlet box red">
+   <div class="portlet-title">
+      <div class="caption"><i class="fa fa-adn"></i>Individual Performance Analysis - Bull</div>
+   </div>
+
+   <div class="portlet-body">
+           <div class="row" style="padding: 0px; margin-left: 0px">
+                <div id='a' class="col-md-2"  style="background: #399939;text-align: center;padding: 0px;position: relative;border-radius: 10px;cursor: pointer; margin: 15px;width: 150px;height: 100px" >
+                   <h4 style="color: white;padding-top: 8px;"><strong>Total AI</strong> </h4>
+                   <h1 class="count" style="color: white;margin-top: 0px;">{{program_count}}</h1>
+                   <div class="col-md-12" style="text-align: right;margin-right: 0px;padding: 0px;opacity: 0.2; position: absolute; bottom: -10px;">
+                       <i class="fa fa-calendar-o" style="font-size: 80px;color: white;transform: rotate(0deg)"></i>
+                   </div>
+                </div>
+
+                <div id='b' class="col-md-2"  style="background: #399939;text-align: center;padding: 0px;position: relative;border-radius: 10px;cursor: pointer; margin: 15px;width: 150px;height: 100px ">
+                   <h4 style="color: white;padding-top: 8px;"><strong>Repeat AI</strong> </h4>
+                   <h1 class="count" style="color: white;margin-top: 0px;">{{crop_count}} </h1>
+                   <div class="col-md-12" style="text-align: right;margin-right: 0px;padding: 0px;opacity: 0.2; position: absolute; bottom: -10px;">
+                       <i class="fa fa-snowflake-o" style="font-size: 80px;color: white;transform: rotate(0deg)"></i>
+                   </div>
+                </div>
+
+                <div id='c' class="col-md-2"  style="background: #399939;text-align: center;padding: 0px;position: relative;border-radius: 10px;cursor: pointer; margin: 15px;width: 150px;height: 100px">
+                   <h4 style="color: white;padding-top: 8px;"><strong>Conception Rate</strong> </h4>
+                   <h1 class="count" style="color: white;margin-top: 0px;">{{farmer_count}} </h1>
+                   <div class="col-md-12" style="text-align: right;margin-right: 0px;padding: 0px;opacity: 0.2; position: absolute; bottom: -10px;">
+                       <i class="fa fa-percent" style="font-size: 80px;color: white;transform: rotate(0deg)"></i>
+                   </div>
+                </div>
+
+                <div id='d' class="col-md-2"  style="background: #399939;text-align: center;padding: 0px;position: relative;border-radius: 10px;cursor: pointer; margin: 15px;width: 150px;height: 100px">
+                   <h4 style="color: white;padding-top: 8px;"><strong>Service Per Conception</strong> </h4>
+                   <h1 class="count" style="color: white;margin-top: 0px;">{{sent_sms_count}} </h1>
+                   <div class="col-md-12" style="text-align: right;margin-right: 0px;padding: 0px;opacity: 0.2; position: absolute; bottom: -10px;">
+                       <i class="fa fa-comments-o" style="font-size: 80px;color: white;transform: rotate(-10deg)"></i>
+                   </div>
+                </div>
+
+                <div id='e' class="col-md-2" style="background: #399939;text-align: center;padding: 0px;position: relative;border-radius: 10px;cursor: pointer; margin: 15px;width: 150px;height: 100px">
+                   <h4 style="color: white;padding-top: 8px;"><strong>Target Achieved</strong> </h4>
+                   <h1 class="count" style="color: white;margin-top: 0px;">{{sent_voice_sms_count}} </h1>
+                   <div class="col-md-12" style="text-align: right;margin-right: 0px;padding: 0px;opacity: 0.2; position: absolute; bottom: -10px;">
+                       <i class="fa fa-line-chart " style="font-size: 80px;color: white;transform: rotate(0deg)"></i>
+                   </div>
+                </div>
+
+            </div>
+
+
+
+           <div class="col-md-12" style="margin-top: 30px; margin-bottom: 20px ;padding-left: 8px">
+                <div class="card" style="height: auto;  margin: 5px; background: #d0ffdc">
+                    <div class="card-body">
+                        <div class="col-md-12">
+                                 <p style="margin: 0px;padding: 0px"><strong> Bull Id :</strong>  </p> <br>
+                                 <p style="margin: 0px;padding: 0px"><strong>  Breed :  </strong></p> <br>
+                                 <p style="margin: 0px;padding: 0px"><strong>  Organization :  </strong></p> <br>
+                                 <p style="margin: 0px;padding: 0px"><strong>  Exotic Blood Percentange :</strong>  </p> <br>
+                                 <p style="margin: 0px;padding: 0px"><strong>  Number of AI Technician used the Bull : </strong> </p>
+                        </div>
+                        <div class="col-md-12" style="text-align: center;margin-top: 15px">
+                                 <h3 style="color: royalblue"> <strong> Overall Performance </strong> </h3>
+                        </div>
+                         <div class="row">
+                             <div class="col-md-12">
+                                    <div id="individual_coneption_rate" class="col-md-3"  style="background: #399939;text-align: center;padding: 0px;position: relative;border-radius: 10px;cursor: pointer; margin:35px; height: 50px; text-align: center" >
+                                       <h4 style="color: white;padding-top: 15px;font-size: medium"><strong>Conception Rate</strong> </h4>
+                                    </div>
+                                    <div id="individual_spc" class="col-md-3"  style="background: #399939;text-align: center;padding: 0px;position: relative;border-radius: 10px;cursor: pointer; margin: 35px; height: 50px; text-align: center" >
+                                       <h4 style="color: white;padding-top: 15px;font-size: medium"><strong> Service per Conception </strong> </h4>
+                                    </div>
+                                    <div id="individual_calf_weight" class="col-md-3"  style="background: #399939;text-align: center;padding: 0px;position: relative;border-radius: 10px;cursor: pointer; margin: 35px; height: 50px; text-align: center" >
+                                       <h4 style="color: white;padding-top: 15px;font-size: medium"><strong> Average Calf Birth Weight</strong> </h4>
+                                    </div>
+
+
+                              </div>
+                         </div>
+                         <div class="row">
+                             <div class="col-md-12">
+                                 <div class="card" style="height: auto; width: 100%; background: #a1ffb0">
+                                      <div class="card-body">
+
+                                           <form class="">
+                                            {% csrf_token %}
+                                                <div class="col-md-12">
+                                                    <div class="col-md-2">
+                                                        <div class="form-group">
+                                                            <label>Cattle Type: </label>
+                                                            <select class="form-control" name="cattle_type" id="cattle_type">
+                                                                <option value="%">Select One</option>
+                                                                {% for row in cattle_type_list %}
+                                                                    <option value="{{ row.id }}">{{ row.name }}</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                        <div class="form-group">
+                                                            <label>Division: </label>
+                                                            <select class="form-control" data-division = "{{division}}" name="division" id="division" onclick="load_district(this,0)">
+                                                                <option value="%">Select One</option>
+                                                                 {% for row in division_list %}
+                                                                    <option value="{{ row.id }}">{{ row.name }}</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                        <div class="form-group">
+                                                            <label>District: </label>
+                                                            <select class="form-control" name="district" id="district" onclick="load_upazilla(this,0)">
+                                                                <option value="%">Select One</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                        <div class="form-group">
+                                                            <label>Upazilla: </label>
+                                                            <select class="form-control" name="upazilla" id="upazilla">
+                                                                <option value="%">Select One</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+
+                                                    <div class="col-md-2" >
+                                                        <div class="form-group">
+                                                            <label >Year: </label>
+                                                            <select class="form-control"  name="year" id="year" required>
+                                                                <option value="%">Select One</option>
+                                                                {% for year in year_list %}
+                                                                    <option value="{{ year }}">{{ year }}</option>
+                                                                {% endfor %}
+
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-2">
+                                                        <div class="form-group">
+                                                            <label>Month: </label>
+                                                            <select class="form-control"  name="month" id="month" required>
+                                                                <option value="%">Select One</option>
+                                                                <option value="1">Jan</option>
+                                                                <option value="2">Feb</option>
+                                                                <option value="3">Mar</option>
+                                                                <option value="4">Apr</option>
+                                                                <option value="5">May</option>
+                                                                <option value="6">Jun</option>
+                                                                <option value="7">Jul</option>
+                                                                <option value="8">Aug</option>
+                                                                <option value="9">Sep</option>
+                                                                <option value="10">Oct</option>
+                                                                <option value="11">Nov</option>
+                                                                <option value="12">Dec</option>
+
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                </div>
+
+                                            <input type="hidden" id="selected_category_id" name="selected_category_id" value="1">
+                                            </form>
+                                            <div class="col-md-12">
+                                                <div class="col-md-2 col-md-offset-10">
+                                                        <div class="form-group pull-right">
+                                                    <button style="" onclick="filter_individual_bull_data()" class="btn red" id="default_search">Search</button>
+                                                </div>
+                                                </div>
+
+                                            </div>
+
+                                            <div class="col-md-12" style="position: inherit">
+                                                <div class="card" style="height: auto;  margin: 5px">
+                                                    <div class="card-body">
+                                                        <div id="container_1" style="max-width: 100%; margin: 0 auto;"></div>
+
+                                                    </div>
+                                                </div>
+                                           </div>
+
+
+                                      </div>
+                                 </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+           </div>
+
+
+
+   </div>
+
+</div>
+
+{% endblock %}
+{% block additional-javascript %}
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/dataTables.buttons.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.flash.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/pdfmake.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/vfs_fonts.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.html5.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.print.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/semantic-ui/2.2.10/semantic.min.js"></script>
+    <script type="text/javascript" src="/static/js/calendar.min.js"></script>
+    <script type="text/javascript" src="/static/js/Date-Range-Picker-For-Twitter-Bootstrap/date.js"></script>
+	<script type="text/javascript" src="/static/js/Date-Range-Picker-For-Twitter-Bootstrap/daterangepicker.js"></script>
+	<script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/modules/data.js"></script>
+    <script src="https://code.highcharts.com/modules/drilldown.js"></script>
+    <script>
+
+        $("#individual_coneption_rate").on("click", function() {
+            resetAllColor();
+            $(this).css("background", "#1d6016");
+            document.getElementById("selected_category_id").value = 1 ;
+            get_individual_data(1)
+        });
+
+        $("#individual_spc").on("click", function() {
+            resetAllColor();
+            $(this).css("background", "#1d6016");
+            document.getElementById("selected_category_id").value = 2 ;
+            get_individual_data(2)
+        });
+
+        $("#individual_calf_weight").on("click", function() {
+            resetAllColor();
+            $(this).css("background", "#1d6016");
+            document.getElementById("selected_category_id").value = 3 ;
+            get_individual_data(3)
+        });
+
+
+        function resetAllColor() {
+           $("#individual_coneption_rate").css("background", "#399939");
+           $("#individual_spc").css("background", "#399939");
+           $("#individual_calf_weight").css("background", "#399939");
+        }
+
+        function dashboardBarChart(div, title, data ) {
+           console.log(data);
+           Highcharts.chart(div, {
+              chart: {
+                  type: 'line'
+              },
+              title: {
+                  text: title
+              },
+              xAxis: {
+                  type: 'category'
+              },
+              series: [{
+                  name: '',
+                  colorByPoint: true,
+                  data: data
+                }],
+              plotOptions: {
+                line: {
+                    dataLabels: {
+                        enabled: true
+                    },
+                    enableMouseTracking: true
+                    }
+                  }
+              // drilldown: {
+              //       series: drilldown_data
+              //   }
+            });
+       }
+
+       $(document).ready(function(){
+           category_id = {{ category_id | safe }}
+           console.log(category_id);
+           if (category_id ==1)
+              document.getElementById("individual_coneption_rate").style.background = "#1d6016";
+           else
+               document.getElementById("individual_spc").style.background = "#1d6016";
+           get_individual_data(category_id)
+       });
+
+       function get_individual_data(category_id)
+       {
+            $.ajax({
+                //url: '/livestock/get_percentage_dashboard/',
+                url : '/livestock/get_individual_bull_data/',
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    'category_id': category_id
+                },
+                beforeSend: function () {
+
+                },
+                success: function (result) {
+                    if(category_id == 1){
+                        dashboardBarChart('container_1', 'Conception Rate of the Bull', result.bar_data_division);
+
+                        } else if(category_id == 2){
+                        dashboardBarChart('container_1', 'Service per Conception of the Bull', result.bar_data_division);
+
+                        } else if(category_id == 3){
+                        dashboardBarChart('container_1', ' Average Calf Birth Weight', result.bar_data_division);
+
+                        }
+                }
+            });
+        }
+
+
+       function filter_individual_bull_data() {
+           seleted_category_id = document.getElementById("selected_category_id").value ;
+           cattle_type = document.getElementById("cattle_type").value ;
+           year= $('#year option:selected').val();
+           month= $('#month option:selected').val();
+           division = $('#division option:selected').val();
+           district = $('#district option:selected').val();
+           upazilla = $('#upazilla option:selected').val();
+
+           console.log(seleted_category_id);
+           console.log(cattle_type);
+           console.log(year);
+           console.log(division);
+           console.log(district);
+
+           $.ajax({
+                url : '/livestock/get_individual_bull_data/',
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    'category_id': seleted_category_id
+                },
+                beforeSend: function () {
+
+                },
+                success: function (result) {
+                    if(seleted_category_id == 1){
+                        dashboardBarChart('container_1', 'Division wise total AI', result.bar_data_division);
+
+                        } else if(seleted_category_id == 2){
+                        dashboardBarChart('container_1', 'Division wise Repeated AI', result.bar_data_division);
+
+                        } else if(seleted_category_id == 3){
+                        dashboardBarChart('container_1', 'Division wise Conception Rate', result.bar_data_division);
+
+                        }
+                }
+            });
+       }
+
+
+       function load_district(object,selectValue) {
+            obj = parseInt(object.value);
+            console.log(obj);
+            $.ajax({
+                url: '/livestock/getDistricts/',
+                type: 'POST',
+                dataType: 'json',
+                data: {'div_id': obj},
+
+                success: function (result) {
+                    //console.log(result);
+                    var html_code = "<option value=\"%\">Select One</option>";
+
+                    for (i = 0; i < result.length; i++) {
+                        html_code += "<option value=\"" + result[i].id + "\""+ checkSelect(result[i].id,selectValue) +" > " + result[i].field_name + "</option>";
+                    }
+                    $('#district').html(html_code);
+
+                }
+            });
+
+        }
+
+       function load_upazilla(object,selectValue) {
+            obj = parseInt(object.value);
+
+            $.ajax({
+                url: '/livestock/getUpazillas/',
+                type: 'POST',
+                dataType: 'json',
+                data: {'dis_id': obj},
+                success: function (result) {
+                    var html_code = "<option value=\"%\">Select One</option>";
+
+                    for (i = 0; i < result.length; i++) {
+                        html_code += "<option value=\"" + result[i].id + "\""+ checkSelect(result[i].id,selectValue) +"> " + result[i].field_name + "</option>";
+                    }
+                    $('#upazilla').html(html_code);
+                }
+            });
+
+
+        }
+
+       function checkSelect(id,selectValue){
+            if (id == selectValue) return "selected";
+            else return 1 ;
+        }
+
+
+    </script>
+    {% endblock %}

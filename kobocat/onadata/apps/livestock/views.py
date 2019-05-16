@@ -963,7 +963,7 @@ def get_cattle_info(id):
                 breed_type = ''
 
         else:
-            breed_type = unicode('দেশী ', 'utf-8') + 'local_final' + '%'
+            breed_type = unicode('দেশী ', 'utf-8')+temp['local_final']+'%'
 
         cattle_dict = {'cattle_type': temp['cattle_type'], 'cattle_img': img, 'mobile': temp['mobile'],
                        'cattle_name': temp['cattle_name'], 'cattle_weight': temp['cattleweight'],

@@ -28,6 +28,8 @@
    </div>
 
    <div class="portlet-body">
+            <form class="" method="POST">
+            {% csrf_token %}
             <div class="row">
                 <div class="col-md-12 col-md-offset-6 col-xs-12">
                     <div class="col-md-2 col-md-offset-1">
@@ -56,6 +58,7 @@
                     </div>
                 </div>
             </div>
+            </form>
            <div class="row" style="padding: 0px; margin-left: 0px">
                 <div id='a' class="col-md-2"  style="background: #399939;text-align: center;padding: 0px;position: relative;border-radius: 10px;cursor: pointer; margin: 15px;width: 150px;height: 100px" >
                    <h4 style="color: white;padding-top: 8px;margin-bottom: 20px"><strong>Total AI</strong> </h4>

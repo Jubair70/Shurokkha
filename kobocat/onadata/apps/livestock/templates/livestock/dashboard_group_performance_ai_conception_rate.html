@@ -37,44 +37,46 @@
    <div class="portlet-body">
            <div class="row" style="padding: 0px; margin-left: 0px">
                 <div id='a' class="col-md-2"  style="background: #399939;text-align: center;padding: 0px;position: relative;border-radius: 10px;cursor: pointer; margin: 15px;width: 150px;height: 100px" >
-                   <h4 style="color: white;padding-top: 8px;"><strong>Total AI</strong> </h4>
-                   <h1 class="count" style="color: white;margin-top: 0px;">{{program_count}}</h1>
+                   <h4 style="color: white;padding-top: 8px;margin-bottom: 20px"><strong>Total AI</strong> </h4>
+                   <h1 class="count" style="color: white;margin-top: 0px;">{{total_ai}}</h1>
                    <div class="col-md-12" style="text-align: right;margin-right: 0px;padding: 0px;opacity: 0.2; position: absolute; bottom: -10px;">
                        <i class="fa fa-calendar-o" style="font-size: 80px;color: white;transform: rotate(0deg)"></i>
                    </div>
                 </div>
 
                 <div id='b' class="col-md-2"  style="background: #399939;text-align: center;padding: 0px;position: relative;border-radius: 10px;cursor: pointer; margin: 15px;width: 150px;height: 100px ">
-                   <h4 style="color: white;padding-top: 8px;"><strong>Repeat AI</strong> </h4>
-                   <h1 class="count" style="color: white;margin-top: 0px;">{{crop_count}} </h1>
+                   <h4 style="color: white;padding-top: 8px; margin-bottom: 20px"><strong>Repeat AI</strong> </h4>
+                   <h1 class="count" style="color: white;margin-top: 0px;">{{repeat_ai}} % </h1>
                    <div class="col-md-12" style="text-align: right;margin-right: 0px;padding: 0px;opacity: 0.2; position: absolute; bottom: -10px;">
                        <i class="fa fa-snowflake-o" style="font-size: 80px;color: white;transform: rotate(0deg)"></i>
                    </div>
                 </div>
 
                 <div id='c' class="col-md-2"  style="background: #399939;text-align: center;padding: 0px;position: relative;border-radius: 10px;cursor: pointer; margin: 15px;width: 150px;height: 100px">
-                   <h4 style="color: white;padding-top: 8px;"><strong>Conception Rate</strong> </h4>
-                   <h1 class="count" style="color: white;margin-top: 0px;">{{farmer_count}} </h1>
+                   <h4 style="color: white;padding-top: 8px;margin-bottom: 20px"><strong>Conception Rate</strong> </h4>
+                   <h1 class="count" style="color: white;margin-top: 0px;">{{conception_rate}} % </h1>
                    <div class="col-md-12" style="text-align: right;margin-right: 0px;padding: 0px;opacity: 0.2; position: absolute; bottom: -10px;">
                        <i class="fa fa-percent" style="font-size: 80px;color: white;transform: rotate(0deg)"></i>
                    </div>
                 </div>
 
                 <div id='d' class="col-md-2"  style="background: #399939;text-align: center;padding: 0px;position: relative;border-radius: 10px;cursor: pointer; margin: 15px;width: 150px;height: 100px">
-                   <h4 style="color: white;padding-top: 8px;"><strong>Service Per Conception</strong> </h4>
-                   <h1 class="count" style="color: white;margin-top: 0px;">{{sent_sms_count}} </h1>
+                   <h4 style="color: white;padding-top: 8px; font-size: 18px"><strong>Service Per Conception</strong> </h4>
+                   <h1 class="count" style="color: white;margin-top: 0px;">{{service_per_conception}} </h1>
                    <div class="col-md-12" style="text-align: right;margin-right: 0px;padding: 0px;opacity: 0.2; position: absolute; bottom: -10px;">
                        <i class="fa fa-comments-o" style="font-size: 80px;color: white;transform: rotate(-10deg)"></i>
                    </div>
                 </div>
 
                 <div id='e' class="col-md-2" style="background: #399939;text-align: center;padding: 0px;position: relative;border-radius: 10px;cursor: pointer; margin: 15px;width: 150px;height: 100px">
-                   <h4 style="color: white;padding-top: 8px;"><strong>Target Achieved</strong> </h4>
-                   <h1 class="count" style="color: white;margin-top: 0px;">{{sent_voice_sms_count}} </h1>
+                   <h4 style="color: white;padding-top: 8px;margin-bottom: 20px"><strong>Target Achieved</strong> </h4>
+                   <h1 class="count" style="color: white;margin-top: 0px;">{{target_achieved}}% </h1>
                    <div class="col-md-12" style="text-align: right;margin-right: 0px;padding: 0px;opacity: 0.2; position: absolute; bottom: -10px;">
                        <i class="fa fa-line-chart " style="font-size: 80px;color: white;transform: rotate(0deg)"></i>
                    </div>
                 </div>
+
+
 
                 <div class="col-md-12 col-xs-12" style="margin-bottom: 20px; margin-top: 10px">
                     <div class="col-md-6 col-xs-6 col-md-offset-3 col-xs-offset-3" style="border: 1px solid #399939;padding: 0px">
@@ -99,15 +101,16 @@
                        {% for row in ai_list %}
                        <tr>
                            <td>
-                                {{row.name}}
+                                {{row.name}} / {{row.id}}
                            </td>
                            <td>
                                  <div onclick="location.href='/livestock/individual_performance_dashboard/ai/{{row.id}}/1/';" style="cursor: pointer" title="See Detail">
-                              <div class="progress" style="margin-bottom: 0px;margin-top: 4px">
-                                  <div class="progress-bar" role="progressbar" aria-valuenow="70"
-                                  aria-valuemin="0" aria-valuemax="100" style="width:30% ;background-color: green">
-                                    30%
+                              <div class="progress" style="margin-bottom: 0px;margin-top: 4px;position: inherit">
+                                  <div class="progress-bar" role="progressbar"
+                                  aria-valuemin="0" aria-valuemax="100" style="width:{{row.conception_rate_per_user}}% ;background-color: green ;">
+
                                   </div>
+                                  {{row.conception_rate_per_user}}%
                                 </div>
                                 </div>
                            </td>

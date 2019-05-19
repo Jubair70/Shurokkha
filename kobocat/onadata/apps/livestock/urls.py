@@ -49,7 +49,7 @@ urlpatterns = patterns('',
                         #DASHBOARD
                         url(r'^ai_dashboard_content/$', views.ai_dashboard_content, name='ai_dashboard_content'),
                         url(r'^get_percentage_dashboard/$', views.get_ai_percentage_dashboard, name='get_ai_percentage_dashboard'),
-                        url(r'^get_individual_bull_data/$', views.get_individual_bull_data, name='get_individual_bull_data'),
+                        url(r'^get_individual_ai_data/$', views.get_individual_ai_data, name='get_individual_ai_data'),
 
                         url(r'^group_performance_dashboard/bull/conception_rate/$', views.get_group_performance_dashboard_bull_conception_rate, name='get_group_performance_dashboard_bull_conception_rate'),
                         url(r'^group_performance_dashboard/bull/service_per_conception/$', views.get_group_performance_dashboard_bull_service_per_conception, name='get_group_performance_dashboard_bull_service_per_conception'),

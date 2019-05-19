@@ -36,41 +36,41 @@
 
    <div class="portlet-body">
            <div class="row" style="padding: 0px; margin-left: 0px">
-                <div id='a' class="col-md-2"  style="background: #399939;text-align: center;padding: 0px;position: relative;border-radius: 10px;cursor: pointer; margin: 15px;width: 150px;height: 100px" >
-                   <h4 style="color: white;padding-top: 8px;"><strong>Total AI</strong> </h4>
-                   <h1 class="count" style="color: white;margin-top: 0px;">{{program_count}}</h1>
+                                <div id='a' class="col-md-2"  style="background: #399939;text-align: center;padding: 0px;position: relative;border-radius: 10px;cursor: pointer; margin: 15px;width: 150px;height: 100px" >
+                   <h4 style="color: white;padding-top: 8px;margin-bottom: 20px"><strong>Total AI</strong> </h4>
+                   <h1 class="count" style="color: white;margin-top: 0px;">{{total_ai}}</h1>
                    <div class="col-md-12" style="text-align: right;margin-right: 0px;padding: 0px;opacity: 0.2; position: absolute; bottom: -10px;">
                        <i class="fa fa-calendar-o" style="font-size: 80px;color: white;transform: rotate(0deg)"></i>
                    </div>
                 </div>
 
                 <div id='b' class="col-md-2"  style="background: #399939;text-align: center;padding: 0px;position: relative;border-radius: 10px;cursor: pointer; margin: 15px;width: 150px;height: 100px ">
-                   <h4 style="color: white;padding-top: 8px;"><strong>Repeat AI</strong> </h4>
-                   <h1 class="count" style="color: white;margin-top: 0px;">{{crop_count}} </h1>
+                   <h4 style="color: white;padding-top: 8px; margin-bottom: 20px"><strong>Repeat AI</strong> </h4>
+                   <h1 class="count" style="color: white;margin-top: 0px;">{{repeat_ai}} % </h1>
                    <div class="col-md-12" style="text-align: right;margin-right: 0px;padding: 0px;opacity: 0.2; position: absolute; bottom: -10px;">
                        <i class="fa fa-snowflake-o" style="font-size: 80px;color: white;transform: rotate(0deg)"></i>
                    </div>
                 </div>
 
                 <div id='c' class="col-md-2"  style="background: #399939;text-align: center;padding: 0px;position: relative;border-radius: 10px;cursor: pointer; margin: 15px;width: 150px;height: 100px">
-                   <h4 style="color: white;padding-top: 8px;"><strong>Conception Rate</strong> </h4>
-                   <h1 class="count" style="color: white;margin-top: 0px;">{{farmer_count}} </h1>
+                   <h4 style="color: white;padding-top: 8px;margin-bottom: 20px"><strong>Conception Rate</strong> </h4>
+                   <h1 class="count" style="color: white;margin-top: 0px;">{{conception_rate}} % </h1>
                    <div class="col-md-12" style="text-align: right;margin-right: 0px;padding: 0px;opacity: 0.2; position: absolute; bottom: -10px;">
                        <i class="fa fa-percent" style="font-size: 80px;color: white;transform: rotate(0deg)"></i>
                    </div>
                 </div>
 
                 <div id='d' class="col-md-2"  style="background: #399939;text-align: center;padding: 0px;position: relative;border-radius: 10px;cursor: pointer; margin: 15px;width: 150px;height: 100px">
-                   <h4 style="color: white;padding-top: 8px;"><strong>Service Per Conception</strong> </h4>
-                   <h1 class="count" style="color: white;margin-top: 0px;">{{sent_sms_count}} </h1>
+                   <h4 style="color: white;padding-top: 8px; font-size: 18px"><strong>Service Per Conception</strong> </h4>
+                   <h1 class="count" style="color: white;margin-top: 0px;">{{service_per_conception}} </h1>
                    <div class="col-md-12" style="text-align: right;margin-right: 0px;padding: 0px;opacity: 0.2; position: absolute; bottom: -10px;">
                        <i class="fa fa-comments-o" style="font-size: 80px;color: white;transform: rotate(-10deg)"></i>
                    </div>
                 </div>
 
                 <div id='e' class="col-md-2" style="background: #399939;text-align: center;padding: 0px;position: relative;border-radius: 10px;cursor: pointer; margin: 15px;width: 150px;height: 100px">
-                   <h4 style="color: white;padding-top: 8px;"><strong>Target Achieved</strong> </h4>
-                   <h1 class="count" style="color: white;margin-top: 0px;">{{sent_voice_sms_count}} </h1>
+                   <h4 style="color: white;padding-top: 8px;margin-bottom: 20px"><strong>Target Achieved</strong> </h4>
+                   <h1 class="count" style="color: white;margin-top: 0px;">{{target_achieved}}% </h1>
                    <div class="col-md-12" style="text-align: right;margin-right: 0px;padding: 0px;opacity: 0.2; position: absolute; bottom: -10px;">
                        <i class="fa fa-line-chart " style="font-size: 80px;color: white;transform: rotate(0deg)"></i>
                    </div>
@@ -87,7 +87,7 @@
            </div>
            <div class="row" style="margin-left: 2px; margin-top: 20px">
            <div class="col-md-8">
-                <table id="farmerInfoListTable" class="table table-bordered table-hover nowrap">
+                <table id="bullInfoListTable" class="table table-bordered table-hover nowrap">
                     <thead class="flip-content check">
                     <tr>
                         <th> Bull Id</th>
@@ -96,13 +96,13 @@
                     </tr>
                     </thead>
                     <tbody>
-                       {% for row in ai_list %}
+                       {% for row in bull_list %}
                        <tr>
                            <td>
-                                {{row.name}}
+                                {{row.bull_id}}
                            </td>
                            <td>
-                                 <div onclick="location.href='/livestock/individual_performance_dashboard/bull/1/1/';" style="cursor: pointer" title="See Detail">
+                                 <div onclick="location.href='/livestock/individual_performance_dashboard/bull/{{row.id}}/1/';" style="cursor: pointer" title="See Detail">
                               <div class="progress" style="margin-bottom: 0px;margin-top: 4px">
                                   <div class="progress-bar" role="progressbar" aria-valuenow="70"
                                   aria-valuemin="0" aria-valuemax="100" style="width:30% ;background-color: green">
@@ -250,6 +250,11 @@
     <script src="https://code.highcharts.com/modules/data.js"></script>
     <script src="https://code.highcharts.com/modules/drilldown.js"></script>
     <script>
+
+        $(document).ready(function(){
+            $('#bullInfoListTable').dataTable();
+        });
+
 
         $("#a").on("click", function() {
             resetAllColor();

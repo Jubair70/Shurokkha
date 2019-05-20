@@ -1,0 +1,198 @@
+{% extends 'base_test.html' %}
+{% load i18n %}
+{% block additional-headers %}
+
+{% endblock %}
+
+{% block content %}
+
+    <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption">
+                <i class="fa fa-reorder"></i> Bull Registration
+            </div>
+        </div>
+
+        <div class="portlet-body">
+            <form class="horizontal-form" id="" method="post" action="/livestock/insert_bull_form/" id="form"
+                  enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-body">
+                <div class="row">
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label>Bull ID:</label>
+                                <input type="text" class="form-control" name="bull_id" id="bull_id" required>
+                                <span style="color:red; font-size: 11px;" id ="alert_duplicate_bull_id" hidden>Duplicate Bull ID Not Accepted</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label>Breed: </label>
+                                <select class="form-control" name="breed" id="breed" onclick="load_pres(this)" required>
+                                        <option value="">Select One</option>
+                                        {% for x,y in breed_id_name %}
+                                            <option value="{{ x }}">{{ y }}</option>
+                                        {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row" id="other_row" hidden>
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label>Breed Name</label>
+                                <input type="text" class="form-control" name="other_breed" id="other_breed">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label >Organization: </label>
+                                <select class="form-control" name="organization" id="organization" onclick="" required>
+                                    <option value="">Select One</option>
+                                    {% for x ,y in org_list %}
+                                        <option value="{{ x }}">{{ y }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row" id="ebp_row" hidden>
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label>Exotic Blood Pressure:</label>
+                                <input type="text" class="form-control" name="ebp" id="ebp">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row" id="ebpf_row" hidden>
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label>Exotic Blood Pressure(for f):</label>
+                                <input type="text" class="form-control" name="ebpf" id="ebpf">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row" id="ebps_row" hidden>
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label>Exotic Blood Pressure(for s):</label>
+                                <input type="text" class="form-control" name="ebps" id="ebps">
+                            </div>
+                        </div>
+                    </div>
+
+
+
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <button class="btn btn-danger pull-left" id="submit" name="submit" type="submit"
+                                    data-original-title=""
+                                    title="">Submit
+                            </button>
+                            <button onclick="history.go(-1);" style="margin-left:10px;" type="button"
+                                    class="btn btn-info pull-left" data-original-title="" title="">Cancel
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block additional-javascript %}
+    <script>
+    var breeds = {{ breeds | safe }};
+    var bull_ids = {{ bull_ids | safe }};
+    $('#submit').on('click', function(){
+        var bull_id = $('#bull_id').val();
+        if(bull_ids.includes(bull_id))
+        {
+            $('#alert_duplicate_bull_id').show();
+            return false
+        }
+    });
+
+    function load_pres(obj) {
+        $('#ebp_row').hide();
+        $("#ebp").prop('required',false);
+        $("#ebp").val('');
+        $('#ebpf_row').hide();
+        $("#ebpf").prop('required',false);
+        $("#ebpf").val('');
+        $('#ebps_row').hide();
+        $("#ebps").prop('required',false);
+        $("#ebps").val('');
+        $('#other_row').hide();
+        $('#other_breed').prop('required',false);
+        $("#other_breed").val('');
+        breed_id = obj.value;
+
+        for(each in breeds)
+        {
+
+            if(breeds[each].id == breed_id)
+            {
+                console.log(breeds[each]);
+                if(breeds[each].breed_name == 'Others')
+                {
+                    $('#other_row').show();
+                    $('#other_breed').prop('required',true);
+                }
+
+                if(breeds[each].validation_bp == 1)
+                {
+                    $('#ebp_row').show();
+                    $("#ebp").prop('required',true);
+                }
+
+                if(breeds[each].validation_bpf == 1)
+                {
+                    $('#ebpf_row').show();
+                    $("#ebpf").prop('required',true);
+                }
+
+                if(breeds[each].validation_bps == 1)
+                {
+                    $('#ebps_row').show();
+                    $("#ebps").prop('required',true);
+                }
+
+                if(breeds[each].default_val_bp != null)
+                {
+                    $("#ebp").val(breeds[each].default_val_bp);
+                }
+
+                if(breeds[each].default_val_bpf != null)
+                {
+                    $("#ebpf").val(breeds[each].default_val_bpf);
+                }
+
+                if(breeds[each].default_val_bps != null)
+                {
+                    $("#ebps").val(breeds[each].default_val_bps);
+                }
+
+                if(breeds[each].validation_bp == 0 && breeds[each].validation_bpf == 0 && breeds[each].validation_bps == 0)
+                {
+                    $('#ebp_row').show();
+                }
+                break;
+            }
+        }
+    }
+
+
+
+
+    </script>
+
+{% endblock %}

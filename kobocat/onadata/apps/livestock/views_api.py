@@ -497,11 +497,115 @@ def get_cattle_list(request):
             img_path = "media/" + cattle_regi_form_owner + "/attachments/" + img
         data_dict['image_url'] = img_path
 
+        shahiwal = ''
+        frizian = ''
+        breed_type = ''
+
+        if temp['local_final'] != '100':
+
+            if temp['sl_final'] :
+                shahiwal = unicode('শাহীওয়াল ', 'utf-8')+temp['sl_final']+'%'
+            else:
+                shahiwal = ''
+
+            if temp['hf_final']:
+                frizian = unicode('ফ্রিজিয়ান ', 'utf-8') + temp['hf_final'] + '%'
+            else:
+                frizian = ''
+
+            if temp['sl_final'] and temp['hf_final']:
+                breed_type = shahiwal+ ' X ' + frizian
+
+            elif temp['sl_final'] or temp['hf_final']:
+                if temp['sl_final']:
+                    breed_type = shahiwal
+                if temp['hf_final']:
+                    breed_type = frizian
+
+            else:
+                breed_type = ''
+
+        else:
+            breed_type = unicode('দেশী ', 'utf-8')+temp['local_final']+'%'
+
+        data_dict['breed_type'] = breed_type
+
         data_list.append(data_dict.copy())
         data_dict.clear()
     return HttpResponse(json.dumps(data_list))
 
+@csrf_exempt
+def get_cattle_general_info(request):
+    cattle_id = request.GET.get('cattle_id')
+    q = " select *,date(created_date)::text as register_date ,(select label from vwcattle_type where value =cattle_type ) cattle_type_text,(select label from vwcattle_origin where value =cattle_origin ) cattle_origin_text from cattle where cattle_system_id = " + cattle_id
+    #q= "with pv_own_cattle as(select cattle_system_id from cattle where mobile = '"+farmer_id+"'), pv_served_cattle as (select (json->>'system_id')::Integer cattle_system_id from logger_instance where xform_id in(600,603,605) and user_id=(select id from auth_user where username = '"+farmer_id+"') and (json ->>'system_id') is not null), pv_created_farmer_cattle as (select cattle_system_id from cattle where mobile in(select mobile from farmer where submitted_by =(select id from auth_user where username = '"+farmer_id+"'))) ((select pv_own_cattle.cattle_system_id from pv_own_cattle) union (select pv_served_cattle.cattle_system_id from pv_served_cattle) union (select pv_created_farmer_cattle.cattle_system_id from pv_created_farmer_cattle))"
+    #q = "with pv_own_cattle as(select cattle_system_id from cattle where mobile = '"+farmer_id+"'), pv_served_cattle as (select (json->>'system_id')::Integer cattle_system_id from logger_instance where xform_id in(600,603,605) and user_id=(select id from auth_user where username = '"+farmer_id+"') and (json ->>'system_id') is not null), pv_created_farmer_cattle as (select cattle_system_id from cattle where mobile in(select mobile from farmer where submitted_by =(select id from auth_user where username = '"+farmer_id+"'))), final_cattle_list as((select pv_own_cattle.cattle_system_id from pv_own_cattle) union (select pv_served_cattle.cattle_system_id from pv_served_cattle) union (select pv_created_farmer_cattle.cattle_system_id from pv_created_farmer_cattle)) select *,date(created_date)::text as register_date ,(select label from vwcattle_type where value =cattle_type ) cattle_type_text,(select label from vwcattle_origin where value =cattle_origin ) cattle_origin_text from cattle where cattle_system_id in (select cattle_system_id from final_cattle_list)"
+    dataset = views.__db_fetch_values_dict(q)
+    #print q
+    cattle_regi_form_owner_q = "select (select username from auth_user where id = logger_xform.user_id limit 1) as user_name from public.logger_xform where id_string = 'cattle_registration'"
+    cattle_regi_form_owner = views.__db_fetch_single_value(cattle_regi_form_owner_q)
+    data_list = []
+    for temp in dataset:
+        data_dict = {}
+        data_dict['id'] = temp['cattle_id']
+        data_dict['name'] = temp['cattle_name']
+        data_dict['farmer_phone'] = temp['mobile']
+        data_dict['calf_age'] = temp['calf_age']
+        data_dict['cattle_age'] = temp['cattle_age']
+        data_dict['register_date'] = temp['register_date']
+        data_dict['cattle_birth_date'] = temp['cattle_birth_date']
+        #data_dict['weight'] = temp['cattle_weight']
+        #data_dict['calf_birth_weight'] = temp['calf_birth_weight']
+        data_dict['cattle_type'] = temp['cattle_type_text']
+        data_dict['cattle_system_id'] = temp['cattle_system_id']
+        if temp['cattle_weight'] == None:
+            if temp['cattle_type'] =='4':
+                if temp['calf_birth_weight'] is not None:
+                    data_dict['weight'] = temp['calf_birth_weight']
+        else:
+            data_dict['weight'] = temp['cattle_weight']
+        img_path = None
+        if temp['picture'] is not None:
+            img = temp['picture']
+            img_path = "media/" + cattle_regi_form_owner + "/attachments/" + img
+        data_dict['image_url'] = img_path
 
+        shahiwal = ''
+        frizian = ''
+        breed_type = ''
+
+        if temp['local_final'] != '100':
+
+            if temp['sl_final'] :
+                shahiwal = unicode('শাহীওয়াল ', 'utf-8')+temp['sl_final']+'%'
+            else:
+                shahiwal = ''
+
+            if temp['hf_final']:
+                frizian = unicode('ফ্রিজিয়ান ', 'utf-8') + temp['hf_final'] + '%'
+            else:
+                frizian = ''
+
+            if temp['sl_final'] and temp['hf_final']:
+                breed_type = shahiwal+ ' X ' + frizian
+
+            elif temp['sl_final'] or temp['hf_final']:
+                if temp['sl_final']:
+                    breed_type = shahiwal
+                if temp['hf_final']:
+                    breed_type = frizian
+
+            else:
+                breed_type = ''
+
+        else:
+            breed_type = unicode('দেশী ', 'utf-8')+temp['local_final']+'%'
+
+        data_dict['breed_type'] = breed_type
+
+        data_list.append(data_dict.copy())
+        data_dict.clear()
+    return HttpResponse(json.dumps(data_list))
 
 @csrf_exempt
 def delete_farmer(request):

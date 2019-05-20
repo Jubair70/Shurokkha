@@ -1301,6 +1301,94 @@ Dashboard
 '''
 
 
+"""
+Emtiaz work (S)
+"""
+
+@login_required
+def get_sms_dashboard(request):
+    division_query = "select distinct division as name, div_code id from vwunion_code"
+    division_dict = __db_fetch_values_dict(division_query)
+
+    '''
+    farmer_query = "select count (*) from vwuser_org_role where role = 'Farmer'"
+    paravet_query = "select count(*)from vwuser_org_role where role = 'Paravet'"
+    ai_query = "select count(*) from vwuser_org_role where role = 'AI Technicians'"
+    vet_query = "select count(*) from vwuser_org_role where role = 'Veterinary'"
+    cattle_query = "select count(*) from cattle"
+    sickness_query = "select count (*) from appointment where appointment_type ='2' "
+    husbandry_query = "select count (*) from appointment where appointment_type ='1' or appointment_type ='3'"
+    filter_query = ""
+    if request.method == 'POST':
+        from_date = request.POST.get('from_date')
+        to_date = request.POST.get('to_date')
+        division = request.POST.get('division')
+        district = request.POST.get('district')
+        upazila = request.POST.get('upazila')
+
+        if from_date != "" and to_date != "":
+            filter_query += "and appointment_date::date between '" + str(from_date) + "' and '" + str(to_date) + "' "
+
+    farmer_count = __db_fetch_single_value(farmer_query + filter_query)
+    paravet_count = __db_fetch_single_value(paravet_query + filter_query)
+    ai_count = __db_fetch_single_value(ai_query + filter_query)
+    vet_count = __db_fetch_single_value(vet_query + filter_query)
+    cattle_count = __db_fetch_single_value(cattle_query + filter_query)
+    sickness_count = __db_fetch_single_value(sickness_query + filter_query)
+    husbandry_count = __db_fetch_single_value(husbandry_query + filter_query)
+
+    return render(request, 'livestock/sms_dashboard.html',
+                  {'division': division_dict, 'farmer_count': farmer_count, 'paravet_count': paravet_count,
+                   'ai_count': ai_count, 'vet_count': vet_count, 'cattle_count': cattle_count,
+                   'sickness_count': sickness_count, 'husbandry_count': husbandry_count})
+'''
+
+    return render(request, 'livestock/sms_dashboard.html', {'division': division_dict})
+
+
+
+def get_sms_dashboard_content(request):
+    date_range = request.POST.get('date_range')
+    if date_range == '':
+        start_date = '01/01/2010'
+        end_date = '12/28/2021'
+    else:
+        dates = get_dates(str(date_range))
+        start_date = dates.get('start_date')
+        end_date = dates.get('end_date')
+    division = request.POST.get('division')
+    district = request.POST.get('district')
+    upazila = request.POST.get('upazila')
+    farmer_query = "select count (*) from farmer  where coalesce(division::text,'') like '" + division + "' and coalesce(district::text,'') like '" + district + "' and  coalesce(upazila::text,'') like '" + upazila + "' and date(submission_time) BETWEEN '" + start_date + "' and '" + end_date + "'"
+    paravet_query = "select count(*)from paravet_aitechnician where user_type = 'Paravet' and coalesce(division::text,'') like '" + division + "' and coalesce(district::text,'') like '" + district + "' and  coalesce(upazila::text,'') like '" + upazila + "' and date(submission_time) BETWEEN '" + start_date + "' and '" + end_date + "'"
+    ai_query = "select count(*) from paravet_aitechnician where user_type = 'AI Technicians' and coalesce(division::text,'') like '" + division + "' and coalesce(district::text,'') like '" + district + "' and  coalesce(upazila::text,'') like '" + upazila + "' and date(submission_time) BETWEEN '" + start_date + "' and '" + end_date + "'"
+    vet_query = "select count(*) from vwuser_org_role where role = 'Veterinary'"
+    cattle_query = "select count(*) from vwcattle_farmer where coalesce(division::text,'') like '" + division + "' and coalesce(district::text,'') like '" + district + "' and  coalesce(upazila::text,'') like '" + upazila + "' and  date(created_date) BETWEEN '" + start_date + "' and '" + end_date + "'"
+    sickness_query = "select count (*) from vwcattle_appointment where  coalesce(division::text,'') like '" + division + "' and coalesce(district::text,'') like '" + district + "' and  coalesce(upazila::text,'') like '" + upazila + "' and appointment_type ='2' and date(created_date) BETWEEN '" + start_date + "' and '" + end_date + "'"
+    husbandry_query = "select count (*) from vwcattle_appointment where  coalesce(division::text,'') like '" + division + "' and coalesce(district::text,'') like '" + district + "' and  coalesce(upazila::text,'') like '" + upazila + "' and appointment_type ='1' or appointment_type ='3'  and date(created_date) BETWEEN '" + start_date + "' and '" + end_date + "'"
+
+    farmer_count = __db_fetch_single_value(farmer_query)
+    paravet_count = __db_fetch_single_value(paravet_query)
+    ai_count = __db_fetch_single_value(ai_query)
+    vet_count = __db_fetch_single_value(vet_query)
+    cattle_count = __db_fetch_single_value(cattle_query)
+    sickness_count = __db_fetch_single_value(sickness_query)
+    husbandry_count = __db_fetch_single_value(husbandry_query)
+
+    return render(request, 'livestock/sms_dashboard_content.html',
+                  {'farmer_count': farmer_count, 'paravet_count': paravet_count,
+                   'ai_count': ai_count, 'vet_count': vet_count, 'cattle_count': cattle_count,
+                   'sickness_count': sickness_count, 'husbandry_count': husbandry_count})
+
+
+
+
+
+"""
+Emtiaz work (E)
+"""
+
+
 @login_required
 def get_dashboard(request):
     division_query = "select distinct division as name, div_code id from vwunion_code"

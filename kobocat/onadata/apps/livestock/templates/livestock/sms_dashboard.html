@@ -1,0 +1,188 @@
+{% extends 'base_test.html' %}
+<head>
+    <meta charset="utf-8"/>
+    <title>{% block title %}SMS Dashboard{% endblock %}</title>
+</head>
+{% load i18n %}
+{% block additional-headers %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css">
+<link href="https://cdn.datatables.net/buttons/1.4.2/css/buttons.dataTables.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/semantic-ui/2.2.10/semantic.min.css">
+<link href="/static/css/calendar.min.css" rel="stylesheet" type="text/css"/>
+<link href="/static/bootstrap4/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+<!-- Custom fonts for this template-->
+<link href="/static/bootstrap4/vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+<!-- Custom styles for this template-->
+<link href="/static/bootstrap4/css/sb-admin.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" media="all" href="/static/css/Date-Range-Picker-For-Twitter-Bootstrap/daterangepicker.css">
+
+
+ <style>
+
+ .sms-dashboard-div{
+     padding-left: 0px;
+ }
+
+ </style>
+
+
+{% endblock %}
+
+
+
+{% block content %}
+<div class="portlet box red">
+   <div class="portlet-title">
+      <div class="caption"><i class="fa fa-adn"></i>SMS Dashboard</div>
+   </div>
+   {% csrf_token %}
+   <div class="portlet-body">
+      <div class="row">
+         <div class="col-md-4">
+            <div class="form-group">
+               <label >Division </label>
+               <select class="form-control" name="division" id="division">
+                <option value = "%">Select</option>
+                  {% for div in division %}
+                        <option value="{{ div.id }}">{{ div.name }}</option>
+                    {% endfor %}
+                  
+               </select>
+            </div>
+         </div>
+         <div class="col-md-4">
+            <div class="form-group">
+               <label>District </label>
+               <select class="form-control" name="district" id="district">
+                  <option value="%" selected>Select One</option>
+                  
+               </select>
+            </div>
+         </div>
+         <div class="col-md-4">
+            <div class="form-group">
+               <label>Upazila </label>
+               <select class="form-control" name="upazila" id="upazila">
+                  <option value="%" selected >Select One</option>
+                  
+               </select>
+            </div>
+         </div>
+      </div>
+      <div class="row">
+         <div class="col-md-3"><label class="control-label"> Date range</label><br>
+            <input class = "form-control" readonly type="text" name="reservation" id="date_range" />
+        </div>
+         <div class="col-md-4" style="    margin-top: 9px; " >
+            <label class="control-label" > </label><br>
+               <button class="btn btn-info pull-left" id="generate_report" name="generate_report"
+                  data-original-title=""
+                  title="">Search</button>
+
+         </div>
+      </div>
+      <br>
+      <div class="container-fluid" id="dashboard_content">
+
+      </div>
+      <!-- /.container-fluid-->
+      <!-- /.content-wrapper-->
+      <!-- Scroll to Top Button-->
+      <!-- Bootstrap core JavaScript-->
+   </div>
+</div>
+
+{% endblock %}
+{% block additional-javascript %}
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/dataTables.buttons.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.flash.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/pdfmake.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/vfs_fonts.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.html5.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.print.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/semantic-ui/2.2.10/semantic.min.js"></script>
+    <script type="text/javascript" src="/static/js/calendar.min.js"></script>
+    <script type="text/javascript" src="/static/js/Date-Range-Picker-For-Twitter-Bootstrap/date.js"></script>
+	<script type="text/javascript" src="/static/js/Date-Range-Picker-For-Twitter-Bootstrap/daterangepicker.js"></script>
+    <script>
+        $(document).ready(function () {
+            get_dashboard_content()
+            $('#date_range').daterangepicker({ showDropdowns: true,maxDate: new Date()});
+        });
+
+        function getfilterCriteria(){
+            date_range = $('#date_range').val();
+            division = $('#division').val();
+            district = $('#district').val();
+            upazila = $('#upazila').val();
+
+        }
+
+        function get_dashboard_content(){
+            getfilterCriteria()
+            $.ajax({
+                url: '/livestock/get_sms_dashboard_content/',
+                type: 'POST',
+                data:{'date_range' : date_range,'division' : division,'district' : district,'upazila' : upazila},
+                success: function (data) {
+                    $("#dashboard_content").html(data);
+
+                }
+            });
+
+        }
+        $(document).on("click", "#generate_report", function () {
+            get_dashboard_content()
+        });
+
+      /*geo hierarchy loading*/
+         $(document).on("change", "#division", function () {
+            division = $(this).val()
+
+            $.ajax({
+                type: 'POST',
+                url: '/livestock/get_district/',
+                data: {
+
+                    'div_code': division,
+                },
+                success: function (data) {
+                   list = JSON.parse(data)
+
+                    $('#district').find('option').remove()
+                    $('#district').append('<option value = "%">All</option>')
+                    for (var i = 0 ; i < list.dist_list.length ; i++){
+                         $('#district').append('<option value = '+list.dist_list[i][1]+'>'+list.dist_list[i][0]+'</option>')
+                    }
+                }
+
+            });
+
+        });
+        $(document).on("change", "#district", function () {
+            district = $(this).val()
+                        $.ajax({
+                type: 'POST',
+                url: '/livestock/get_upazila/',
+                data: {
+
+                    'dist_code': district,
+                },
+                success: function (data) {
+                   list = JSON.parse(data)
+                    console.log(list)
+                    $('#upazila').find('option').remove()
+                    $('#upazila').append('<option value = "%">All </option>')
+
+                    for (var i = 0 ; i < list.upz_list.length ; i++){
+                         $('#upazila').append('<option value = '+list.upz_list[i][1]+'>'+list.upz_list[i][0]+'</option>')
+                    }
+                }
+
+            });
+
+        });
+    </script>
+    {% endblock %}

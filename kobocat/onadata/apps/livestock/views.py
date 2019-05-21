@@ -33,6 +33,11 @@ import requests
 from django.views.decorators.csrf import csrf_exempt
 from onadata.apps.livestock.tasks import prescription_upload
 
+import sys
+reload(sys)
+sys.setdefaultencoding('utf8')
+
+
 push_service = FCMNotification(
     api_key="AAAA1dBJQYk:APA91bGQf5qjEkdhxxcjnvodj-xMKVWmRPQ2UbBw_qsp4XlxGratkzemLNbF6JYnTIZ1jfRIZ-1e1IaqSZctL_n_i338zF5_5swkRBAiW0PEc4fW_DOl-03jq-aKLKOfOVcHcZMqDLctAXVKOT-kx4XdRRekuIofqg")
 
@@ -2683,3 +2688,4 @@ def get_individual_ai_performance_dashboard(request,ai_id,category_id):
         'total_bull_used':total_bull_used,
         'year_id':year
     })
+

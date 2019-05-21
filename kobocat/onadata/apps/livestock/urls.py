@@ -46,14 +46,14 @@ urlpatterns = patterns('',
                         url(r'^view_ai_pravet_profile/(?P<id>\d+)/$', views.view_ai_paravet_profile, name='view_ai_paravet_profile'),
                         url(r'^send_prescription_sms/$', views.send_prescription_sms, name='send_prescription_sms'),
 
-<<<<<<< HEAD
+
                         ###****************** Emtiaz work (S) ****************###
 
                         url(r'^get_sms_dashboard/$', views.get_sms_dashboard, name='get_sms_dashboard'),
                         url(r'^get_sms_dashboard_content/$', views.get_sms_dashboard_content, name='get_sms_dashboard_content'),
 
                        ###****************** Emtiaz work (E) ****************###
-=======
+
                         #DASHBOARD
                         url(r'^ai_dashboard_content/$', views.ai_dashboard_content, name='ai_dashboard_content'),
                         url(r'^get_percentage_dashboard/$', views.get_ai_percentage_dashboard, name='get_ai_percentage_dashboard'),
@@ -78,7 +78,7 @@ urlpatterns = patterns('',
                         url(r'^update_bull_form/$', views.update_bull_form, name='update_bull_form'),
                         url(r'^delete_bull_form/(?P<id>\d+)/$', views.delete_bull_form,name='delete_bull_form'),
 
->>>>>>> 0d6a45ed2cda9302ca1bf5331b533b370167a267
+
 
                        ##############################
 

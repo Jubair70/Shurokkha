@@ -856,20 +856,20 @@
                 if ('{{ clinical_findings_data }}'){
                     $('#clinical_findings_id_prescription').val('{{ clinical_findings_data.id }}')
                     $('#clinical_findings_id').val('{{ clinical_findings_data.id }}')
-                    $('#complain_details').val('{{ clinical_findings_data.complain_details  | safe}}')
-                    $('#treatment_history').val('{{ clinical_findings_data.treatment_history | safe}}')
+                    $('#complain_details').val('{{ clinical_findings_data.complain_details  | escapejs}}')
+                    $('#treatment_history').val('{{ clinical_findings_data.treatment_history | escapejs }}')
                     //$('#same_sickness_other_cattle').val({{ clinical_findings_data.same_sickness_other_cattle  | safe}} )
                     //$('#sick_cattle_affected_or_died').val('{{ clinical_findings_data.sick_cattle_affected_or_died | safe}}')
-                    $('#deworming_history').val('{{ clinical_findings_data.deworming_history | safe}}')
-                    $('#feeding_history').val('{{ clinical_findings_data.feeding_history | safe}}')
+                    $('#deworming_history').val('{{ clinical_findings_data.deworming_history | escapejs}}')
+                    $('#feeding_history').val('{{ clinical_findings_data.feeding_history | escapejs}}')
                     $('#wrong_feeding_last_days').val({{ clinical_findings_data.wrong_feeding_last_days | safe}})
-                    $('#rumination').val('{{ clinical_findings_data.rumination | safe}}')
+                    $('#rumination').val('{{ clinical_findings_data.rumination | escapejs}}')
                     //$('#lacrimation').val('{{ clinical_findings_data.lacrimation | safe}}')
                     //$('#muzzle').val({{ clinical_findings_data.muzzle | safe}})
                     $('#sickness_sign').val({{ clinical_findings_data.sickness_sign | safe}})
                     $('#behavioral_signs').val({{ clinical_findings_data.behavioral_signs | safe}})
                     $('#mouth_digestion_sign').val({{ clinical_findings_data.mouth_digestion_sign | safe}})
-                    $('#stool_condition').val('{{ clinical_findings_data.stool_condition | safe}}')
+                    $('#stool_condition').val('{{ clinical_findings_data.stool_condition | safe }}')
                     $('#repiratory_sign').val({{ clinical_findings_data.repiratory_sign | safe}})
                     $('#reproductive_problem').val({{ clinical_findings_data.reproductive_problem | safe}})
                     $('#milking_problem').val({{ clinical_findings_data.milking_problem | safe}})
@@ -877,8 +877,9 @@
                     $('#skin_problem').val({{ clinical_findings_data.skin_problem | safe}})
                     $('#foot_problem').val({{ clinical_findings_data.foot_problem | safe}})
                     $('#megot').val({{ clinical_findings_data.megot|safe }})
-                    $('#disease_pattern').val('{{ clinical_findings_data.disease_pattern | safe}}')
-                    $('#diagnosis_name').val('{{ clinical_findings_data.tentative_diagnosis | safe}}')
+                    $('#disease_pattern').val('{{ clinical_findings_data.disease_pattern | safe }}')
+                    $('#diagnosis_name').val('{{ clinical_findings_data.tentative_diagnosis | escapejs}}')
+
 
                 }
                 $('#prescription').show();

@@ -541,7 +541,8 @@ def get_cattle_general_info(request):
     #q= "with pv_own_cattle as(select cattle_system_id from cattle where mobile = '"+farmer_id+"'), pv_served_cattle as (select (json->>'system_id')::Integer cattle_system_id from logger_instance where xform_id in(600,603,605) and user_id=(select id from auth_user where username = '"+farmer_id+"') and (json ->>'system_id') is not null), pv_created_farmer_cattle as (select cattle_system_id from cattle where mobile in(select mobile from farmer where submitted_by =(select id from auth_user where username = '"+farmer_id+"'))) ((select pv_own_cattle.cattle_system_id from pv_own_cattle) union (select pv_served_cattle.cattle_system_id from pv_served_cattle) union (select pv_created_farmer_cattle.cattle_system_id from pv_created_farmer_cattle))"
     #q = "with pv_own_cattle as(select cattle_system_id from cattle where mobile = '"+farmer_id+"'), pv_served_cattle as (select (json->>'system_id')::Integer cattle_system_id from logger_instance where xform_id in(600,603,605) and user_id=(select id from auth_user where username = '"+farmer_id+"') and (json ->>'system_id') is not null), pv_created_farmer_cattle as (select cattle_system_id from cattle where mobile in(select mobile from farmer where submitted_by =(select id from auth_user where username = '"+farmer_id+"'))), final_cattle_list as((select pv_own_cattle.cattle_system_id from pv_own_cattle) union (select pv_served_cattle.cattle_system_id from pv_served_cattle) union (select pv_created_farmer_cattle.cattle_system_id from pv_created_farmer_cattle)) select *,date(created_date)::text as register_date ,(select label from vwcattle_type where value =cattle_type ) cattle_type_text,(select label from vwcattle_origin where value =cattle_origin ) cattle_origin_text from cattle where cattle_system_id in (select cattle_system_id from final_cattle_list)"
     dataset = views.__db_fetch_values_dict(q)
-    #print q
+    if len(dataset) < 1:
+        return HttpResponse('{}')
     cattle_regi_form_owner_q = "select (select username from auth_user where id = logger_xform.user_id limit 1) as user_name from public.logger_xform where id_string = 'cattle_registration'"
     cattle_regi_form_owner = views.__db_fetch_single_value(cattle_regi_form_owner_q)
     data_list = []
@@ -605,7 +606,7 @@ def get_cattle_general_info(request):
 
         data_list.append(data_dict.copy())
         data_dict.clear()
-    return HttpResponse(json.dumps(data_list))
+    return HttpResponse(json.dumps(data_list[0]))
 
 @csrf_exempt
 def delete_farmer(request):

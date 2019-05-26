@@ -1,0 +1,364 @@
+{% extends 'base_test.html' %}
+<head>
+    <meta charset="utf-8"/>
+    <title>{% block title %}AI Dashboard{% endblock %}</title>
+</head>
+{% load i18n %}
+{% block additional-headers %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css">
+<link href="https://cdn.datatables.net/buttons/1.4.2/css/buttons.dataTables.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/semantic-ui/2.2.10/semantic.min.css">
+<link href="/static/css/calendar.min.css" rel="stylesheet" type="text/css"/>
+<link href="/static/bootstrap4/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+<!-- Custom fonts for this template-->
+<link href="/static/bootstrap4/vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+<!-- Custom styles for this template-->
+<link href="/static/bootstrap4/css/sb-admin.css" rel="stylesheet">
+<link rel="stylesheet" type="text/css" media="all" href="/static/css/Date-Range-Picker-For-Twitter-Bootstrap/daterangepicker.css">
+
+<style>
+     .e:hover{
+             background-color:#00d06d;
+             color: white;
+        }
+</style>
+
+
+{% endblock %}
+
+
+
+{% block content %}
+<div class="portlet box red">
+   <div class="portlet-title">
+      <div class="caption"><i class="fa fa-adn"></i>Bull Performance Analysis</div>
+   </div>
+
+   <div class="portlet-body">
+           <div class="row" style="padding: 0px; margin-left: 0px">
+                               <div id='a' class="col-md-2"  style="background: #399939;text-align: center;padding: 0px;position: relative;border-radius: 10px;cursor: pointer; margin: 15px;width: 150px;height: 100px" >
+                   <h4 style="color: white;padding-top: 8px;margin-bottom: 20px"><strong>Total AI</strong> </h4>
+                   <h1 class="count" style="color: white;margin-top: 0px;">{{total_ai}}</h1>
+                   <div class="col-md-12" style="text-align: right;margin-right: 0px;padding: 0px;opacity: 0.2; position: absolute; bottom: -10px;">
+                       <i class="fa fa-calendar-o" style="font-size: 80px;color: white;transform: rotate(0deg)"></i>
+                   </div>
+                </div>
+
+                <div id='b' class="col-md-2"  style="background: #399939;text-align: center;padding: 0px;position: relative;border-radius: 10px;cursor: pointer; margin: 15px;width: 150px;height: 100px ">
+                   <h4 style="color: white;padding-top: 8px; margin-bottom: 20px"><strong>Repeat AI</strong> </h4>
+                   <h1 class="count" style="color: white;margin-top: 0px;">{{repeat_ai}} % </h1>
+                   <div class="col-md-12" style="text-align: right;margin-right: 0px;padding: 0px;opacity: 0.2; position: absolute; bottom: -10px;">
+                       <i class="fa fa-snowflake-o" style="font-size: 80px;color: white;transform: rotate(0deg)"></i>
+                   </div>
+                </div>
+
+                <div id='c' class="col-md-2"  style="background: #399939;text-align: center;padding: 0px;position: relative;border-radius: 10px;cursor: pointer; margin: 15px;width: 150px;height: 100px">
+                   <h4 style="color: white;padding-top: 8px;margin-bottom: 20px"><strong>Conception Rate</strong> </h4>
+                   <h1 class="count" style="color: white;margin-top: 0px;">{{conception_rate}} % </h1>
+                   <div class="col-md-12" style="text-align: right;margin-right: 0px;padding: 0px;opacity: 0.2; position: absolute; bottom: -10px;">
+                       <i class="fa fa-percent" style="font-size: 80px;color: white;transform: rotate(0deg)"></i>
+                   </div>
+                </div>
+
+                <div id='d' class="col-md-2"  style="background: #399939;text-align: center;padding: 0px;position: relative;border-radius: 10px;cursor: pointer; margin: 15px;width: 150px;height: 100px">
+                   <h4 style="color: white;padding-top: 8px; font-size: 18px"><strong>Service Per Conception</strong> </h4>
+                   <h1 class="count" style="color: white;margin-top: 0px;">{{service_per_conception}} </h1>
+                   <div class="col-md-12" style="text-align: right;margin-right: 0px;padding: 0px;opacity: 0.2; position: absolute; bottom: -10px;">
+                       <i class="fa fa-comments-o" style="font-size: 80px;color: white;transform: rotate(-10deg)"></i>
+                   </div>
+                </div>
+
+                <div id='e' class="col-md-2" style="background: #399939;text-align: center;padding: 0px;position: relative;border-radius: 10px;cursor: pointer; margin: 15px;width: 150px;height: 100px">
+                   <h4 style="color: white;padding-top: 8px;margin-bottom: 20px"><strong>Target Achieved</strong> </h4>
+                   <h1 class="count" style="color: white;margin-top: 0px;">{{target_achieved}}% </h1>
+                   <div class="col-md-12" style="text-align: right;margin-right: 0px;padding: 0px;opacity: 0.2; position: absolute; bottom: -10px;">
+                       <i class="fa fa-line-chart " style="font-size: 80px;color: white;transform: rotate(0deg)"></i>
+                   </div>
+                </div>
+
+                <div class="col-md-12 col-xs-12" style="margin-bottom: 20px; margin-top: 10px">
+                    <div class="col-md-6 col-xs-6 col-md-offset-3 col-xs-offset-3" style="border: 1px solid #399939;padding: 0px">
+
+                          <div class="btn e col-md-6 col-xs-6" style="font-weight: bold;" onclick="location.href='/livestock/group_performance_dashboard/bull/conception_rate';" >Conception Rate</div>
+                          <div class="btn col-md-6 col-xs-6 active" style="background: #399939;color: white;font-weight: bold" onclick="location.href='';"> Service Per Conception</div>
+                    </div>
+                </div>
+
+
+           </div>
+           <div class="row" style="margin-left: 2px; margin-top: 20px">
+           <div class="col-md-8">
+                <table id="farmerInfoListTable" class="table table-bordered table-hover nowrap">
+                    <thead class="flip-content check">
+                    <tr>
+                        <th> Bull Id</th>
+                        <th> Service per Conception</th>
+
+                    </tr>
+                    </thead>
+                    <tbody>
+                       <td>
+                            1
+                       </td>
+                       <td>
+                          <div onclick="location.href='/livestock/individual_performance_dashboard/bull/1/2/';" style="cursor: pointer" title="See Detail">
+                          <div class="progress" style="margin-bottom: 0px;margin-top: 4px">
+                              <div class="progress-bar" role="progressbar" aria-valuenow="70"
+                              aria-valuemin="0" aria-valuemax="100" style="width:99% ;background-color: #6382fb">
+                                1.67
+                              </div>
+                            </div>
+                          </div>
+                       </td>
+
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-md-4" >
+                 <div class="card" style="height: auto;  margin: 0px; padding: 0px; background: #d0ffdc">
+                    <div class="card-body" style="margin: 0px;padding: 0px">
+                         <div class="col-md-12" style="margin-left: 0px;">
+                               <form class="" method="POST">
+                                    {% csrf_token %}
+
+                                    <div class="col-md-12" style="padding: 0px">
+                                        <div class="col-md-12" style="padding-left: 0px;margin-left: 0px">
+                                            <div class="form-group">
+                                                <label style="float: left; margin-right: 10px">Organization: </label>
+                                                <select class="form-control pull-right" style="width: 150px" name="organization" id="organization" required>
+                                                    <option value="%">Select One</option>
+                                                    {% for org_id,org_name in organization %}
+                                                        <option value="{{ org_id }}">{{ org_name }}</option>
+                                                    {% endfor %}
+
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <br>
+                                        <div class="col-md-12" style="padding-left: 0px;margin-left: 0px">
+                                            <div class="form-group">
+                                                <label style="float: left; margin-right: 10px">Breed Type: </label>
+                                                <select class="form-control pull-right" style="width: 150px" name="breed" id="breed" required>
+                                                    <option value="%">Select One</option>
+                                                    {% for breed_id,breed_name in breed %}
+                                                        <option value="{{ breed_id }}">{{ breed_name }}</option>
+                                                    {% endfor %}
+
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <br>
+                                         <div class="col-md-12" style="padding-left: 0px;margin-left: 0px">
+                                            <div class="form-group">
+                                                <label style="float: left; margin-right: 10px">Performance: </label>
+                                                <select class="form-control pull-right" style="width: 150px" name="performance" id="performance" required>
+                                                    <option value="%">Select One</option>
+                                                    <option value="1">High performing</option>
+                                                    <option value="2">Low performing</option>
+
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <br>
+                                        <div class="col-md-12" style="padding-left: 0px;margin-left: 0px">
+                                            <div class="form-group">
+                                                <label style="float: left; margin-right: 10px">Range: </label>
+                                                <select class="form-control pull-right" style="width: 150px" name="range" id="range" required>
+                                                    <option value="%">All</option>
+                                                    <option value="5">5</option>
+                                                    <option value="10">10</option>
+                                                    <option value="15">15</option>
+                                                    <option value="20">20</option>
+
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <br>
+                                        <div class="col-md-12" style="padding-left: 0px;margin-left: 0px">
+                                            <div class="form-group">
+                                                <label style="float: left; margin-right: 10px">Year: </label>
+                                                <select class="form-control pull-right" style="width: 150px" name="year" id="year" required>
+                                                    <option value="%">Select One</option>
+                                                    {% for year in year_list %}
+                                                        <option value="{{ year }}">{{ year }}</option>
+                                                    {% endfor %}
+
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <br>
+                                        <div class="col-md-12" style="padding-left: 0px;margin-left: 0px">
+                                            <div class="form-group">
+                                                <label style="float: left; margin-right: 10px">Month: </label>
+                                                <select class="form-control pull-right" style="width: 150px" name="month" id="month" required>
+                                                    <option value="%">Select One</option>
+                                                    <option value="1">Jan</option>
+                                                    <option value="2">Feb</option>
+                                                    <option value="3">Mar</option>
+                                                    <option value="4">Apr</option>
+                                                    <option value="5">May</option>
+                                                    <option value="6">Jun</option>
+                                                    <option value="7">Jul</option>
+                                                    <option value="8">Aug</option>
+                                                    <option value="9">Sep</option>
+                                                    <option value="10">Oct</option>
+                                                    <option value="11">Nov</option>
+                                                    <option value="12">Dec</option>
+
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <br>
+                                        <div class="col-md-12" style="margin-top:20px">
+                                            <div class="form-group pull-right">
+                                                <button style="margin-left:0px;" type="submit" class="btn red" id="default_search">Filter</button>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                               </form>
+                           </div>
+
+                    </div>
+                </div>
+            </div>
+            </div>
+
+   </div>
+
+</div>
+
+{% endblock %}
+{% block additional-javascript %}
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/dataTables.buttons.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.flash.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/pdfmake.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/vfs_fonts.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.html5.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.print.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/semantic-ui/2.2.10/semantic.min.js"></script>
+    <script type="text/javascript" src="/static/js/calendar.min.js"></script>
+    <script type="text/javascript" src="/static/js/Date-Range-Picker-For-Twitter-Bootstrap/date.js"></script>
+	<script type="text/javascript" src="/static/js/Date-Range-Picker-For-Twitter-Bootstrap/daterangepicker.js"></script>
+	<script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/modules/data.js"></script>
+    <script src="https://code.highcharts.com/modules/drilldown.js"></script>
+    <script>
+
+        $("#a").on("click", function() {
+            resetAllColor();
+            $(this).css("background", "green");
+            get_percentage(1)
+        });
+
+        $("#b").on("click", function() {
+            resetAllColor();
+            $(this).css("background", "green");
+            get_percentage(2)
+        });
+
+        $("#c").on("click", function() {
+            resetAllColor();
+            $(this).css("background", "green");
+             get_percentage(3)
+        });
+
+        $("#d").on("click", function() {
+            resetAllColor();
+            $(this).css("background", "green");
+             get_percentage(4)
+        });
+
+        $("#e").on("click", function() {
+            resetAllColor();
+            $(this).css("background", "green");
+             get_percentage(5)
+        });
+
+
+        function resetAllColor() {
+           $("#a").css("background", "#399939");
+           $("#b").css("background", "#399939");
+           $("#c").css("background", "#399939");
+           $("#d").css("background", "#399939");
+           $("#e").css("background", "#399939");
+        }
+
+        function dashboardBarChart(div, title, data ) {
+           console.log(data);
+           Highcharts.chart(div, {
+              chart: {
+                  type: 'column'
+              },
+              title: {
+                  text: title
+              },
+              xAxis: {
+                  type: 'category'
+              },
+              series: [{
+                  name: '',
+                  colorByPoint: true,
+                  data: data
+                }],
+              plotOptions: {
+                    column: {
+                      groupPadding: 0,
+                      pointPadding: 0,
+                      dataLabels: {
+                        format: '{point.y:.1f}%',
+                        enabled: true,
+                      }
+                    }
+                  }
+              // drilldown: {
+              //       series: drilldown_data
+              //   }
+            });
+       }
+
+       $(document).ready(function(){
+            document.getElementById("a").style.background = "green";
+            get_percentage(1)
+       });
+
+       function get_percentage(category_id)
+       {
+            $.ajax({
+                url: '/livestock/get_percentage_dashboard/',
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    'category_id': category_id
+                },
+                beforeSend: function () {
+
+                },
+                success: function (result) {
+                    if(category_id == 1){
+                        dashboardBarChart('container_1', 'Division wise total AI', result.bar_data_division);
+                        dashboardBarChart('container_2', 'Organization wise total AI', result.bar_data_organization);
+                        } else if(category_id == 2){
+                        dashboardBarChart('container_1', 'Division wise Repeated AI', result.bar_data_division);
+                        dashboardBarChart('container_2', 'Organization wise Repeated AI', result.bar_data_organization);
+                        } else if(category_id == 3){
+                        dashboardBarChart('container_1', 'Division wise Conception Rate', result.bar_data_division);
+                        dashboardBarChart('container_2', 'Organization wise Conception Rate', result.bar_data_organization);
+                        } else if(category_id == 4){
+                        dashboardBarChart('container_1', 'Division wise Service per Conception', result.bar_data_division);
+                        dashboardBarChart('container_2', 'Organization wise Service per Conception', result.bar_data_organization);
+                        } else if(category_id == 5){
+                        dashboardBarChart('container_1', 'Division wise Target Achieved', result.bar_data_division);
+                        dashboardBarChart('container_2', 'Organization wise Target Achieved', result.bar_data_organization);
+                        }
+                }
+            });
+        }
+
+
+
+    </script>
+    {% endblock %}

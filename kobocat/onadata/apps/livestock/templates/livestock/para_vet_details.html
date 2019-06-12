@@ -123,7 +123,7 @@
             </div>
 
 
-            <div class="row mt-1">
+            <div class="row mt-4">
 
                 <div id="para_vat_chart_individual" class="col-sm-12 col-md-12  ">
 
@@ -155,7 +155,10 @@
         <script type="text/javascript" src="/static/js/Date-Range-Picker-For-Twitter-Bootstrap/date.js"></script>
         <script type="text/javascript" src="/static/js/Date-Range-Picker-For-Twitter-Bootstrap/daterangepicker.js"></script>
 
-
+    <script src="http://code.highcharts.com/highcharts.js"></script>
+    <script type="text/javascript" src="http://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/highcharts-more.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
 
     <script>
 
@@ -213,16 +216,19 @@
 
             $.ajax({
                 type: 'POST',
-                url: '/deltacap/getInstitutionalTypeDashboard/',
+                url: '/livestock/get_paravet_performance_dashboard/',
+
                 success: function (data) {
 
-                    var barchart = data
+                    var barchart = ''
 
 
-                    jsonDataList('para_vat_chart_individual', '', 'column', false, true, barchart)
+                    jsonDataList('para_vat_chart_individual', '', 'line', false, true, barchart)
                 }
 
             });
+
+
         }
 
 
@@ -267,22 +273,46 @@
         }
 
 
+                var se = [{
+        name: 'Population',
+        data: [
+            ['Shanghai', 24.2],
+            ['Beijing', 20.8],
+            ['Karachi', 14.9],
+            ['Shenzhen', 13.7],
+            ['Guangzhou', 13.1],
+        ],
+        dataLabels: {
+            enabled: true,
+            rotation: -90,
+            color: '#FFFFFF',
+            align: 'right',
+            format: '{point.y:.1f}', // one decimal
+            y: 10, // 10 pixels down from the top
+            style: {
+                fontSize: '13px',
+                fontFamily: 'Verdana, sans-serif'
+            }
+        }
+    }]
+
+
         function jsonDataList(divId, titleText, chartType, stackLabelEnabled, plotColumnDatalabelEnabled, dataset) {
 
             // ******* Total Value of Chart (S) ******
             var dataSum = 0;
-            if (chartType != 'pie') {
-
-                for (var i = 0; i < dataset.total[0].data.length; i++) {
-
-                    dataSum += dataset.total[0].data[i]
-                }
-
-
-                var pcnt = (this.y / dataSum) * 100;
-
-
-            }
+{#            if (chartType != 'pie') {#}
+{##}
+{#                for (var i = 0; i < dataset.total[0].data.length; i++) {#}
+{##}
+{#                    dataSum += dataset.total[0].data[i]#}
+{#                }#}
+{##}
+{##}
+{#                var pcnt = (this.y / dataSum) * 100;#}
+{##}
+{##}
+{#            }#}
 
 
             // ******* Total Value of Chart (E) ******
@@ -309,7 +339,11 @@
 
             var xAxis = {
 
-                categories: dataset.cat_list,
+               // categories: dataset.cat_list,
+                categories:             ['Shanghai', 'Beijing',
+            'Karachi',
+            'Shenzhen',
+            'Guangzhou'] ,
                 //     tickmarkPlacement: 'on',
                 title: {
                     enabled: false
@@ -386,7 +420,8 @@
 
             }
             else {
-                var series = dataset.total;
+                //var series = dataset.total;
+                var series = se
 
             }
 

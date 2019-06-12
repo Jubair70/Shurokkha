@@ -211,7 +211,7 @@
                     </div>
 
                 </div>
-                <div id="para_vat_chart" class="col-sm-9 col-md-9  ">
+                <div id="para_vat_chart" class="col-sm-7 col-md-7 ml-5 ">
 
                 </div>
             </div>
@@ -238,6 +238,15 @@
     <script type="text/javascript" src="/static/js/calendar.min.js"></script>
     <script type="text/javascript" src="/static/js/Date-Range-Picker-For-Twitter-Bootstrap/date.js"></script>
     <script type="text/javascript" src="/static/js/Date-Range-Picker-For-Twitter-Bootstrap/daterangepicker.js"></script>
+
+
+    <script src="http://code.highcharts.com/highcharts.js"></script>
+    <script type="text/javascript" src="http://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/highcharts-more.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+
+
+
 
     <script>
 
@@ -329,19 +338,30 @@
 
         function get_chart_data() {
 
-
-            console.log("Enter into chart Area")
-
             get_chart_filterCriteria()
 
             // ********* Instituition Type   ************
 
             $.ajax({
                 type: 'POST',
-                url: '/deltacap/getInstitutionalTypeDashboard/',
+                url: '/livestock/get_paravet_performance_dashboard/',
+                data:{
+                    "extra_ordinary_from ": extra_ordinary_from ,
+                    "extra_ordinary_to" : extra_ordinary_to ,
+                    "above_average_from" : above_average_from ,
+                    "above_average_to" : above_average_to ,
+                    "moderate_from" : moderate_from ,
+                    "moderate_to" : moderate_to ,
+                    "need_training_from" : need_training_from ,
+                    "need_training_to" : need_training_to,
+                    "poor_from" : poor_from ,
+                    "poor_to" : poor_to ,
+                    "reconsider_from" : reconsider_from ,
+                    "reconsider_to" : reconsider_to ,
+                },
                 success: function (data) {
 
-                    var barchart = data
+                    var barchart = ''
 
 
                     jsonDataList('para_vat_chart', '', 'column', false, true, barchart)
@@ -448,6 +468,29 @@
         });
 
 
+        var se = [{
+        name: 'Population',
+        data: [
+            ['Shanghai', 24.2],
+            ['Beijing', 20.8],
+            ['Karachi', 14.9],
+            ['Shenzhen', 13.7],
+            ['Guangzhou', 13.1],
+        ],
+        dataLabels: {
+            enabled: true,
+            rotation: -90,
+            color: '#FFFFFF',
+            align: 'right',
+            format: '{point.y:.1f}', // one decimal
+            y: 10, // 10 pixels down from the top
+            style: {
+                fontSize: '13px',
+                fontFamily: 'Verdana, sans-serif'
+            }
+        }
+    }]
+
 
 
 
@@ -455,18 +498,18 @@
 
             // ******* Total Value of Chart (S) ******
             var dataSum = 0;
-            if (chartType != 'pie') {
-
-                for (var i = 0; i < dataset.total[0].data.length; i++) {
-
-                    dataSum += dataset.total[0].data[i]
-                }
-
-
-                var pcnt = (this.y / dataSum) * 100;
-
-
-            }
+{#            if (chartType != 'pie') {#}
+{##}
+{#                for (var i = 0; i < dataset.total[0].data.length; i++) {#}
+{##}
+{#                    dataSum += dataset.total[0].data[i]#}
+{#                }#}
+{##}
+{##}
+{#                var pcnt = (this.y / dataSum) * 100;#}
+{##}
+{##}
+{#            }#}
 
 
             // ******* Total Value of Chart (E) ******
@@ -493,7 +536,11 @@
 
             var xAxis = {
 
-                categories: dataset.cat_list,
+               // categories: dataset.cat_list,
+                categories:             ['Shanghai', 'Beijing',
+            'Karachi',
+            'Shenzhen',
+            'Guangzhou'] ,
                 //     tickmarkPlacement: 'on',
                 title: {
                     enabled: false
@@ -570,7 +617,8 @@
 
             }
             else {
-                var series = dataset.total;
+                //var series = dataset.total;
+                var series = se
 
             }
 

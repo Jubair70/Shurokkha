@@ -1678,9 +1678,6 @@ def get_para_vet_performance_dashboard_content(request):
                           "json->>'picture' as picture " \
                           "from logger_instance where  xform_id = (select id from logger_xform where id_string = 'paravet_at_tech_profile_update')"
 
-
-    print query_para_vet_list
-
     para_vet_list = makeTableList(query_para_vet_list)
     json_para_vet_list = json.dumps({'para_vet_list': para_vet_list} , default=decimal_date_default)
 
@@ -1701,6 +1698,44 @@ def get_para_vet_details(request, id ):
     print get_para_vet_info
 
     return render(request, 'livestock/para_vet_details.html' , {'get_para_vet_info': get_para_vet_info})
+
+
+
+
+def get_paravet_performance_dashboard(request):
+    #query = "select (select type_name from usermodule_institution_type where id = any(select type_id from usermodule_institution where id = institution_info_id 	)) institution_type , count(id) cnt from accesment_details group by institution_type"
+
+    ## ******  ( Category for multiple value of each Legend) ******* (Start)
+
+    '''
+        uniqueList = getUniqueValues(dataset, name_field)
+        category_list = getUniqueValues(dataset, category_field)
+
+        seriesData = []
+        for ul in uniqueList:
+        print(ul)
+        dict = {}
+        dict['name'] = ul;
+
+        dict['data'] = [nameTodata[data_field] for nameTodata in dataset if nameTodata[name_field] == ul]
+        seriesData.append(dict)
+    '''
+
+    ## ******  ( Category for multiple value of each Legend) ******* (End)
+
+
+    # category_list = getUniqueValues(dataset, 'institution_type')
+    # seriesData = []
+    # dict = {}
+    #
+    # dict['data'] = [nameTodata['cnt'] for nameTodata in dataset]
+    # seriesData.append(dict)
+
+    # jsonForChart = json.dumps({'cat_list': category_list, 'total': seriesData}, default=decimal_date_default)
+    #
+    # return HttpResponse(jsonForChart, mimetype='text/json')
+    jsonForChart = ''
+    return HttpResponse(jsonForChart, mimetype='text/json')
 
 
 """

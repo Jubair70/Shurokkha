@@ -1,0 +1,676 @@
+{% extends 'base_test.html' %}
+<head>
+    <meta charset="utf-8"/>
+    <title>{% block title %}Para Vet Performance Dashboard{% endblock %}</title>
+</head>
+{% load i18n %}
+{% block additional-headers %}
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css">
+    <link href="https://cdn.datatables.net/buttons/1.4.2/css/buttons.dataTables.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/semantic-ui/2.2.10/semantic.min.css">
+    <link href="/static/css/calendar.min.css" rel="stylesheet" type="text/css"/>
+    <link href="/static/bootstrap4/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom fonts for this template-->
+    <link href="/static/bootstrap4/vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <!-- Custom styles for this template-->
+    <link href="/static/bootstrap4/css/sb-admin.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" media="all"
+          href="/static/css/Date-Range-Picker-For-Twitter-Bootstrap/daterangepicker.css">
+
+
+    <style>
+
+        .sms-dashboard-div {
+            padding-left: 0px;
+        }
+
+        .btn-color {
+            background-color: #00B755;
+            border: #00B755;
+        }
+
+    </style>
+
+
+{% endblock %}
+
+
+
+{% block content %}
+    <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption"><i class="fa fa-adn"></i>Para Vet Performance Dashboard</div>
+        </div>
+        {% csrf_token %}
+        <div class="portlet-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>Division </label>
+                        <select class="form-control" name="division" id="division">
+                            <option value="%">Select</option>
+                            {% for div in division %}
+                                <option value="{{ div.id }}">{{ div.name }}</option>
+                            {% endfor %}
+
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>District </label>
+                        <select class="form-control" name="district" id="district">
+                            <option value="%" selected>Select One</option>
+
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>Upazila </label>
+                        <select class="form-control" name="upazila" id="upazila">
+                            <option value="%" selected>Select One</option>
+
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3"><label class="control-label"> Date range</label><br>
+                    <input class="form-control" readonly type="text" name="reservation" id="date_range"/>
+                </div>
+                <div class="col-md-4" style="    margin-top: 9px; ">
+                    <label class="control-label"> </label><br>
+                    <button class="btn btn-info pull-left btn-color " id="generate_report" name="generate_report"
+                            data-original-title=""
+                            title="">Search
+                    </button>
+
+                </div>
+            </div>
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    <table id="para_vet" class="table table-bordered ">
+                        <caption class="textAlign">
+
+                        </caption>
+                        <thead>
+                        <tr>
+                            <th>Para Vet Name</th>
+                            <th>District</th>
+                            <th>No. of cases reported</th>
+                            <th>Mobile No.</th>
+                            <th>Multiple cases for farmer</th>
+                            <th>Multiple cases for cattle</th>
+                            <th>Average TAT</th>
+                            <th></th>
+                        </tr>
+
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-md-2">
+                    <button class="btn btn-info pull-left btn-color " id="no_of_cases_report" name="no_of_cases_report"
+                            data-original-title=""
+                            title="" onclick="get_chart_data() ">No. of Cases Reported
+                    </button>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-info pull-left btn-color " id="tat_report" name="tat_report"
+                            data-original-title=""
+                            title="" onclick="get_chart_data() ">TAT
+                    </button>
+
+                </div>
+            </div>
+
+
+            <div class="row mt-1">
+                <div class="col-md-4 ml-3 mt-3 p-3" style="border: 1px solid black ">
+                    <div class="row ">
+                        <div class="col-md-12">
+                            <div class="input-group row ">
+                                <div class="col-md-6">
+                                    <span class=" pt-2 ">Extra Ordinary</span>
+                                </div>
+                                <input type="text" class="form-control " name="extra_ordinary_from"
+                                       id="extra_ordinary_from" placeholder="Start">
+                                <span class=" pt-2 input-group-text ">to</span>
+                                <input type="text" class="form-control" name="extra_ordinary_to" id="extra_ordinary_to"
+                                       placeholder="End">
+                            </div>
+                        </div>
+                        <div class="col-md-12 mt-2">
+                            <div class="input-group row ">
+                                <div class="col-md-6">
+                                    <span class=" pt-2 ">Above Average</span>
+                                </div>
+                                <input type="text" class="form-control" name="above_average_from"
+                                       id="above_average_from" placeholder="Start">
+                                <span class="  pt-2 input-group-text ">to</span>
+                                <input type="text" class="form-control" name="above_average_to" id="above_average_to"
+                                       placeholder="End">
+                            </div>
+                        </div>
+                        <div class="col-md-12 mt-2">
+                            <div class="input-group row ">
+                                <div class="col-md-6">
+                                    <span class="  pt-2 ">Moderate</span>
+                                </div>
+                                <input type="text" class="form-control" name="moderate_from"
+                                       id="moderate_from" placeholder="Start">
+                                <span class=" pt-2 input-group-text ">to</span>
+                                <input type="text" class="form-control" name="moderate_to" id="moderate_to"
+                                       placeholder="End">
+                            </div>
+                        </div>
+                        <div class="col-md-12 mt-2">
+                            <div class="input-group row ">
+                                <div class="col-md-6">
+                                    <span class="  pt-2 ">Need Training </span>
+                                </div>
+                                <input type="text" class="form-control" name="need_training_from"
+                                       id="need_training_from" placeholder="Start">
+                                <span class="  pt-2 input-group-text ">to</span>
+                                <input type="text" class="form-control" name="need_training_to" id="need_training_to"
+                                       placeholder="End">
+                            </div>
+                        </div>
+                        <div class="col-md-12 mt-2">
+                            <div class="input-group row ">
+                                <div class="col-md-6">
+                                    <span class=" pr-3 pt-2 ">Poor</span>
+                                </div>
+                                <input type="text" class="form-control" name="poor_from"
+                                       id="poor_from" placeholder="Start">
+                                <span class=" pt-2 input-group-text ">to</span>
+                                <input type="text" class="form-control" name="poor_to" id="poor_to"
+                                       placeholder="End">
+                            </div>
+                        </div>
+
+                        <div class="col-md-12 mt-2">
+                            <div class="input-group row ">
+                                <div class="col-md-6">
+                                    <span class=" pr-3 pt-2 ">Reconsider</span>
+                                </div>
+                                <input type="text" class="form-control" name="reconsider_from"
+                                       id="reconsider_from" placeholder="Start">
+                                <span class="  pt-2 input-group-text ">to</span>
+                                <input type="text" class="form-control" name="reconsider_to" id="reconsider_to"
+                                       placeholder="End">
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+                <div id="para_vat_chart" class="col-sm-9 col-md-9  ">
+
+                </div>
+            </div>
+
+
+            <!-- /.container-fluid-->
+            <!-- /.content-wrapper-->
+            <!-- Scroll to Top Button-->
+            <!-- Bootstrap core JavaScript-->
+        </div>
+    </div>
+
+{% endblock %}
+{% block additional-javascript %}
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/dataTables.buttons.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.flash.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/pdfmake.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/vfs_fonts.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.html5.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.print.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/semantic-ui/2.2.10/semantic.min.js"></script>
+    <script type="text/javascript" src="/static/js/calendar.min.js"></script>
+    <script type="text/javascript" src="/static/js/Date-Range-Picker-For-Twitter-Bootstrap/date.js"></script>
+    <script type="text/javascript" src="/static/js/Date-Range-Picker-For-Twitter-Bootstrap/daterangepicker.js"></script>
+
+    <script>
+
+
+
+
+
+        function ajaxSetupRequirement() {
+
+            $.ajaxSetup({
+                beforeSend: function (xhr, settings) {
+                    function getCookie(name) {
+                        var cookieValue = null;
+                        if (document.cookie && document.cookie != '') {
+                            var cookies = document.cookie.split(';');
+                            for (var i = 0; i < cookies.length; i++) {
+                                var cookie = jQuery.trim(cookies[i]);
+                                // Does this cookie string begin with the name we want?
+                                if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                    break;
+                                }
+                            }
+                        }
+                        return cookieValue;
+                    }
+
+                    if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+                        // Only send the token to relative URLs i.e. locally.
+                        xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                    }
+                }
+            });
+
+
+        }
+
+
+        $(document).ready(function () {
+            get_dashboard_content()
+            $('#date_range').daterangepicker({showDropdowns: true, maxDate: new Date()});
+
+        });
+
+        function getfilterCriteria() {
+            date_range = $('#date_range').val();
+            division = $('#division').val();
+            district = $('#district').val();
+            upazila = $('#upazila').val();
+
+        }
+
+        function get_dashboard_content() {
+
+            getfilterCriteria()
+            $.ajax({
+                url: '/livestock/get_para_vet_performance_dashboard_content/',
+                type: 'POST',
+                data: {'date_range': date_range, 'division': division, 'district': district, 'upazila': upazila},
+                success: function (data) {
+
+                   data = JSON.parse(data)
+
+                    geenrate_para_vet_Table(data)
+
+
+                }
+            });
+
+            get_chart_data()
+
+        }
+
+        function get_chart_filterCriteria() {
+            extra_ordinary_from = $('#extra_ordinary_from').val();
+            extra_ordinary_to = $('#extra_ordinary_from').val();
+            above_average_from = $('#above_average_from').val();
+            above_average_to = $('#above_average_to').val();
+            moderate_from = $('#moderate_from').val();
+            moderate_to = $('#moderate_to').val();
+            need_training_from = $('#need_training_from').val();
+            need_training_to = $('#need_training_to').val();
+            poor_from = $('#poor_from').val();
+            poor_to = $('#poor_to').val();
+            reconsider_from = $('#reconsider_from').val();
+            reconsider_to = $('#reconsider_to').val();
+        }
+
+
+        function get_chart_data() {
+
+
+            console.log("Enter into chart Area")
+
+            get_chart_filterCriteria()
+
+            // ********* Instituition Type   ************
+
+            $.ajax({
+                type: 'POST',
+                url: '/deltacap/getInstitutionalTypeDashboard/',
+                success: function (data) {
+
+                    var barchart = data
+
+
+                    jsonDataList('para_vat_chart', '', 'column', false, true, barchart)
+                }
+
+            });
+        }
+
+
+        function geenrate_para_vet_Table(data) {
+
+            $('#para_vet').DataTable().destroy()
+
+            tbody = ''
+
+            console.log(data.para_vet_list)
+            data = data.para_vet_list
+
+            for (i = 0; i < data.length; i++) {
+
+                tbody += '<tr> <td>' + data[i][1] + '</td><td>' + data[i][2] + '</td><td></td><td></td><td></td><td></td><td></td><td><a href = "/livestock/get_para_vet_details/'+data[i][0]+'/"class="btn btn-color" style="color : white" >Details</a></td></tr>'
+
+            }
+
+            $('#para_vet').find('tbody').html(tbody)
+
+            var dTablewithData = $('#para_vet').DataTable({
+                "retrieve": true,
+                "bFilter": true,
+                "paging": true,
+                "scrollCollapse": true,
+                select: true,
+                //ordering: true,
+                "scrollX": true,
+                "sorting": false,
+                "bLengthChange": true,
+                "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+                {#                "dom": '<"wrapper"flipt>',#} // pagination keep top or above instead of below
+                {#                "dom": 'lrtip',#} // No filtering input control:
+                {#                "dom": '<lf<t>ip>' ,#} //  Length and filter above, information and pagination below table:
+                {#                "dom": '<"top"i>rt<"bottom"flp><"clear">',#}
+                "dom": 'Blf<t>ip',
+                buttons: [{
+                    extend: 'excel', text: "Export", title: 'Para Vet List', exportOptions: {
+                        columns: ':visible'
+                    }
+                }],
+
+            });
+
+        }
+
+
+        $(document).on("click", "#generate_report", function () {
+            get_dashboard_content()
+        });
+
+        /*geo hierarchy loading*/
+        $(document).on("change", "#division", function () {
+            division = $(this).val()
+
+            $.ajax({
+                type: 'POST',
+                url: '/livestock/get_district/',
+                data: {
+
+                    'div_code': division,
+                },
+                success: function (data) {
+                    list = JSON.parse(data)
+
+                    $('#district').find('option').remove()
+                    $('#district').append('<option value = "%">All</option>')
+                    for (var i = 0; i < list.dist_list.length; i++) {
+                        $('#district').append('<option value = ' + list.dist_list[i][1] + '>' + list.dist_list[i][0] + '</option>')
+                    }
+                }
+
+            });
+
+        });
+        $(document).on("change", "#district", function () {
+            district = $(this).val()
+            $.ajax({
+                type: 'POST',
+                url: '/livestock/get_upazila/',
+                data: {
+
+                    'dist_code': district,
+                },
+                success: function (data) {
+                    list = JSON.parse(data)
+                    console.log(list)
+                    $('#upazila').find('option').remove()
+                    $('#upazila').append('<option value = "%">All </option>')
+
+                    for (var i = 0; i < list.upz_list.length; i++) {
+                        $('#upazila').append('<option value = ' + list.upz_list[i][1] + '>' + list.upz_list[i][0] + '</option>')
+                    }
+                }
+
+            });
+
+        });
+
+
+
+
+
+                function jsonDataList(divId, titleText, chartType, stackLabelEnabled, plotColumnDatalabelEnabled, dataset) {
+
+            // ******* Total Value of Chart (S) ******
+            var dataSum = 0;
+            if (chartType != 'pie') {
+
+                for (var i = 0; i < dataset.total[0].data.length; i++) {
+
+                    dataSum += dataset.total[0].data[i]
+                }
+
+
+                var pcnt = (this.y / dataSum) * 100;
+
+
+            }
+
+
+            // ******* Total Value of Chart (E) ******
+
+            var chart = {
+
+                type: chartType
+            };
+            var title = {
+                style: {
+
+                    fontSize: '12px',
+                    fontWeight: 'bold'
+
+                },
+                text: titleText,
+            };
+
+
+            var subtitle = {
+                text: ' ',
+            };
+
+
+            var xAxis = {
+
+                categories: dataset.cat_list,
+                //     tickmarkPlacement: 'on',
+                title: {
+                    enabled: false
+                }
+            };
+
+            var yAxis = {
+
+                labels: {
+                    enabled: true
+                },
+
+                allowDecimals: false,
+                min: 0,
+                title: {
+                    text: 'Total Number',
+                    enabled: true,
+                },
+
+                stackLabels: {
+                    enabled: stackLabelEnabled,
+                    style: {
+                        // fontWeight: 'bold',
+                        color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
+                    }
+
+                }
+            };
+
+            if (chartType == 'pie') {
+
+                var legend = {
+                    layout: 'vertical',
+                    align: 'right',
+                    verticalAlign: 'up',
+                    enabled: true
+                };
+
+            }
+
+            else {
+
+                var legend = {
+                    {#                    layout: 'horizontal',#}
+                    {#                    align: 'middle',#}
+                    {#                    verticalAlign: 'bottom',#}
+                    enabled: false
+                };
+
+
+            }
+
+
+            if (chartType == 'pie') {
+                var tooltip = {
+                    pointFormat: '<b>{point.percentage:.1f}%</b>'
+                };
+            }
+            else {
+
+                var tooltip = {
+
+                    pointFormat: '<b>{point.y}</b>'
+                };
+            }
+
+
+            if (chartType == 'pie') {
+
+                var series = [{
+
+                    data: dataset
+                }];
+
+            }
+            else {
+                var series = dataset.total;
+
+            }
+
+            var plotOptions = {
+
+                bar: {
+                    colorByPoint: true,
+                    allowPointSelect: true,
+                    showInLegend: true,
+
+                    stacking: 'normal',
+                    dataLabels: {
+
+                        inside: false,
+                        align: 'up',
+                        enabled: plotColumnDatalabelEnabled,
+                        formatter: function () {
+                            var pcnt = (this.y / dataSum) * 100;
+                            return Highcharts.numberFormat(pcnt, 0) + '%';
+                        },
+                        color: (Highcharts.theme && Highcharts.theme.dataLabelsColor) || 'black'
+                    }
+
+
+                },
+
+                column: {
+                    colorByPoint: true,
+                    allowPointSelect: true,
+                    showInLegend: true,
+
+                    stacking: 'normal',
+                    dataLabels: {
+                        enabled: plotColumnDatalabelEnabled,
+                        formatter: function () {
+                            {#                            var pcnt = (this.y / dataSum) * 100;#}
+                            {#                            return Highcharts.numberFormat(pcnt,0) + '%';#}
+                            return this.y
+
+                        },
+                        color: (Highcharts.theme && Highcharts.theme.dataLabelsColor) || 'black'
+                    }
+
+
+                },
+
+                pie: {
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: {
+                        enabled: plotColumnDatalabelEnabled,
+                        format: '<b>{point.name}</b>: <b>{point.percentage:.1f}%</b>',
+
+                        style: {
+                            color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                        }
+                    }
+
+                    ,
+                    showInLegend: true
+                }
+
+
+            };
+
+
+            //         }
+
+
+            var credits = {
+                enabled: false,
+            };
+
+
+            var exporting = {
+                buttons: {
+                    contextButton: {
+                        enabled: false
+                    }
+                }
+            };
+
+            var json = {};
+            json.chart = chart;
+            json.title = title;
+            json.subtitle = subtitle;
+            json.xAxis = xAxis;
+            json.yAxis = yAxis;
+            json.legend = legend;
+            json.tooltip = tooltip;
+            json.series = series;
+            json.plotOptions = plotOptions;
+            json.credits = credits;
+            json.exporting = exporting;
+
+            $('#' + divId).highcharts(json);
+
+        }
+
+
+
+    </script>
+{% endblock %}

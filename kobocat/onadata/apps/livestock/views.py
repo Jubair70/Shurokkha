@@ -1652,7 +1652,90 @@ def get_sms_dashboard_content(request):
                    'sickness_count': sickness_count, 'husbandry_count': husbandry_count})
 
 
+@login_required
+def get_para_vet_performance_dashboard(request):
+    division_query = "select distinct division as name, div_code id from vwunion_code"
+    division_dict = __db_fetch_values_dict(division_query)
 
+    return render(request, 'livestock/para_vet_performance_dashboard.html', {'division': division_dict})
+
+def get_para_vet_performance_dashboard_content(request):
+    date_range = request.POST.get('date_range')
+    if date_range == '':
+        start_date = '01/01/2010'
+        end_date = '12/28/2021'
+    else:
+        dates = get_dates(str(date_range))
+        start_date = dates.get('start_date')
+        end_date = dates.get('end_date')
+    division = request.POST.get('division')
+    district = request.POST.get('district')
+    upazila = request.POST.get('upazila')
+
+
+    query_para_vet_list = "select id , json->>'name' as name  , " \
+                          "(select distinct district from vwunion_code where json->>'district' = dist_code ) , " \
+                          "json->>'picture' as picture " \
+                          "from logger_instance where  xform_id = (select id from logger_xform where id_string = 'paravet_at_tech_profile_update')"
+
+    para_vet_list = makeTableList(query_para_vet_list)
+    json_para_vet_list = json.dumps({'para_vet_list': para_vet_list} , default=decimal_date_default)
+
+    return HttpResponse(json_para_vet_list)
+
+
+def get_para_vet_details(request, id ):
+
+    query_get_para_vet_info = "select json->>'name' as name , " \
+                              "(select distinct district from vwunion_code where json->>'district' = dist_code )  " \
+                              "from logger_instance where  " \
+                              "xform_id = (select id from logger_xform where id_string = 'paravet_at_tech_profile_update') " \
+                              "and id = " + str(id)
+
+    get_para_vet_info = makeTableList(query_get_para_vet_info)
+
+    print " get_para_vet_info "
+    print get_para_vet_info
+
+    return render(request, 'livestock/para_vet_details.html' , {'get_para_vet_info': get_para_vet_info})
+
+
+
+
+def get_paravet_performance_dashboard(request):
+    #query = "select (select type_name from usermodule_institution_type where id = any(select type_id from usermodule_institution where id = institution_info_id 	)) institution_type , count(id) cnt from accesment_details group by institution_type"
+
+    ## ******  ( Category for multiple value of each Legend) ******* (Start)
+
+    '''
+        uniqueList = getUniqueValues(dataset, name_field)
+        category_list = getUniqueValues(dataset, category_field)
+
+        seriesData = []
+        for ul in uniqueList:
+        print(ul)
+        dict = {}
+        dict['name'] = ul;
+
+        dict['data'] = [nameTodata[data_field] for nameTodata in dataset if nameTodata[name_field] == ul]
+        seriesData.append(dict)
+    '''
+
+    ## ******  ( Category for multiple value of each Legend) ******* (End)
+
+
+    # category_list = getUniqueValues(dataset, 'institution_type')
+    # seriesData = []
+    # dict = {}
+    #
+    # dict['data'] = [nameTodata['cnt'] for nameTodata in dataset]
+    # seriesData.append(dict)
+
+    # jsonForChart = json.dumps({'cat_list': category_list, 'total': seriesData}, default=decimal_date_default)
+    #
+    # return HttpResponse(jsonForChart, mimetype='text/json')
+    jsonForChart = ''
+    return HttpResponse(jsonForChart, mimetype='text/json')
 
 
 """

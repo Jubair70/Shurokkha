@@ -116,7 +116,7 @@ urlpatterns = patterns('',
                         url(r"^update_token/$", views.update_token, name='update_token'),
                         url(r"^get_cattle_info$", views_api.get_cattle_info, name='get_cattle_info'),
                         url(r"^cattle_prescription_list/(?P<cattle_id>\d+)/$", views_api.cattle_prescription_list, name='cattle_prescription_list'),
-
+                        url(r"^get_cattle_general_info/$", views_api.get_cattle_general_info, name='get_cattle_general_info'),
 
 
 

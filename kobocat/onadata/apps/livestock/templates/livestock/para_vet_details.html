@@ -51,7 +51,7 @@
 {% block content %}
     <div class="portlet box red">
         <div class="portlet-title">
-            <div class="caption"><i class="fa fa-adn"></i> Para Vet Details</div>
+            <div > <span class="h5" >Para Vet Details</span> <span style="float: right"><i class="glyphicon glyphicon-circle-arrow-left"></i> <a href="/livestock/get_para_vet_performance_dashboard/" style="color: white ; text-decoration: none; ">Back to Dashboard</a> </span></div>
         </div>
         {% csrf_token %}
         <div class="portlet-body">
@@ -60,7 +60,7 @@
             <div class="row mt-1">
 
                 <div class="col-sm-3 col-md-3  ">
-                    <img src="/media/p.jpg">
+                    <img src="/media/uploaded_files/signature.jpg">
 
                 </div>
                 <div class="col-md-8 ">
@@ -70,7 +70,7 @@
                             <span>Name : </span>
 
                         </div>
-                        <span>{{ get_para_vet_info.0.0 }}</span>
+                        <span>{{ get_para_vet_info.0.2 }}</span>
                     </div>
                     <div class=" row ">
                         <div class="col-md-4 mb-3 ">
@@ -78,7 +78,7 @@
 
                         </div>
 
-                        <span>{{ get_para_vet_info.0.1 }}</span>
+                        <span>{{ get_para_vet_info.0.7 }}</span>
                     </div>
 
                     <div class=" row ">
@@ -89,7 +89,7 @@
 
                         </div>
 
-                        <span>to</span>
+                        <span>{{ get_para_vet_info.0.9 }}</span>
 
                     </div>
 

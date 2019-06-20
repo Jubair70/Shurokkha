@@ -39,7 +39,7 @@
 {% block content %}
     <div class="portlet box red">
         <div class="portlet-title">
-            <div class="caption"><i class="fa fa-adn"></i>Para Vet Performance Dashboard</div>
+            <div class="caption">Para Vet Performance Dashboard</div>
         </div>
         {% csrf_token %}
         <div class="portlet-body">
@@ -99,7 +99,6 @@
                             <th>Para Vet Name</th>
                             <th>District</th>
                             <th>No. of cases reported</th>
-                            <th>Mobile No.</th>
                             <th>Multiple cases for farmer</th>
                             <th>Multiple cases for cattle</th>
                             <th>Average TAT</th>
@@ -118,13 +117,13 @@
                 <div class="col-md-2">
                     <button class="btn btn-info pull-left btn-color " id="no_of_cases_report" name="no_of_cases_report"
                             data-original-title=""
-                            title="" onclick="get_chart_data() ">No. of Cases Reported
+                            title="" onclick="get_no_case_tat_dashboard(1) ">No. of Cases Reported
                     </button>
                 </div>
                 <div class="col-md-2">
                     <button class="btn btn-info pull-left btn-color " id="tat_report" name="tat_report"
                             data-original-title=""
-                            title="" onclick="get_chart_data() ">TAT
+                            title="" onclick="get_no_case_tat_dashboard(2) ">TAT
                     </button>
 
                 </div>
@@ -140,10 +139,10 @@
                                     <span class=" pt-2 ">Extra Ordinary</span>
                                 </div>
                                 <input type="text" class="form-control " name="extra_ordinary_from"
-                                       id="extra_ordinary_from" placeholder="Start">
+                                       id="extra_ordinary_from" placeholder="Start" onkeyup="if (/\D/g.test(this.value)) this.value = this.value.replace(/\D/g,'')" >
                                 <span class=" pt-2 input-group-text ">to</span>
                                 <input type="text" class="form-control" name="extra_ordinary_to" id="extra_ordinary_to"
-                                       placeholder="End">
+                                       placeholder="End" onkeyup="if (/\D/g.test(this.value)) this.value = this.value.replace(/\D/g,'')" >
                             </div>
                         </div>
                         <div class="col-md-12 mt-2">
@@ -152,10 +151,10 @@
                                     <span class=" pt-2 ">Above Average</span>
                                 </div>
                                 <input type="text" class="form-control" name="above_average_from"
-                                       id="above_average_from" placeholder="Start">
+                                       id="above_average_from" placeholder="Start" onkeyup="if (/\D/g.test(this.value)) this.value = this.value.replace(/\D/g,'')">
                                 <span class="  pt-2 input-group-text ">to</span>
                                 <input type="text" class="form-control" name="above_average_to" id="above_average_to"
-                                       placeholder="End">
+                                       placeholder="End" onkeyup="if (/\D/g.test(this.value)) this.value = this.value.replace(/\D/g,'')">
                             </div>
                         </div>
                         <div class="col-md-12 mt-2">
@@ -164,10 +163,10 @@
                                     <span class="  pt-2 ">Moderate</span>
                                 </div>
                                 <input type="text" class="form-control" name="moderate_from"
-                                       id="moderate_from" placeholder="Start">
+                                       id="moderate_from" placeholder="Start" onkeyup="if (/\D/g.test(this.value)) this.value = this.value.replace(/\D/g,'')" >
                                 <span class=" pt-2 input-group-text ">to</span>
                                 <input type="text" class="form-control" name="moderate_to" id="moderate_to"
-                                       placeholder="End">
+                                       placeholder="End" onkeyup="if (/\D/g.test(this.value)) this.value = this.value.replace(/\D/g,'')" >
                             </div>
                         </div>
                         <div class="col-md-12 mt-2">
@@ -176,10 +175,10 @@
                                     <span class="  pt-2 ">Need Training </span>
                                 </div>
                                 <input type="text" class="form-control" name="need_training_from"
-                                       id="need_training_from" placeholder="Start">
+                                       id="need_training_from" placeholder="Start" onkeyup="if (/\D/g.test(this.value)) this.value = this.value.replace(/\D/g,'')" >
                                 <span class="  pt-2 input-group-text ">to</span>
                                 <input type="text" class="form-control" name="need_training_to" id="need_training_to"
-                                       placeholder="End">
+                                       placeholder="End" onkeyup="if (/\D/g.test(this.value)) this.value = this.value.replace(/\D/g,'')" >
                             </div>
                         </div>
                         <div class="col-md-12 mt-2">
@@ -188,10 +187,10 @@
                                     <span class=" pr-3 pt-2 ">Poor</span>
                                 </div>
                                 <input type="text" class="form-control" name="poor_from"
-                                       id="poor_from" placeholder="Start">
+                                       id="poor_from" placeholder="Start" onkeyup="if (/\D/g.test(this.value)) this.value = this.value.replace(/\D/g,'')" >
                                 <span class=" pt-2 input-group-text ">to</span>
                                 <input type="text" class="form-control" name="poor_to" id="poor_to"
-                                       placeholder="End">
+                                       placeholder="End" onkeyup="if (/\D/g.test(this.value)) this.value = this.value.replace(/\D/g,'')" >
                             </div>
                         </div>
 
@@ -201,17 +200,17 @@
                                     <span class=" pr-3 pt-2 ">Reconsider</span>
                                 </div>
                                 <input type="text" class="form-control" name="reconsider_from"
-                                       id="reconsider_from" placeholder="Start">
+                                       id="reconsider_from" placeholder="Start" onkeyup="if (/\D/g.test(this.value)) this.value = this.value.replace(/\D/g,'')" >
                                 <span class="  pt-2 input-group-text ">to</span>
                                 <input type="text" class="form-control" name="reconsider_to" id="reconsider_to"
-                                       placeholder="End">
+                                       placeholder="End" onkeyup="if (/\D/g.test(this.value)) this.value = this.value.replace(/\D/g,'')" >
                             </div>
                         </div>
 
                     </div>
 
                 </div>
-                <div id="para_vat_chart" class="col-sm-7 col-md-7 ml-5 ">
+                <div id="para_vat_chart" class="col-sm-7 col-md-7 ml-5 mt-2 ">
 
                 </div>
             </div>
@@ -251,9 +250,6 @@
     <script>
 
 
-
-
-
         function ajaxSetupRequirement() {
 
             $.ajaxSetup({
@@ -285,6 +281,9 @@
         }
 
 
+        var tat = 0
+        var no_case_repeated = 0
+
         $(document).ready(function () {
             get_dashboard_content()
             $('#date_range').daterangepicker({showDropdowns: true, maxDate: new Date()});
@@ -305,69 +304,154 @@
             $.ajax({
                 url: '/livestock/get_para_vet_performance_dashboard_content/',
                 type: 'POST',
-                data: {'date_range': date_range, 'division': division, 'district': district, 'upazila': upazila},
-                success: function (data) {
-
-                   data = JSON.parse(data)
-
-                    geenrate_para_vet_Table(data)
-
-
-                }
-            });
-
-            get_chart_data()
-
-        }
-
-        function get_chart_filterCriteria() {
-            extra_ordinary_from = $('#extra_ordinary_from').val();
-            extra_ordinary_to = $('#extra_ordinary_from').val();
-            above_average_from = $('#above_average_from').val();
-            above_average_to = $('#above_average_to').val();
-            moderate_from = $('#moderate_from').val();
-            moderate_to = $('#moderate_to').val();
-            need_training_from = $('#need_training_from').val();
-            need_training_to = $('#need_training_to').val();
-            poor_from = $('#poor_from').val();
-            poor_to = $('#poor_to').val();
-            reconsider_from = $('#reconsider_from').val();
-            reconsider_to = $('#reconsider_to').val();
-        }
-
-
-        function get_chart_data() {
-
-            get_chart_filterCriteria()
-
-            // ********* Instituition Type   ************
-
-            $.ajax({
-                type: 'POST',
-                url: '/livestock/get_paravet_performance_dashboard/',
-                data:{
-                    "extra_ordinary_from ": extra_ordinary_from ,
-                    "extra_ordinary_to" : extra_ordinary_to ,
-                    "above_average_from" : above_average_from ,
-                    "above_average_to" : above_average_to ,
-                    "moderate_from" : moderate_from ,
-                    "moderate_to" : moderate_to ,
-                    "need_training_from" : need_training_from ,
-                    "need_training_to" : need_training_to,
-                    "poor_from" : poor_from ,
-                    "poor_to" : poor_to ,
-                    "reconsider_from" : reconsider_from ,
-                    "reconsider_to" : reconsider_to ,
+                data: {
+                    'date_range': date_range, 'division': division, 'district': district, 'upazila': upazila
                 },
                 success: function (data) {
 
-                    var barchart = ''
-
-
+                    geenrate_para_vet_Table(data)
+                    var barchart = JSON.parse(data.jsonForChart)
                     jsonDataList('para_vat_chart', '', 'column', false, true, barchart)
-                }
 
+
+                }
             });
+
+
+        }
+
+
+        function get_no_case_tat_dashboard(button_id) {
+
+            getfilterCriteria()
+
+            if (button_id == 2 && tat == 0) {
+
+                extra_ordinary_from = 1
+                extra_ordinary_to = 3
+                above_average_from = 4
+                above_average_to = 5
+                moderate_from = 6
+                moderate_to = 8
+                need_training_from = 9
+                need_training_to = 12
+                poor_from = 13
+                poor_to = 15
+                reconsider_from = 16
+                reconsider_to = 30
+                tat = tat + 1
+
+            } else {
+
+
+                get_paravet_chart_filterCriteria()
+
+            }
+
+
+            if (isNaN(extra_ordinary_to) || isNaN(extra_ordinary_to) || isNaN(above_average_from) ||
+                isNaN(above_average_to) || isNaN(moderate_from) || isNaN(moderate_to) || isNaN(need_training_from) ||
+                need_training_to == '' || isNaN(poor_from) || isNaN(poor_to) || isNaN(reconsider_from) || isNaN(reconsider_to)) {
+
+                alert('Give range value to all criteria ')
+            }
+            else if (extra_ordinary_from >= extra_ordinary_to || above_average_from >= above_average_to || moderate_from >= moderate_to || need_training_from >= need_training_to || poor_from >= poor_to || reconsider_from >= reconsider_to) {
+
+                alert("From value is smaller than To value of all Criteria")
+            }
+            else if (button_id == 1 && (above_average_from >= extra_ordinary_from || above_average_to >= extra_ordinary_from)) {
+
+                alert(" 'Above Average' range value is smaller than 'Extra Ordinary' ")
+
+            }else if (button_id == 2 && (above_average_from <= extra_ordinary_to || above_average_to <= extra_ordinary_to)) {
+
+                alert(" 'Above Average' range value is greater than 'Extra Ordinary' ")
+
+            } else if (button_id == 1 && (moderate_from >= above_average_from || moderate_to >= above_average_from)) {
+
+                alert(" 'Moderate' range value is smaller than 'Above Average' ")
+
+            }else if (button_id == 2 && (moderate_from <= above_average_to || moderate_to <= above_average_to)) {
+
+                alert(" 'Moderate' range value is greater than 'Above Average' ")
+
+            } else if (button_id == 1 && (need_training_from >= moderate_from || need_training_to >= moderate_from)) {
+
+                alert(" 'Need Training' range value is smaller than 'Moderate' ")
+
+            }else if (button_id == 2 && (need_training_from <= moderate_to || need_training_to <= moderate_to)) {
+
+                alert(" 'Need Training' range value is greater than 'Moderate' ")
+
+            } else if (button_id == 1 && (poor_from >= need_training_from || poor_to >= need_training_from)) {
+
+                alert(" 'Poor' range value is smaller than 'Need Training' ")
+
+            }else if (button_id == 2 && (poor_from <= need_training_to || poor_to <= need_training_to)) {
+
+                alert(" 'Poor' range value is greater than 'Need Training' ")
+
+            } else if (button_id == 1 && ( reconsider_from >= poor_from || reconsider_to >= poor_from)) {
+
+                alert(" 'Reconsider' range value is smaller than 'Poor' ")
+
+            }else if (button_id == 2 && ( reconsider_from <= poor_to || reconsider_to <= poor_to)) {
+
+                alert(" 'Reconsider' range value is greater than 'Poor' ")
+
+            }
+            else {
+
+
+                $.ajax({
+                    url: '/livestock/get_paravet_no_case_tat_Dashboard/',
+                    type: 'POST',
+                    data: {
+                        'date_range': date_range, 'division': division, 'district': district, 'upazila': upazila,
+                        "extra_ordinary_from": extra_ordinary_from,
+                        "extra_ordinary_to": extra_ordinary_to,
+                        "above_average_from": above_average_from,
+                        "above_average_to": above_average_to,
+                        "moderate_from": moderate_from,
+                        "moderate_to": moderate_to,
+                        "need_training_from": need_training_from,
+                        "need_training_to": need_training_to,
+                        "poor_from": poor_from,
+                        "poor_to": poor_to,
+                        "reconsider_from": reconsider_from,
+                        "reconsider_to": reconsider_to,
+                        "button_id": button_id
+                    },
+                    success: function (data) {
+
+                        jsonDataList('para_vat_chart', '', 'column', false, true, data)
+
+
+                    }
+                });
+
+
+            }
+
+
+        }
+
+
+        function get_paravet_chart_filterCriteria() {
+
+            extra_ordinary_from = parseInt($('#extra_ordinary_from').val());
+            extra_ordinary_to = parseInt($('#extra_ordinary_to').val());
+            above_average_from = parseInt($('#above_average_from').val());
+            above_average_to = parseInt($('#above_average_to').val());
+            moderate_from = parseInt($('#moderate_from').val());
+            moderate_to = parseInt($('#moderate_to').val());
+            need_training_from = parseInt($('#need_training_from').val());
+            need_training_to = parseInt($('#need_training_to').val());
+            poor_from = parseInt($('#poor_from').val());
+            poor_to = parseInt($('#poor_to').val());
+            reconsider_from = parseInt($('#reconsider_from').val());
+            reconsider_to = parseInt($('#reconsider_to').val());
+
         }
 
 
@@ -377,12 +461,11 @@
 
             tbody = ''
 
-            console.log(data.para_vet_list)
             data = data.para_vet_list
 
             for (i = 0; i < data.length; i++) {
 
-                tbody += '<tr> <td>' + data[i][1] + '</td><td>' + data[i][2] + '</td><td></td><td></td><td></td><td></td><td></td><td><a href = "/livestock/get_para_vet_details/'+data[i][0]+'/"class="btn btn-color" style="color : white" >Details</a></td></tr>'
+                tbody += '<tr> <td>' + data[i][2] + '</td><td>' + data[i][7] + '</td><td>' + data[i][9] + '</td><td>' + data[i][10] + '</td><td>' + data[i][11] + '</td><td>' + data[i][12] + '</td><td><a href = "/livestock/get_para_vet_details/' + data[i][0] + '/' + data[i][1] + '/"class="btn btn-color" style="color : white" >Details</a></td></tr>'
 
             }
 
@@ -454,7 +537,7 @@
                 },
                 success: function (data) {
                     list = JSON.parse(data)
-                    console.log(list)
+
                     $('#upazila').find('option').remove()
                     $('#upazila').append('<option value = "%">All </option>')
 
@@ -468,48 +551,46 @@
         });
 
 
-        var se = [{
-        name: 'Population',
-        data: [
-            ['Shanghai', 24.2],
-            ['Beijing', 20.8],
-            ['Karachi', 14.9],
-            ['Shenzhen', 13.7],
-            ['Guangzhou', 13.1],
-        ],
-        dataLabels: {
-            enabled: true,
-            rotation: -90,
-            color: '#FFFFFF',
-            align: 'right',
-            format: '{point.y:.1f}', // one decimal
-            y: 10, // 10 pixels down from the top
-            style: {
-                fontSize: '13px',
-                fontFamily: 'Verdana, sans-serif'
-            }
-        }
-    }]
+        {#        var se = [{#}
+        {#            name: 'Population',#}
+        {#            data: [#}
+        {#                ['Shanghai', 24.2],#}
+        {#                ['Beijing', 20.8],#}
+        {#                ['Karachi', 14.9],#}
+        {#                ['Shenzhen', 13.7],#}
+        {#                ['Guangzhou', 13.1],#}
+        {#            ],#}
+        {#            dataLabels: {#}
+        {#                enabled: true,#}
+        {#                rotation: -90,#}
+        {#                color: '#FFFFFF',#}
+        {#                align: 'right',#}
+        {#                format: '{point.y:.1f}', // one decimal#}
+        {#                y: 10, // 10 pixels down from the top#}
+        {#                style: {#}
+        {#                    fontSize: '13px',#}
+        {#                    fontFamily: 'Verdana, sans-serif'#}
+        {#                }#}
+        {#            }#}
+        {#        }]#}
 
 
-
-
-                function jsonDataList(divId, titleText, chartType, stackLabelEnabled, plotColumnDatalabelEnabled, dataset) {
+        function jsonDataList(divId, titleText, chartType, stackLabelEnabled, plotColumnDatalabelEnabled, dataset) {
 
             // ******* Total Value of Chart (S) ******
             var dataSum = 0;
-{#            if (chartType != 'pie') {#}
-{##}
-{#                for (var i = 0; i < dataset.total[0].data.length; i++) {#}
-{##}
-{#                    dataSum += dataset.total[0].data[i]#}
-{#                }#}
-{##}
-{##}
-{#                var pcnt = (this.y / dataSum) * 100;#}
-{##}
-{##}
-{#            }#}
+            {#            if (chartType != 'pie') {#}
+            {##}
+            {#                for (var i = 0; i < dataset.total[0].data.length; i++) {#}
+            {##}
+            {#                    dataSum += dataset.total[0].data[i]#}
+            {#                }#}
+            {##}
+            {##}
+            {#                var pcnt = (this.y / dataSum) * 100;#}
+            {##}
+            {##}
+            {#            }#}
 
 
             // ******* Total Value of Chart (E) ******
@@ -536,11 +617,7 @@
 
             var xAxis = {
 
-               // categories: dataset.cat_list,
-                categories:             ['Shanghai', 'Beijing',
-            'Karachi',
-            'Shenzhen',
-            'Guangzhou'] ,
+                categories: dataset.cat_list,
                 //     tickmarkPlacement: 'on',
                 title: {
                     enabled: false
@@ -617,8 +694,8 @@
 
             }
             else {
-                //var series = dataset.total;
-                var series = se
+                var series = dataset.total;
+
 
             }
 
@@ -717,7 +794,6 @@
             $('#' + divId).highcharts(json);
 
         }
-
 
 
     </script>

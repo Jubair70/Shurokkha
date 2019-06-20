@@ -32,6 +32,8 @@ from pyfcm import FCMNotification
 import requests
 from django.views.decorators.csrf import csrf_exempt
 from onadata.apps.livestock.tasks import prescription_upload
+import datetime
+
 
 import sys
 reload(sys)
@@ -85,6 +87,17 @@ def makeTableList(tableListQuery):
     cursor.execute(tableListQuery)
     tableList = list(cursor.fetchall())
     return tableList
+
+
+
+def getUniqueValues(dataset, colname):
+    list = [];
+    for dis in dataset:
+        if dis[colname] in list:
+            continue;
+        else:
+            list.append(dis[colname]);
+    return list;
 
 
 ##****Json Serialize (Start)**********
@@ -1662,8 +1675,54 @@ def get_para_vet_performance_dashboard(request):
 def get_para_vet_performance_dashboard_content(request):
     date_range = request.POST.get('date_range')
     if date_range == '':
-        start_date = '01/01/2010'
-        end_date = '12/28/2021'
+        start_date = (datetime.datetime.now() + datetime.timedelta(-30)).date()
+        end_date = datetime.datetime.now().date()
+    else:
+        dates = get_dates(str(date_range))
+        start_date = dates.get('start_date')
+        end_date = dates.get('end_date')
+
+    division = request.POST.get('division')
+    district = request.POST.get('district')
+    upazila = request.POST.get('upazila')
+
+    query_para_vet_list = "  with g as( with b as( with a as ( with t as (select * from vwparavet_profile_info), s as( select user_id , count(id)no_cases_reported from logger_instance where xform_id = any(select id from logger_xform where id_string in ('health_records','sickness','reproduction_record')) and date_modified between '"+str(start_date)+"' and '"+str(end_date)+"' group by user_id) select t.* , s.no_cases_reported from t join s on t.user_id = s.user_id), r as( with p as ( select user_id ,json->>'mobile' mobile , count(id)no_farmer_multiple_case from logger_instance where xform_id = any(select id from logger_xform where id_string in ('health_records','sickness','reproduction_record')) group by user_id , json->>'mobile' having count(id) > 1 ), q as ( select user_id , (select mobile from farmer where id = farmer_id ) from user_farmer_map) select p.user_id , count(p.no_farmer_multiple_case) no_farmer_multiple_case from p left join q on p.user_id = q.user_id and p.mobile = q.mobile group by p.user_id ) select a.* , r.no_farmer_multiple_case from a left join r on a.user_id = r.user_id), d as (with c as ( select user_id ,json->>'system_id' system_id , count(id) no_cattle_multiple_case from logger_instance where xform_id = any(select id from logger_xform where id_string in ('health_records','sickness','reproduction_record')) and (json->>'system_id')::int = any(select cattle_system_id from cattle) group by user_id , json->>'system_id' having count(id) > 1) select c.user_id , count(c.no_cattle_multiple_case)no_cattle_multiple_case from c group by user_id) select b.* , d.no_cattle_multiple_case from b left join d on b.user_id = d.user_id), f as ( with e as( select user_id , sum((json->>'end')::timestamp - (json->>'start')::timestamp) min_diff from logger_instance where xform_id = any(select id from logger_xform where id_string in ('health_records','sickness','reproduction_record')) group by user_id) select user_id , round (CAST(float8 (EXTRACT(EPOCH FROM min_diff::INTERVAL)/60) as numeric),0) time_diff from e ) select g.* , round(COALESCE ((f.time_diff/g.no_cases_reported),0),0) avg_time from g left join f on g.user_id = f.user_id where division_code like '"+str(division)+"' and district_code like '" +str(district)+ "'  and upazila_code like '" + str(upazila)+"' "
+    para_vet_list = makeTableList(query_para_vet_list)
+
+
+    print "query_para_vet_list"
+    print query_para_vet_list
+
+    query_no_case_dashboard = " with x as ( with g as( with b as( with a as ( with t as (select * from vwparavet_profile_info), s as( select user_id , count(id)no_cases_reported from logger_instance where xform_id = any(select id from logger_xform where id_string in ('health_records','sickness','reproduction_record')) and date_modified between '"+str(start_date)+"' and '"+str(end_date)+"' group by user_id) select t.* , s.no_cases_reported from t join s on t.user_id = s.user_id), r as( with p as ( select user_id ,json->>'mobile' mobile , count(id)no_farmer_multiple_case from logger_instance where xform_id = any(select id from logger_xform where id_string in ('health_records','sickness','reproduction_record')) group by user_id , json->>'mobile' having count(id) > 1 ), q as ( select user_id , (select mobile from farmer where id = farmer_id ) from user_farmer_map) select p.user_id , count(p.no_farmer_multiple_case) no_farmer_multiple_case from p left join q on p.user_id = q.user_id and p.mobile = q.mobile group by p.user_id ) select a.* , r.no_farmer_multiple_case from a left join r on a.user_id = r.user_id), d as (with c as ( select user_id ,json->>'system_id' system_id , count(id) no_cattle_multiple_case from logger_instance where xform_id = any(select id from logger_xform where id_string in ('health_records','sickness','reproduction_record')) and (json->>'system_id')::int = any(select cattle_system_id from cattle) group by user_id , json->>'system_id' having count(id) > 1) select c.user_id , count(c.no_cattle_multiple_case)no_cattle_multiple_case from c group by user_id) select b.* , d.no_cattle_multiple_case from b left join d on b.user_id = d.user_id), f as ( with e as( select user_id , sum((json->>'end')::timestamp - (json->>'start')::timestamp) min_diff from logger_instance where xform_id = any(select id from logger_xform where id_string in ('health_records','sickness','reproduction_record')) group by user_id) select user_id , round (CAST(float8 (EXTRACT(EPOCH FROM min_diff::INTERVAL)/60) as numeric),0) time_diff from e ) select g.* , round(COALESCE ((f.time_diff/g.no_cases_reported),0),0) avg_time from g left join f on g.user_id = f.user_id where division_code like '"+str(division)+"' and district_code like '" +str(district)+ "'  and upazila_code like '" + str(upazila)+"'  ) select 'Extra Ordinary' category , count(no_cases_reported) cnt from x where no_cases_reported between 60 and 100 union all select 'Above Average' category , count(no_cases_reported) cnt from x where no_cases_reported between 40 and 59 union all select 'Moderate' category , count(no_cases_reported) cnt from x where no_cases_reported between 25 and 39 union all select 'Need Training' category , count(no_cases_reported) cnt from x where no_cases_reported between 15 and 24 union all select 'Poor' category , count(no_cases_reported) cnt from x where no_cases_reported between 6 and 14 union all select 'Reconsider' category , count(no_cases_reported) cnt from x where no_cases_reported between 0 and 5 "
+    jsonForChart = get_chart_data_for_paravet_performace(query_no_case_dashboard) # get chart data
+
+
+    print "query_no_case_dashboard"
+    print query_no_case_dashboard
+
+    json_para_vet_list = json.dumps({'para_vet_list': para_vet_list , 'jsonForChart' : jsonForChart} , default=decimal_date_default)
+    return HttpResponse(json_para_vet_list , mimetype='text/json')
+
+def get_chart_data_for_paravet_performace(query_no_case_dashboard):
+    dataset = __db_fetch_values_dict(query_no_case_dashboard)
+
+    category_list = getUniqueValues(dataset, 'category')
+    seriesData = []
+    dict = {}
+
+    dict['data'] = [nameTodata['cnt'] for nameTodata in dataset]
+    seriesData.append(dict)
+
+    jsonForChart = json.dumps({'cat_list': category_list, 'total': seriesData}, default=decimal_date_default)
+
+    return jsonForChart
+
+
+def get_paravet_no_case_tat_Dashboard(request):
+    date_range = request.POST.get('date_range')
+    if date_range == '':
+        start_date = (datetime.datetime.now() + datetime.timedelta(-30)).date()
+        end_date = datetime.datetime.now().date()
     else:
         dates = get_dates(str(date_range))
         start_date = dates.get('start_date')
@@ -1671,32 +1730,72 @@ def get_para_vet_performance_dashboard_content(request):
     division = request.POST.get('division')
     district = request.POST.get('district')
     upazila = request.POST.get('upazila')
+    extra_ordinary_from = request.POST.get('extra_ordinary_from')
+    extra_ordinary_to = request.POST.get('extra_ordinary_to')
+    above_average_from = request.POST.get('above_average_from')
+    above_average_to = request.POST.get('above_average_to')
+    moderate_from = request.POST.get('moderate_from')
+    moderate_to = request.POST.get('moderate_to')
+    need_training_from = request.POST.get('need_training_from')
+    need_training_to = request.POST.get('need_training_to')
+    poor_from = request.POST.get('poor_from')
+    poor_to = request.POST.get('poor_to')
+    reconsider_from = request.POST.get('reconsider_from')
+    reconsider_to = request.POST.get('reconsider_to')
+    button_id = request.POST.get('button_id')
+
+    if button_id == '1' :
+        criteria_value = "select 'Extra Ordinary' category , count(no_cases_reported) cnt from x where no_cases_reported between " + str( extra_ordinary_from )+" and " +str(extra_ordinary_to)+" union all select 'Above Average' category , count(no_cases_reported) cnt from x where no_cases_reported between " +str(above_average_from)+ " and " +str(above_average_to)+" union all select 'Moderate' category , count(no_cases_reported) cnt from x where no_cases_reported between "+str(moderate_from)+" and "+str(moderate_to)+" union all select 'Need Training' category , count(no_cases_reported) cnt from x where no_cases_reported between "+str(need_training_from)+" and "+str(need_training_to)+" union all select 'Poor' category , count(no_cases_reported) cnt from x where no_cases_reported between "+str(poor_from)+" and "+str(poor_to)+" union all select 'Reconsider' category , count(no_cases_reported) cnt from x where no_cases_reported between "+str(reconsider_from)+" and " + str(reconsider_to)
+    if button_id == '2' :
+        criteria_value = "select 'Extra Ordinary' category , count(avg_time) cnt from x where avg_time between " + str( extra_ordinary_from )+" and " +str(extra_ordinary_to)+" union all select 'Above Average' category , count(avg_time) cnt from x where avg_time between " +str(above_average_from)+ " and " +str(above_average_to)+" union all select 'Moderate' category , count(avg_time) cnt from x where avg_time between "+str(moderate_from)+" and "+str(moderate_to)+" union all select 'Need Training' category , count(avg_time) cnt from x where avg_time between "+str(need_training_from)+" and "+str(need_training_to)+" union all select 'Poor' category , count(avg_time) cnt from x where avg_time between "+str(poor_from)+" and "+str(poor_to)+" union all select 'Reconsider' category , count(avg_time) cnt from x where avg_time between "+str(reconsider_from)+" and " + str(reconsider_to)
+
+    query =  " with x as ( with g as( with b as( with a as ( with t as (select * from vwparavet_profile_info), s as( select user_id , count(id)no_cases_reported from logger_instance where xform_id = any(select id from logger_xform where id_string in ('health_records','sickness','reproduction_record')) and date_modified between '"+str(start_date)+"' and '"+str(end_date)+"' group by user_id) select t.* , s.no_cases_reported from t join s on t.user_id = s.user_id), r as( with p as ( select user_id ,json->>'mobile' mobile , count(id)no_farmer_multiple_case from logger_instance where xform_id = any(select id from logger_xform where id_string in ('health_records','sickness','reproduction_record')) group by user_id , json->>'mobile' having count(id) > 1 ), q as ( select user_id , (select mobile from farmer where id = farmer_id ) from user_farmer_map) select p.user_id , count(p.no_farmer_multiple_case) no_farmer_multiple_case from p left join q on p.user_id = q.user_id and p.mobile = q.mobile group by p.user_id ) select a.* , r.no_farmer_multiple_case from a left join r on a.user_id = r.user_id), d as (with c as ( select user_id ,json->>'system_id' system_id , count(id) no_cattle_multiple_case from logger_instance where xform_id = any(select id from logger_xform where id_string in ('health_records','sickness','reproduction_record')) and (json->>'system_id')::int = any(select cattle_system_id from cattle) group by user_id , json->>'system_id' having count(id) > 1) select c.user_id , count(c.no_cattle_multiple_case)no_cattle_multiple_case from c group by user_id) select b.* , d.no_cattle_multiple_case from b left join d on b.user_id = d.user_id), f as ( with e as( select user_id , sum((json->>'end')::timestamp - (json->>'start')::timestamp) min_diff from logger_instance where xform_id = any(select id from logger_xform where id_string in ('health_records','sickness','reproduction_record')) group by user_id) select user_id , round (CAST(float8 (EXTRACT(EPOCH FROM min_diff::INTERVAL)/60) as numeric),0) time_diff from e ) select g.* , round(COALESCE ((f.time_diff/g.no_cases_reported),0),0) avg_time from g left join f on g.user_id = f.user_id where division_code like '"+str(division)+"' and district_code like '" +str(district)+ "'  and upazila_code like '" + str(upazila)+"'   ) " + str(criteria_value)
 
 
-    query_para_vet_list = "select id , json->>'name' as name  , " \
-                          "(select distinct district from vwunion_code where json->>'district' = dist_code ) , " \
-                          "json->>'picture' as picture " \
-                          "from logger_instance where  xform_id = (select id from logger_xform where id_string = 'paravet_at_tech_profile_update')"
-
-    para_vet_list = makeTableList(query_para_vet_list)
-    json_para_vet_list = json.dumps({'para_vet_list': para_vet_list} , default=decimal_date_default)
-
-    return HttpResponse(json_para_vet_list)
+    print " query Final "
+    print query
 
 
-def get_para_vet_details(request, id ):
+    dataset = __db_fetch_values_dict(query)
 
-    query_get_para_vet_info = "select json->>'name' as name , " \
-                              "(select distinct district from vwunion_code where json->>'district' = dist_code )  " \
-                              "from logger_instance where  " \
-                              "xform_id = (select id from logger_xform where id_string = 'paravet_at_tech_profile_update') " \
-                              "and id = " + str(id)
+
+
+    ## ******  ( Category for multiple value of each Legend) ******* (Start)
+
+    '''
+        uniqueList = getUniqueValues(dataset, name_field)
+        category_list = getUniqueValues(dataset, category_field)
+
+        seriesData = []
+        for ul in uniqueList:
+        print(ul)
+        dict = {}
+        dict['name'] = ul;
+
+        dict['data'] = [nameTodata[data_field] for nameTodata in dataset if nameTodata[name_field] == ul]
+        seriesData.append(dict)
+    '''
+
+    ## ******  ( Category for multiple value of each Legend) ******* (End)
+
+
+    category_list = getUniqueValues(dataset, 'category')
+    seriesData = []
+    dict = {}
+
+    dict['data'] = [nameTodata['cnt'] for nameTodata in dataset]
+    seriesData.append(dict)
+
+    jsonForChart = json.dumps({'cat_list': category_list, 'total': seriesData}, default=decimal_date_default)
+
+    return HttpResponse(jsonForChart, mimetype='text/json')
+
+
+def get_para_vet_details(request, id , user_id ):
+
+    query_get_para_vet_info = "with t as( select * from vwparavet_profile_info), s as( select user_id , count(id)no_cases_reported from logger_instance where xform_id = any( select id from logger_xform where id_string in ('health_records', 'sickness', 'reproduction_record')) group by user_id) select t.* , s.no_cases_reported from t join s on t.user_id = s.user_id where t.user_id = " + str(user_id)
 
     get_para_vet_info = makeTableList(query_get_para_vet_info)
-
-    print " get_para_vet_info "
-    print get_para_vet_info
-
     return render(request, 'livestock/para_vet_details.html' , {'get_para_vet_info': get_para_vet_info})
 
 

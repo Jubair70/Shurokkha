@@ -1750,12 +1750,6 @@ def get_paravet_no_case_tat_Dashboard(request):
         criteria_value = "select 'Extra Ordinary' category , count(avg_time) cnt from x where avg_time between " + str( extra_ordinary_from )+" and " +str(extra_ordinary_to)+" union all select 'Above Average' category , count(avg_time) cnt from x where avg_time between " +str(above_average_from)+ " and " +str(above_average_to)+" union all select 'Moderate' category , count(avg_time) cnt from x where avg_time between "+str(moderate_from)+" and "+str(moderate_to)+" union all select 'Need Training' category , count(avg_time) cnt from x where avg_time between "+str(need_training_from)+" and "+str(need_training_to)+" union all select 'Poor' category , count(avg_time) cnt from x where avg_time between "+str(poor_from)+" and "+str(poor_to)+" union all select 'Reconsider' category , count(avg_time) cnt from x where avg_time between "+str(reconsider_from)+" and " + str(reconsider_to)
 
     query =  " with x as ( with g as( with b as( with a as ( with t as (select * from vwparavet_profile_info), s as( select user_id , count(id)no_cases_reported from logger_instance where xform_id = any(select id from logger_xform where id_string in ('health_records','sickness','reproduction_record')) and date_modified between '"+str(start_date)+"' and '"+str(end_date)+"' group by user_id) select t.* , s.no_cases_reported from t join s on t.user_id = s.user_id), r as( with p as ( select user_id ,json->>'mobile' mobile , count(id)no_farmer_multiple_case from logger_instance where xform_id = any(select id from logger_xform where id_string in ('health_records','sickness','reproduction_record')) group by user_id , json->>'mobile' having count(id) > 1 ), q as ( select user_id , (select mobile from farmer where id = farmer_id ) from user_farmer_map) select p.user_id , count(p.no_farmer_multiple_case) no_farmer_multiple_case from p left join q on p.user_id = q.user_id and p.mobile = q.mobile group by p.user_id ) select a.* , r.no_farmer_multiple_case from a left join r on a.user_id = r.user_id), d as (with c as ( select user_id ,json->>'system_id' system_id , count(id) no_cattle_multiple_case from logger_instance where xform_id = any(select id from logger_xform where id_string in ('health_records','sickness','reproduction_record')) and (json->>'system_id')::int = any(select cattle_system_id from cattle) group by user_id , json->>'system_id' having count(id) > 1) select c.user_id , count(c.no_cattle_multiple_case)no_cattle_multiple_case from c group by user_id) select b.* , d.no_cattle_multiple_case from b left join d on b.user_id = d.user_id), f as ( with e as( select user_id , sum((json->>'end')::timestamp - (json->>'start')::timestamp) min_diff from logger_instance where xform_id = any(select id from logger_xform where id_string in ('health_records','sickness','reproduction_record')) group by user_id) select user_id , round (CAST(float8 (EXTRACT(EPOCH FROM min_diff::INTERVAL)/60) as numeric),0) time_diff from e ) select g.* , round(COALESCE ((f.time_diff/g.no_cases_reported),0),0) avg_time from g left join f on g.user_id = f.user_id where division_code like '"+str(division)+"' and district_code like '" +str(district)+ "'  and upazila_code like '" + str(upazila)+"'   ) " + str(criteria_value)
-
-
-    print " query Final "
-    print query
-
-
     dataset = __db_fetch_values_dict(query)
 
 
@@ -1796,13 +1790,33 @@ def get_para_vet_details(request, id , user_id ):
     query_get_para_vet_info = "with t as( select * from vwparavet_profile_info), s as( select user_id , count(id)no_cases_reported from logger_instance where xform_id = any( select id from logger_xform where id_string in ('health_records', 'sickness', 'reproduction_record')) group by user_id) select t.* , s.no_cases_reported from t join s on t.user_id = s.user_id where t.user_id = " + str(user_id)
 
     get_para_vet_info = makeTableList(query_get_para_vet_info)
-    return render(request, 'livestock/para_vet_details.html' , {'get_para_vet_info': get_para_vet_info})
+    return render(request, 'livestock/para_vet_details.html' , {'get_para_vet_info': get_para_vet_info , 'user_id':user_id } )
 
 
 
 
 def get_paravet_performance_dashboard(request):
-    #query = "select (select type_name from usermodule_institution_type where id = any(select type_id from usermodule_institution where id = institution_info_id 	)) institution_type , count(id) cnt from accesment_details group by institution_type"
+
+    month_from = request.POST.get('month_from')
+    month_to = request.POST.get('month_to')
+    user_id = request.POST.get('user_id')
+    button_id = request.POST.get('button_id')
+
+    month_limit_query = ''
+    month_sub_query = ''
+
+    if month_from == '' or month_to == '':
+        month_limit_query = " limit 12 "
+    else:
+        month_sub_query = " where to_char(s.txn_month, 'MM-YYYY') between '"+str(month_from)+"' and '"+str(month_to)+"' and to_char(s.txn_year, 'MM-YYYY') between '"+str(month_from)+"' and '"+str(month_to)+"' "
+
+    query = ''
+    if button_id == '1' :
+        query = " with w as( with t as( select * from vwparavet_profile_info), s as( select user_id , date_trunc('month', date_modified) as txn_month, date_trunc('year', date_modified) as txn_year, count(id)no_cases_reported from logger_instance where xform_id = any( select id from logger_xform where id_string in('health_records', 'sickness', 'reproduction_record')) and user_id = " +str(user_id)+ " group by user_id , txn_month, txn_year order by txn_month desc , txn_year desc) select to_char(s.txn_month, 'Mon-YY') as month_year , txn_year, s.no_cases_reported cnt from t join s on t.user_id = s.user_id  " +str( month_sub_query )+"order by txn_month desc , txn_year desc) select * from w " + str(month_limit_query)
+    elif button_id  == '2':
+        query = " with w as ( with a as( with t as( select * from vwparavet_profile_info), s as( select user_id , date_trunc('month', date_modified) as txn_month, date_trunc('year', date_modified) as txn_year, count(id)no_cases_reported from logger_instance where xform_id = any( select id from logger_xform where id_string in('health_records', 'sickness', 'reproduction_record')) and user_id = " +str(user_id)+" group by user_id , txn_month, txn_year order by txn_month desc , txn_year desc) select t.user_id , s.txn_month, s.txn_year , s.no_cases_reported cnt from t join s on t.user_id = s.user_id "+str(month_sub_query)+" order by txn_month desc , txn_year desc ), f as( with e as( select user_id , sum((json->>'end')::timestamp - (json->>'start')::timestamp) min_diff from logger_instance where xform_id = any( select id from logger_xform where id_string in ('health_records', 'sickness', 'reproduction_record')) group by user_id) select user_id , round (cast(float8 (extract(EPOCH from min_diff::interval)/ 60) as numeric), 0) time_diff from e) select to_char(date(a.txn_month), 'Mon-YY') as month_year , round(coalesce ((f.time_diff / a.cnt), 0), 0) cnt from a left join f on a.user_id = f.user_id order by a.txn_month desc , a.txn_year desc ) select * from w  " + str(month_limit_query)
+
+    dataset = __db_fetch_values_dict(query)
 
     ## ******  ( Category for multiple value of each Legend) ******* (Start)
 
@@ -1823,18 +1837,17 @@ def get_paravet_performance_dashboard(request):
     ## ******  ( Category for multiple value of each Legend) ******* (End)
 
 
-    # category_list = getUniqueValues(dataset, 'institution_type')
-    # seriesData = []
-    # dict = {}
-    #
-    # dict['data'] = [nameTodata['cnt'] for nameTodata in dataset]
-    # seriesData.append(dict)
+    category_list = getUniqueValues(dataset, 'month_year')
+    seriesData = []
+    dict = {}
 
-    # jsonForChart = json.dumps({'cat_list': category_list, 'total': seriesData}, default=decimal_date_default)
-    #
-    # return HttpResponse(jsonForChart, mimetype='text/json')
-    jsonForChart = ''
-    return HttpResponse(jsonForChart, mimetype='text/json')
+    dict['data'] = [nameTodata['cnt'] for nameTodata in dataset]
+    seriesData.append(dict)
+
+    jsonForChart = json.dumps({'cat_list': category_list, 'total': seriesData}, default=decimal_date_default)
+
+    return HttpResponse(jsonForChart, content_type='text/json')
+
 
 
 """

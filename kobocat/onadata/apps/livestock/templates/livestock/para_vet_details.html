@@ -14,9 +14,8 @@
     <link href="/static/bootstrap4/vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
     <!-- Custom styles for this template-->
     <link href="/static/bootstrap4/css/sb-admin.css" rel="stylesheet">
-        <link rel="stylesheet" type="text/css" media="all"
-              href="/static/css/Date-Range-Picker-For-Twitter-Bootstrap/daterangepicker.css">
 
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.5.0/css/bootstrap-datepicker.css" rel="stylesheet">
 
 
 
@@ -102,20 +101,25 @@
             <div class="row mt-3">
 
 
-                <div class="col-md-3 input-group "><label class="control-label mt-1"> Date range</label><br>
-                    <input class="form-control ml-3 " readonly type="text" name="reservation" id="date_range"/>
+                <div class="col-md-6 input-group "><label class="control-label mt-2"> Date range</label>
+{#                    <input class="form-control ml-3 " readonly type="text" name="reservation" id="date_range"/>#}
+                     <input class="date-own form-control ml-3 " readonly type="text" name = 'month_from' id="month_from">
+                     <label class="control-label mt-2 ml-3 "> to </label>
+                     <input class="date-own form-control ml-3" readonly type="text" name = 'month_to' id="month_to">
+                      <button class="ml-3 " data-toggle="tooltip" title="Refresh Filter"  id = "refresh_filter"> <i class=" glyphicon glyphicon-refresh"></i> </button>
+
                 </div>
 
                 <div class="col-md-2">
                     <button class="btn btn-info pull-left btn-color " id="no_of_cases_report" name="no_of_cases_report"
                             data-original-title=""
-                            title="" onclick="get_chart_data() ">No. of Cases Reported
+                            title="" onclick="get_chart_data(1) ">No. of Cases Reported
                     </button>
                 </div>
                 <div class="col-md-2">
                     <button class="btn btn-info pull-left btn-color " id="tat_report" name="tat_report"
                             data-original-title=""
-                            title="" onclick="get_chart_data() ">TAT
+                            title="" onclick="get_chart_data(2) ">TAT
                     </button>
 
                 </div>
@@ -151,17 +155,22 @@
     <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.html5.min.js"></script>
     <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.print.min.js"></script>
     <script src="https://cdn.jsdelivr.net/semantic-ui/2.2.10/semantic.min.js"></script>
-        <script type="text/javascript" src="/static/js/calendar.min.js"></script>
-        <script type="text/javascript" src="/static/js/Date-Range-Picker-For-Twitter-Bootstrap/date.js"></script>
-        <script type="text/javascript" src="/static/js/Date-Range-Picker-For-Twitter-Bootstrap/daterangepicker.js"></script>
 
     <script src="http://code.highcharts.com/highcharts.js"></script>
     <script type="text/javascript" src="http://code.highcharts.com/modules/exporting.js"></script>
     <script src="https://code.highcharts.com/highcharts-more.js"></script>
     <script src="https://code.highcharts.com/modules/exporting.js"></script>
 
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.5.0/js/bootstrap-datepicker.js"></script>
+    <script src="    https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.19.1/moment.js"></script>
+
+
+
     <script>
 
+
+        var user_id = {{ user_id |safe }}
 
         function ajaxSetupRequirement() {
 
@@ -195,38 +204,75 @@
 
 
         $(document).ready(function () {
-            get_dashboard_content()
-            //$('#date_range').daterangepicker({showDropdowns: true, maxDate: new Date()});
-            $('#date_range').daterangepicker({ showDropdowns: true, maxDate: new Date() , format:'dd-mm-yy' });
-
+            get_chart_data(1)
         });
 
 
-        function get_dashboard_content() {
+        $('.date-own').datepicker({
+            format: "mm-yyyy",
+            viewMode: "months",
+            minViewMode: "months"
+       });
 
-            date_range = $('#date_range').val();
-            get_chart_data()
+        $("#refresh_filter").on('click',function () {
 
-        }
+            month_from  = $('#month_from').val('');
+            month_to = $('#month_to').val('');
 
-        function get_chart_data() {
+        })
 
+        function get_chart_data(buttton_id) {
+
+
+            month_from  = $('#month_from').val();
+            month_to = $('#month_to').val();
+
+            if ((month_from == '' && month_to != '') || (month_from != '' && month_to == ''))
+                alert(" Select a range of month & year ")
+            else {
+
+                            var d1 = moment(month_from, "MM-YYYY")
+            var d2 = moment(month_to, "MM-YYYY")
+
+
+            console.log(d1.isAfter(d2))
+            console.log(d1.isAfter(d2))
+
+            if(d1.isAfter(d2))
+            {
+
+                alert(" 'From' month  is less than 'To' month . Pleae select accordingly . ")
+
+                $('#month_from').val('');
+                $('#month_to').val('');
+                month_from  = $('#month_from').val();
+                month_to = $('#month_to').val();
+            }
 
             // ********* Instituition Type   ************
 
             $.ajax({
                 type: 'POST',
                 url: '/livestock/get_paravet_performance_dashboard/',
+                data:{
+                    'month_from':month_from,
+                    'month_to':month_to,
+                    'user_id' : user_id ,
+                    'button_id': buttton_id
+                },
 
                 success: function (data) {
 
-                    var barchart = ''
+                    console.log(data)
 
-
-                    jsonDataList('para_vat_chart_individual', '', 'line', false, true, barchart)
+                    jsonDataList('para_vat_chart_individual', '', 'line', false, true, data)
                 }
 
             });
+
+
+            }
+
 
 
         }
@@ -273,30 +319,6 @@
         }
 
 
-                var se = [{
-        name: 'Population',
-        data: [
-            ['Shanghai', 24.2],
-            ['Beijing', 20.8],
-            ['Karachi', 14.9],
-            ['Shenzhen', 13.7],
-            ['Guangzhou', 13.1],
-        ],
-        dataLabels: {
-            enabled: true,
-            rotation: -90,
-            color: '#FFFFFF',
-            align: 'right',
-            format: '{point.y:.1f}', // one decimal
-            y: 10, // 10 pixels down from the top
-            style: {
-                fontSize: '13px',
-                fontFamily: 'Verdana, sans-serif'
-            }
-        }
-    }]
-
-
         function jsonDataList(divId, titleText, chartType, stackLabelEnabled, plotColumnDatalabelEnabled, dataset) {
 
             // ******* Total Value of Chart (S) ******
@@ -339,11 +361,7 @@
 
             var xAxis = {
 
-               // categories: dataset.cat_list,
-                categories:             ['Shanghai', 'Beijing',
-            'Karachi',
-            'Shenzhen',
-            'Guangzhou'] ,
+               categories: dataset.cat_list,
                 //     tickmarkPlacement: 'on',
                 title: {
                     enabled: false
@@ -420,8 +438,7 @@
 
             }
             else {
-                //var series = dataset.total;
-                var series = se
+                var series = dataset.total;
 
             }
 

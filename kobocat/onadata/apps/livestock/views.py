@@ -478,7 +478,7 @@ def targetEdit(request):
 
 @login_required
 def bull_list(request):
-    query = "select id,bull_id ,case when substring(breed from 1 for 1) between '0' and '9' then(select breed_name from breed where id = breed::int) else breed end ,(select organization from usermodule_organizations where id = org_id) ,coalesce(ebp,'') ebp,coalesce(ebpf,'') ebpf, coalesce(ebps,'') ebps from bull"
+    query = "select id,bull_id ,case when substring(breed from 1 for 1) between '0' and '9' then(select breed_name from breed where id = breed::int) else breed end ,(select value_label organization from vwinvolved_institution where value_text::int = org_id::int limit 1) ,coalesce(ebp,'') ebp,coalesce(ebpf,'') ebpf, coalesce(ebps,'') ebps from bull"
     bull_list = json.dumps(__db_fetch_values_dict(query), default=decimal_date_default)
     return render(request, 'livestock/bull_list.html', {
         'bull_list': bull_list
@@ -492,7 +492,7 @@ def add_bull_form(request):
     df = pandas.read_sql(query,connection)
     breed_id_name = zip(df.id.tolist(),df.breed_name.tolist())
 
-    query = "select * from usermodule_organizations"
+    query = "select value_text id,value_label organization from vwinvolved_institution"
     df = pandas.read_sql(query, connection)
     org_list = zip(df.id.tolist(), df.organization.tolist())
 
@@ -547,7 +547,7 @@ def edit_bull_form(request,id):
     df = pandas.read_sql(query, connection)
     breed_id_name = zip(df.id.tolist(), df.breed_name.tolist())
 
-    query = "select * from usermodule_organizations"
+    query = "select value_text id,value_label organization from vwinvolved_institution"
     df = pandas.read_sql(query, connection)
     org_list = zip(df.id.tolist(), df.organization.tolist())
 

@@ -57,7 +57,7 @@ urlpatterns = patterns('',
                            name='get_para_vet_performance_dashboard_content'),
                         url(r'^get_paravet_no_case_tat_Dashboard/$', views.get_paravet_no_case_tat_Dashboard,
                            name='get_paravet_no_case_tat_Dashboard'),
-                        url(r'^get_para_vet_details/(?P<id>\d+)/(?P<user_id>\d+)/$', views.get_para_vet_details, name='get_para_vet_details'),
+                        url(r'^get_para_vet_details/(?P<id>\d+)/(?P<mobile>\d+)/$', views.get_para_vet_details, name='get_para_vet_details'),
                         url(r'^get_paravet_performance_dashboard/$', views.get_paravet_performance_dashboard,
                            name='get_paravet_performance_dashboard'),
                        ###****************** Emtiaz work (E) ****************###

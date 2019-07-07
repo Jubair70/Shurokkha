@@ -60,7 +60,7 @@
             <div class="row mt-1">
 
                 <div class="col-sm-3 col-md-3  ">
-                    <img class =" profile-picture" src="/media/uploaded_files/signature.jpg">
+                    <img class =" profile-picture" src="/media/sh_admin/attachments/{{ get_para_vet_info.0.8 }}">
 
                 </div>
                 <div class="col-md-8 ">
@@ -171,7 +171,9 @@
     <script>
 
 
-        var user_id = {{ user_id |safe }}
+        var mobile = '{{ mobile |safe }}'
+
+        console.log(mobile)
 
         function ajaxSetupRequirement() {
 
@@ -236,9 +238,6 @@
             var d2 = moment(month_to, "MM-YYYY")
 
 
-            console.log(d1.isAfter(d2))
-            console.log(d1.isAfter(d2))
-
             if(d1.isAfter(d2))
             {
 
@@ -258,15 +257,19 @@
                 data:{
                     'month_from':month_from,
                     'month_to':month_to,
-                    'user_id' : user_id ,
+                    'mobile' : mobile ,
                     'button_id': buttton_id
                 },
 
                 success: function (data) {
 
-                    console.log(data)
+                    if (buttton_id == '1')
+                        yAxis_label = 'Total Number'
+                    else
+                        yAxis_label = 'TAT (Min.)'
 
-                    jsonDataList('para_vat_chart_individual', '', 'line', false, true, data)
+
+                    jsonDataList('para_vat_chart_individual', '', 'line', false, true, data , yAxis_label)
                 }
 
             });
@@ -320,7 +323,7 @@
         }
 
 
-        function jsonDataList(divId, titleText, chartType, stackLabelEnabled, plotColumnDatalabelEnabled, dataset) {
+        function jsonDataList(divId, titleText, chartType, stackLabelEnabled, plotColumnDatalabelEnabled, dataset , yAxis_label) {
 
             // ******* Total Value of Chart (S) ******
             var dataSum = 0;
@@ -378,7 +381,7 @@
                 allowDecimals: false,
                 min: 0,
                 title: {
-                    text: 'Total Number',
+                    text: yAxis_label,
                     enabled: true,
                 },
 

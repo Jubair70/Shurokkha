@@ -31,6 +31,7 @@ djcelery.setup_loader()
 CURRENT_FILE = os.path.abspath(__file__)
 PROJECT_ROOT = os.path.realpath(
     os.path.join(os.path.dirname(CURRENT_FILE), '..//'))
+
 PRINT_EXCEPTION = False
 
 TEMPLATED_EMAIL_TEMPLATE_DIR = 'templated_email/'
@@ -438,7 +439,7 @@ after_setup_logger.connect(configure_logging)
 MONGO_DATABASE = {
     'HOST': '192.168.19.88',
     'PORT': 27017,
-    'NAME': 'shurokkha_new',
+    'NAME': 'shurokkha_test',
     'USER': '',
     'PASSWORD': ''
 }

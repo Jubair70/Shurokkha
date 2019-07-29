@@ -2211,6 +2211,15 @@ def get_count_of_q5(request,role_id,from_date="7/1/2019",to_date="7/1/2019"):
 
     #count_of_q5 = __db_fetch_single_value_excption("with t2 as( with l as(with t1 as (select distinct (json->>'system_id')::text cattle_id, (json->>'ai_or_pregnancy_or_delivery')::text ai_status,(json->>'_submitted_by')::text submitted_by from logger_instance where xform_id = 605 and (json->>'ai_or_pregnancy_or_delivery')::text = '1' and (json->>'artificial_reproduction_failed_number')::int > 0) select *,  (select role_name from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_type,(select status from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_status  from t1)select * from l where l.user_type = 'AI Technicians' and user_status = 1 "+sub_query+") select count(*) as serial_no from t2")
 
+def get_count_of_q5(request,role_id,from_date="7/1/2019",to_date="7/1/2019"):
+    username = request.user.username
+    if role_id == 48:
+        sub_query = ''
+    else:
+        sub_query = " where submitted_by = '"+username+"' "
+
+    #count_of_q5 = __db_fetch_single_value_excption("with t2 as( with l as(with t1 as (select distinct (json->>'system_id')::text cattle_id, (json->>'ai_or_pregnancy_or_delivery')::text ai_status,(json->>'_submitted_by')::text submitted_by from logger_instance where xform_id = 605 and (json->>'ai_or_pregnancy_or_delivery')::text = '1' and (json->>'artificial_reproduction_failed_number')::int > 0) select *,  (select role_name from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_type,(select status from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_status  from t1)select * from l where l.user_type = 'AI Technicians' and user_status = 1 "+sub_query+") select count(*) as serial_no from t2")
+
     count_of_q5 = __db_fetch_single_value_excption("with t1 as (select distinct system_id cattle_id,ai_or_pregnancy_or_delivery ai_status,_submitted_by submitted_by from vwreproduction where reproduction_date::date between '" + from_date + "' and '" + to_date + "' and ai_or_pregnancy_or_delivery = '1' and (coalesce(artificial_reproduction_failed_number,'0'))::int > 0 and user_type = 'AI Technicians')select count(distinct cattle_id) from t1"+ sub_query)
 
     return count_of_q5
@@ -2321,6 +2330,7 @@ def get_total_ai_done(request,role_id,from_date="7/1/2019",to_date="7/1/2019"):
     return total_ai_done
 '''
 
+
 def ai_dashboard_content(request):
 
     from_date = dt.now().strftime("%Y-%m-%d")
@@ -2330,8 +2340,6 @@ def ai_dashboard_content(request):
         from_date = request.POST.get('from_date')
         to_date = request.POST.get('to_date')
         category_id = request.POST.get('category_id')
-        print from_date
-        print to_date
 
 
 
@@ -3315,4 +3323,5 @@ def get_ai_percentage_dashboard_new(request):
         "jsn":jsn,
         'bar_data_organization': category_org
     }))
+
 

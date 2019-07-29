@@ -468,13 +468,35 @@ def get_cattle_list(request):
     #q= "with pv_own_cattle as(select cattle_system_id from cattle where mobile = '"+farmer_id+"'), pv_served_cattle as (select (json->>'system_id')::Integer cattle_system_id from logger_instance where xform_id in(600,603,605) and user_id=(select id from auth_user where username = '"+farmer_id+"') and (json ->>'system_id') is not null), pv_created_farmer_cattle as (select cattle_system_id from cattle where mobile in(select mobile from farmer where submitted_by =(select id from auth_user where username = '"+farmer_id+"'))) ((select pv_own_cattle.cattle_system_id from pv_own_cattle) union (select pv_served_cattle.cattle_system_id from pv_served_cattle) union (select pv_created_farmer_cattle.cattle_system_id from pv_created_farmer_cattle))"
     #q = "with pv_own_cattle as(select cattle_system_id from cattle where mobile = '"+farmer_id+"'), pv_served_cattle as (select (json->>'system_id')::Integer cattle_system_id from logger_instance where xform_id in(600,603,605) and user_id=(select id from auth_user where username = '"+farmer_id+"') and (json ->>'system_id') is not null), pv_created_farmer_cattle as (select cattle_system_id from cattle where mobile in(select mobile from farmer where submitted_by =(select id from auth_user where username = '"+farmer_id+"'))), final_cattle_list as((select pv_own_cattle.cattle_system_id from pv_own_cattle) union (select pv_served_cattle.cattle_system_id from pv_served_cattle) union (select pv_created_farmer_cattle.cattle_system_id from pv_created_farmer_cattle)) select *,date(created_date)::text as register_date ,(select label from vwcattle_type where value =cattle_type ) cattle_type_text,(select label from vwcattle_origin where value =cattle_origin ) cattle_origin_text from cattle where cattle_system_id in (select cattle_system_id from final_cattle_list)"
     dataset = views.__db_fetch_values_dict(q)
-    #print q
+
+    rqry="with t as(select  system_id cattle_id,reproduction_date::date,(coalesce(artificial_reproduction_failed_number,'0'))::int artificial_reproduction_failed_number,max(reproduction_date::date) OVER (PARTITION BY system_id) recent_reproduction_date from vwreproduction where (reproduction_date is not null) or (artificial_reproduction_failed_number is not null))select cattle_id,reproduction_date,artificial_reproduction_failed_number from t where recent_reproduction_date=reproduction_date;"
+
+    #df_rep=pd.read_sql_query(form_sql , conn)
+    r_df = pandas.read_sql(rqry, connection)
+
+
+
+
+
+
     cattle_regi_form_owner_q = "select (select username from auth_user where id = logger_xform.user_id limit 1) as user_name from public.logger_xform where id_string = 'cattle_registration'"
     cattle_regi_form_owner = views.__db_fetch_single_value(cattle_regi_form_owner_q)
     data_list = []
     for temp in dataset:
         data_dict = {}
         data_dict['id'] = temp['cattle_id']
+
+        df=r_df.loc[r_df['cattle_id']==temp['cattle_system_id']]
+        if len(df)>0:
+            reproduction_date= df['reproduction_date'].values[0]
+            artificial_reproduction_failed_number=df['artificial_reproduction_failed_number'].values[0]
+        else:
+            reproduction_date=''
+            artificial_reproduction_failed_number='0'
+
+        data_dict['reproduction_date'] = reproduction_date
+        data_dict['artificial_reproduction_failed_number'] = artificial_reproduction_failed_number
+
         data_dict['name'] = temp['cattle_name']
         data_dict['farmer_phone'] = temp['mobile']
         data_dict['calf_age'] = temp['calf_age']
@@ -545,6 +567,12 @@ def get_cattle_general_info(request):
     cattle_regi_form_owner_q = "select (select username from auth_user where id = logger_xform.user_id limit 1) as user_name from public.logger_xform where id_string = 'cattle_registration'"
     cattle_regi_form_owner = views.__db_fetch_single_value(cattle_regi_form_owner_q)
     data_list = []
+
+    rqry="with t as(select  system_id cattle_id,reproduction_date::date,(coalesce(artificial_reproduction_failed_number,'0'))::int artificial_reproduction_failed_number,max(reproduction_date::date) OVER (PARTITION BY system_id) recent_reproduction_date from vwreproduction where (reproduction_date is not null) or (artificial_reproduction_failed_number is not null))select cattle_id,reproduction_date,artificial_reproduction_failed_number from t where recent_reproduction_date=reproduction_date;"
+
+    #df_rep=pd.read_sql_query(form_sql , conn)
+    r_df = pandas.read_sql(rqry, connection)
+
     for temp in dataset:
         data_dict = {}
         data_dict['id'] = temp['cattle_id']
@@ -558,6 +586,19 @@ def get_cattle_general_info(request):
         #data_dict['calf_birth_weight'] = temp['calf_birth_weight']
         data_dict['cattle_type'] = temp['cattle_type_text']
         data_dict['cattle_system_id'] = temp['cattle_system_id']
+
+        df=r_df.loc[r_df['cattle_id']==temp['cattle_system_id']]
+        if len(df)>0:
+            reproduction_date= df['reproduction_date'].values[0]
+            artificial_reproduction_failed_number=df['artificial_reproduction_failed_number'].values[0]
+        else:
+            reproduction_date=''
+            artificial_reproduction_failed_number='0'
+
+        data_dict['reproduction_date'] = reproduction_date
+        data_dict['artificial_reproduction_failed_number'] = artificial_reproduction_failed_number
+
+
         if temp['cattle_weight'] == None:
             if temp['cattle_type'] =='4':
                 if temp['calf_birth_weight'] is not None:

@@ -1,0 +1,547 @@
+{% extends 'base_test.html' %}
+<head>
+    <meta charset="utf-8"/>
+    <title>{% block title %} Para Vet Details {% endblock %}</title>
+</head>
+{% load i18n %}
+{% block additional-headers %}
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css">
+    <link href="https://cdn.datatables.net/buttons/1.4.2/css/buttons.dataTables.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/semantic-ui/2.2.10/semantic.min.css">
+    <link href="/static/css/calendar.min.css" rel="stylesheet" type="text/css"/>
+    <link href="/static/bootstrap4/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom fonts for this template-->
+    <link href="/static/bootstrap4/vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <!-- Custom styles for this template-->
+    <link href="/static/bootstrap4/css/sb-admin.css" rel="stylesheet">
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.5.0/css/bootstrap-datepicker.css" rel="stylesheet">
+
+
+
+    <style>
+
+        .sms-dashboard-div {
+            padding-left: 0px;
+        }
+
+        .btn-color {
+            background-color: #00B755;
+            border: #00B755;
+        }
+
+        .profile-picture{
+            outline: 0;
+            max-width: 100%;
+            height: auto;
+
+        }
+
+        .ui-datepicker-calendar {
+            display: none;
+        }
+
+    </style>
+
+
+{% endblock %}
+
+
+
+{% block content %}
+    <div class="portlet box red">
+        <div class="portlet-title">
+            <div > <span class="h5" >Para Vet Details</span> <span style="float: right"><i class="glyphicon glyphicon-circle-arrow-left"></i> <a href="/livestock/get_para_vet_performance_dashboard/" style="color: white ; text-decoration: none; ">Back to Dashboard</a> </span></div>
+        </div>
+        {% csrf_token %}
+        <div class="portlet-body">
+
+
+            <div class="row mt-1">
+
+                <div class="col-sm-3 col-md-3  ">
+                    <img class =" profile-picture" src="/media/sh_admin/attachments/{{ get_para_vet_info.0.8 }}">
+
+                </div>
+                <div class="col-md-8 ">
+
+                    <div class=" row ">
+                        <div class="col-md-4 mb-3">
+                            <span>Name : </span>
+
+                        </div>
+                        <span>{{ get_para_vet_info.0.2 }}</span>
+                    </div>
+                    <div class=" row ">
+                        <div class="col-md-4 mb-3 ">
+                            <span>District : </span>
+
+                        </div>
+
+                        <span>{{ get_para_vet_info.0.7 }}</span>
+                    </div>
+
+                    <div class=" row ">
+
+
+                        <div class="col-md-4">
+                            <span>No. of cases Reported : </span>
+
+                        </div>
+
+                        <span>{{ get_para_vet_info.0.9 }}</span>
+
+                    </div>
+
+                </div>
+
+
+            </div>
+
+
+            <div class="row mt-3">
+
+
+                <div class="col-md-6 input-group "><label class="control-label mt-2"> Date range</label>
+{#                    <input class="form-control ml-3 " readonly type="text" name="reservation" id="date_range"/>#}
+                     <input class="date-own form-control ml-3 " readonly type="text" name = 'month_from' id="month_from">
+                     <label class="control-label mt-2 ml-3 "> to </label>
+                     <input class="date-own form-control ml-3" readonly type="text" name = 'month_to' id="month_to">
+                      <button class="ml-3 " data-toggle="tooltip" title="Refresh Filter"  id = "refresh_filter"> <i class=" glyphicon glyphicon-refresh"></i> </button>
+
+                </div>
+
+                <div class="col-md-2">
+                    <button class="btn btn-info pull-left btn-color " id="no_of_cases_report" name="no_of_cases_report"
+                            data-original-title=""
+                            title="" onclick="get_chart_data(1) ">No. of Cases Reported
+                    </button>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-info pull-left btn-color " id="tat_report" name="tat_report"
+                            data-original-title=""
+                            title="" onclick="get_chart_data(2) ">TAT
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <div class="row mt-4">
+
+                <div id="para_vat_chart_individual" class="col-sm-12 col-md-12  ">
+
+                </div>
+
+
+            </div>
+
+
+            <!-- /.container-fluid-->
+            <!-- /.content-wrapper-->
+            <!-- Scroll to Top Button-->
+            <!-- Bootstrap core JavaScript-->
+        </div>
+    </div>
+
+{% endblock %}
+{% block additional-javascript %}
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/dataTables.buttons.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.flash.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/pdfmake.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/vfs_fonts.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.html5.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.print.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/semantic-ui/2.2.10/semantic.min.js"></script>
+
+    <script src="http://code.highcharts.com/highcharts.js"></script>
+    <script type="text/javascript" src="http://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/highcharts-more.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.5.0/js/bootstrap-datepicker.js"></script>
+    <script src="    https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.19.1/moment.js"></script>
+
+
+
+    <script>
+
+
+        var mobile = '{{ mobile |safe }}'
+
+        console.log(mobile)
+
+        function ajaxSetupRequirement() {
+
+            $.ajaxSetup({
+                beforeSend: function (xhr, settings) {
+                    function getCookie(name) {
+                        var cookieValue = null;
+                        if (document.cookie && document.cookie != '') {
+                            var cookies = document.cookie.split(';');
+                            for (var i = 0; i < cookies.length; i++) {
+                                var cookie = jQuery.trim(cookies[i]);
+                                // Does this cookie string begin with the name we want?
+                                if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                    break;
+                                }
+                            }
+                        }
+                        return cookieValue;
+                    }
+
+                    if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+                        // Only send the token to relative URLs i.e. locally.
+                        xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                    }
+                }
+            });
+
+
+        }
+
+
+        $(document).ready(function () {
+            get_chart_data(1)
+        });
+
+
+        $('.date-own').datepicker({
+            format: "mm-yyyy",
+            viewMode: "months",
+            minViewMode: "months"
+       });
+
+        $("#refresh_filter").on('click',function () {
+
+            month_from  = $('#month_from').val('');
+            month_to = $('#month_to').val('');
+
+        })
+
+        function get_chart_data(buttton_id) {
+
+
+            month_from  = $('#month_from').val();
+            month_to = $('#month_to').val();
+
+            if ((month_from == '' && month_to != '') || (month_from != '' && month_to == ''))
+                alert(" Select a range of month & year ")
+            else {
+
+                            var d1 = moment(month_from, "MM-YYYY")
+            var d2 = moment(month_to, "MM-YYYY")
+
+
+            if(d1.isAfter(d2))
+            {
+
+                alert(" 'From' month  is less than 'To' month . Pleae select accordingly . ")
+
+                $('#month_from').val('');
+                $('#month_to').val('');
+                month_from  = $('#month_from').val();
+                month_to = $('#month_to').val();
+            }
+
+            // ********* Instituition Type   ************
+
+            $.ajax({
+                type: 'POST',
+                url: '/livestock/get_paravet_performance_dashboard/',
+                data:{
+                    'month_from':month_from,
+                    'month_to':month_to,
+                    'mobile' : mobile ,
+                    'button_id': buttton_id
+                },
+
+                success: function (data) {
+
+                    if (buttton_id == '1')
+                        yAxis_label = 'Total Number'
+                    else
+                        yAxis_label = 'TAT (Min.)'
+
+
+                    jsonDataList('para_vat_chart_individual', '', 'line', false, true, data , yAxis_label)
+                }
+
+            });
+
+
+            }
+
+
+
+        }
+
+
+        function geenrate_para_vet_Table(data) {
+
+            $('#para_vet').DataTable().destroy()
+
+            tbody = ''
+
+            for (i = 0; i < data.length; i++) {
+
+                tbody += '<tr> <td>' + data[i][1] + '</td><td>' + data[i][2] + '</td><td>' + data[i][3] + '</td><td>' + data[i][8] + '</td><td>' + data[i][4] + '</td><td>' + data[i][6] + '</td></tr>'
+
+            }
+
+            $('#para_vet').find('tbody').html(tbody)
+
+            var dTablewithData = $('#para_vet').DataTable({
+                "retrieve": true,
+                "bFilter": true,
+                "paging": true,
+                "scrollCollapse": true,
+                select: true,
+                //ordering: true,
+                "scrollX": true,
+                "sorting": false,
+                "bLengthChange": true,
+                "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+                {#                "dom": '<"wrapper"flipt>',#} // pagination keep top or above instead of below
+                {#                "dom": 'lrtip',#} // No filtering input control:
+                {#                "dom": '<lf<t>ip>' ,#} //  Length and filter above, information and pagination below table:
+                {#                "dom": '<"top"i>rt<"bottom"flp><"clear">',#}
+                "dom": 'Blf<t>ip',
+                buttons: [{
+                    extend: 'excel', text: "Export", title: 'Para Vet List', exportOptions: {
+                        columns: ':visible'
+                    }
+                }],
+
+            });
+
+        }
+
+
+        function jsonDataList(divId, titleText, chartType, stackLabelEnabled, plotColumnDatalabelEnabled, dataset , yAxis_label) {
+
+            // ******* Total Value of Chart (S) ******
+            var dataSum = 0;
+{#            if (chartType != 'pie') {#}
+{##}
+{#                for (var i = 0; i < dataset.total[0].data.length; i++) {#}
+{##}
+{#                    dataSum += dataset.total[0].data[i]#}
+{#                }#}
+{##}
+{##}
+{#                var pcnt = (this.y / dataSum) * 100;#}
+{##}
+{##}
+{#            }#}
+
+
+            // ******* Total Value of Chart (E) ******
+
+            var chart = {
+
+                type: chartType
+            };
+            var title = {
+                style: {
+
+                    fontSize: '12px',
+                    fontWeight: 'bold'
+
+                },
+                text: titleText,
+            };
+
+
+            var subtitle = {
+                text: ' ',
+            };
+
+
+            var xAxis = {
+
+               categories: dataset.cat_list,
+                //     tickmarkPlacement: 'on',
+                title: {
+                    enabled: false
+                }
+            };
+
+            var yAxis = {
+
+                labels: {
+                    enabled: true
+                },
+
+                allowDecimals: false,
+                min: 0,
+                title: {
+                    text: yAxis_label,
+                    enabled: true,
+                },
+
+                stackLabels: {
+                    enabled: stackLabelEnabled,
+                    style: {
+                        // fontWeight: 'bold',
+                        color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
+                    }
+
+                }
+            };
+
+            if (chartType == 'pie') {
+
+                var legend = {
+                    layout: 'vertical',
+                    align: 'right',
+                    verticalAlign: 'up',
+                    enabled: true
+                };
+
+            }
+
+            else {
+
+                var legend = {
+                    {#                    layout: 'horizontal',#}
+                    {#                    align: 'middle',#}
+                    {#                    verticalAlign: 'bottom',#}
+                    enabled: false
+                };
+
+
+            }
+
+
+            if (chartType == 'pie') {
+                var tooltip = {
+                    pointFormat: '<b>{point.percentage:.1f}%</b>'
+                };
+            }
+            else {
+
+                var tooltip = {
+
+                    pointFormat: '<b>{point.y}</b>'
+                };
+            }
+
+
+            if (chartType == 'pie') {
+
+                var series = [{
+
+                    data: dataset
+                }];
+
+            }
+            else {
+                var series = dataset.total;
+
+            }
+
+            var plotOptions = {
+
+                bar: {
+                    colorByPoint: true,
+                    allowPointSelect: true,
+                    showInLegend: true,
+
+                    stacking: 'normal',
+                    dataLabels: {
+
+                        inside: false,
+                        align: 'up',
+                        enabled: plotColumnDatalabelEnabled,
+                        formatter: function () {
+                            var pcnt = (this.y / dataSum) * 100;
+                            return Highcharts.numberFormat(pcnt, 0) + '%';
+                        },
+                        color: (Highcharts.theme && Highcharts.theme.dataLabelsColor) || 'black'
+                    }
+
+
+                },
+
+                column: {
+                    colorByPoint: true,
+                    allowPointSelect: true,
+                    showInLegend: true,
+
+                    stacking: 'normal',
+                    dataLabels: {
+                        enabled: plotColumnDatalabelEnabled,
+                        formatter: function () {
+                            {#                            var pcnt = (this.y / dataSum) * 100;#}
+                            {#                            return Highcharts.numberFormat(pcnt,0) + '%';#}
+                            return this.y
+
+                        },
+                        color: (Highcharts.theme && Highcharts.theme.dataLabelsColor) || 'black'
+                    }
+
+
+                },
+
+                pie: {
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: {
+                        enabled: plotColumnDatalabelEnabled,
+                        format: '<b>{point.name}</b>: <b>{point.percentage:.1f}%</b>',
+
+                        style: {
+                            color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                        }
+                    }
+
+                    ,
+                    showInLegend: true
+                }
+
+
+            };
+
+
+            //         }
+
+
+            var credits = {
+                enabled: false,
+            };
+
+
+            var exporting = {
+                buttons: {
+                    contextButton: {
+                        enabled: false
+                    }
+                }
+            };
+
+            var json = {};
+            json.chart = chart;
+            json.title = title;
+            json.subtitle = subtitle;
+            json.xAxis = xAxis;
+            json.yAxis = yAxis;
+            json.legend = legend;
+            json.tooltip = tooltip;
+            json.series = series;
+            json.plotOptions = plotOptions;
+            json.credits = credits;
+            json.exporting = exporting;
+
+            $('#' + divId).highcharts(json);
+
+        }
+
+
+    </script>
+{% endblock %}

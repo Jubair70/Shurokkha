@@ -52,14 +52,6 @@ urlpatterns = patterns('',
                         url(r'^get_sms_dashboard/$', views.get_sms_dashboard, name='get_sms_dashboard'),
                         url(r'^get_sms_dashboard_content/$', views.get_sms_dashboard_content, name='get_sms_dashboard_content'),
 
-                        url(r'^get_para_vet_performance_dashboard/$', views.get_para_vet_performance_dashboard, name='get_para_vet_performance_dashboard'),
-                        url(r'^get_para_vet_performance_dashboard_content/$', views.get_para_vet_performance_dashboard_content,
-                           name='get_para_vet_performance_dashboard_content'),
-                        url(r'^get_paravet_no_case_tat_Dashboard/$', views.get_paravet_no_case_tat_Dashboard,
-                           name='get_paravet_no_case_tat_Dashboard'),
-                        url(r'^get_para_vet_details/(?P<id>\d+)/(?P<mobile>\d+)/$', views.get_para_vet_details, name='get_para_vet_details'),
-                        url(r'^get_paravet_performance_dashboard/$', views.get_paravet_performance_dashboard,
-                           name='get_paravet_performance_dashboard'),
                        ###****************** Emtiaz work (E) ****************###
 
                         #DASHBOARD
@@ -117,7 +109,7 @@ urlpatterns = patterns('',
                         url(r"^update_token/$", views.update_token, name='update_token'),
                         url(r"^get_cattle_info$", views_api.get_cattle_info, name='get_cattle_info'),
                         url(r"^cattle_prescription_list/(?P<cattle_id>\d+)/$", views_api.cattle_prescription_list, name='cattle_prescription_list'),
-                        url(r"^get_cattle_general_info/$", views_api.get_cattle_general_info, name='get_cattle_general_info'),
+
 
 
 

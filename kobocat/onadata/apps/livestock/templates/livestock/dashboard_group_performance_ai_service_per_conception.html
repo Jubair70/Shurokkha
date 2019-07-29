@@ -213,6 +213,46 @@
                                             </div>
                                         </div>
                                         <br>
+                                        <div class="col-md-12" style="padding-left: 0px;margin-left: 0px">
+                                            <div class="form-group">
+                                                <label style="float: left; margin-right: 10px">Division: </label>
+                                                <select class="form-control pull-right" style="width: 150px" name="division" id="division" required>
+                                                    <option value="%">All</option>
+                                                    {% for item in div_list %}
+                                                        <option value="{{ item.id }}">{{ item.field_name }}</option>
+                                                    {% endfor %}
+
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <br>
+                                         <div class="col-md-12" style="padding-left: 0px;margin-left: 0px">
+                                            <div class="form-group">
+                                                <label style="float: left; margin-right: 10px">District: </label>
+                                                <select class="form-control pull-right" style="width: 150px" name="district" id="district" required>
+                                                    <option value="%">All</option>
+                                                      {% for item in dist_list %}
+                                                        <option value="{{ item.id }}">{{ item.field_name }}</option>
+                                                    {% endfor %}
+
+
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <br>
+                                         <div class="col-md-12" style="padding-left: 0px;margin-left: 0px">
+                                            <div class="form-group">
+                                                <label style="float: left; margin-right: 10px">Upazila: </label>
+                                                <select class="form-control pull-right" style="width: 150px" name="upazilla" id="upazilla" required>
+                                                    <option value="%">All</option>
+                                                    {% for item in upz_list %}
+                                                        <option value="{{ item.id }}">{{ item.field_name }}</option>
+                                                    {% endfor %}
+
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <br>
                                         <div class="col-md-12" style="margin-top:20px">
                                             <div class="form-group pull-right">
                                                 <button style="margin-left:0px;" type="submit" class="btn red" id="default_search">Filter</button>

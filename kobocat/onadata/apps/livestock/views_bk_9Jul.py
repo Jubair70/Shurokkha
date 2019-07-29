@@ -32,9 +32,8 @@ from pyfcm import FCMNotification
 import requests
 from django.views.decorators.csrf import csrf_exempt
 from onadata.apps.livestock.tasks import prescription_upload
-import datetime
 import pandas.io.sql as sqlio
-
+import json
 
 import sys
 reload(sys)
@@ -90,17 +89,6 @@ def makeTableList(tableListQuery):
     return tableList
 
 
-
-def getUniqueValues(dataset, colname):
-    list = [];
-    for dis in dataset:
-        if dis[colname] in list:
-            continue;
-        else:
-            list.append(dis[colname]);
-    return list;
-
-
 ##****Json Serialize (Start)**********
 
 def decimal_date_default(obj):
@@ -124,8 +112,8 @@ def __db_fetch_single_value_excption(query):
     cursor.execute(query)
     fetchVal = cursor.fetchone()
     cursor.close()
-    #print '---------fetchval--------'
-    #print fetchVal
+    print '---------fetchval--------'
+    print fetchVal
     if fetchVal is None:
         return 0
     else:
@@ -492,7 +480,7 @@ def targetEdit(request):
 
 @login_required
 def bull_list(request):
-    query = "select id,bull_id ,case when substring(breed from 1 for 1) between '0' and '9' then(select breed_name from breed where id = breed::int) else breed end ,(select value_label organization from vwinvolved_institution where value_text::int = org_id::int limit 1) ,coalesce(ebp,'') ebp,coalesce(ebpf,'') ebpf, coalesce(ebps,'') ebps from bull"
+    query = "select id,bull_id ,case when substring(breed from 1 for 1) between '0' and '9' then(select breed_name from breed where id = breed::int) else breed end ,(select organization from usermodule_organizations where id = org_id) ,coalesce(ebp,'') ebp,coalesce(ebpf,'') ebpf, coalesce(ebps,'') ebps from bull"
     bull_list = json.dumps(__db_fetch_values_dict(query), default=decimal_date_default)
     return render(request, 'livestock/bull_list.html', {
         'bull_list': bull_list
@@ -506,7 +494,7 @@ def add_bull_form(request):
     df = pandas.read_sql(query,connection)
     breed_id_name = zip(df.id.tolist(),df.breed_name.tolist())
 
-    query = "select value_text id,value_label organization from vwinvolved_institution"
+    query = "select * from usermodule_organizations"
     df = pandas.read_sql(query, connection)
     org_list = zip(df.id.tolist(), df.organization.tolist())
 
@@ -561,7 +549,7 @@ def edit_bull_form(request,id):
     df = pandas.read_sql(query, connection)
     breed_id_name = zip(df.id.tolist(), df.breed_name.tolist())
 
-    query = "select value_text id,value_label organization from vwinvolved_institution"
+    query = "select * from usermodule_organizations"
     df = pandas.read_sql(query, connection)
     org_list = zip(df.id.tolist(), df.organization.tolist())
 
@@ -1666,196 +1654,6 @@ def get_sms_dashboard_content(request):
                    'sickness_count': sickness_count, 'husbandry_count': husbandry_count})
 
 
-@login_required
-def get_para_vet_performance_dashboard(request):
-    division_query = "select distinct division as name, div_code id from vwunion_code"
-    division_dict = __db_fetch_values_dict(division_query)
-
-    return render(request, 'livestock/para_vet_performance_dashboard.html', {'division': division_dict})
-
-def get_para_vet_performance_dashboard_content(request):
-    date_range = request.POST.get('date_range')
-    if date_range == '':
-        start_date = (datetime.datetime.now() + datetime.timedelta(-30)).date()
-        end_date = datetime.datetime.now().date()
-    else:
-        dates = get_dates(str(date_range))
-        start_date = dates.get('start_date')
-        end_date = dates.get('end_date')
-
-    division = request.POST.get('division')
-    district = request.POST.get('district')
-    upazila = request.POST.get('upazila')
-
-    #query_para_vet_list = "  with g as( with b as( with a as ( with t as (select * from vwparavet_profile_info), s as( select user_id , count(id)no_cases_reported from logger_instance where xform_id = any(select id from logger_xform where id_string in ('health_records','sickness','reproduction_record')) and date_modified between '"+str(start_date)+"' and '"+str(end_date)+"' group by user_id) select t.* , s.no_cases_reported from t join s on t.user_id = s.user_id), r as( with p as ( select user_id ,json->>'mobile' mobile , count(id)no_farmer_multiple_case from logger_instance where xform_id = any(select id from logger_xform where id_string in ('health_records','sickness','reproduction_record')) group by user_id , json->>'mobile' having count(id) > 1 ), q as ( select user_id , (select mobile from farmer where id = farmer_id ) from user_farmer_map) select p.user_id , count(p.no_farmer_multiple_case) no_farmer_multiple_case from p left join q on p.user_id = q.user_id and p.mobile = q.mobile group by p.user_id ) select a.* , r.no_farmer_multiple_case from a left join r on a.user_id = r.user_id), d as (with c as ( select user_id ,json->>'system_id' system_id , count(id) no_cattle_multiple_case from logger_instance where xform_id = any(select id from logger_xform where id_string in ('health_records','sickness','reproduction_record')) and (json->>'system_id')::int = any(select cattle_system_id from cattle) group by user_id , json->>'system_id' having count(id) > 1) select c.user_id , count(c.no_cattle_multiple_case)no_cattle_multiple_case from c group by user_id) select b.* , d.no_cattle_multiple_case from b left join d on b.user_id = d.user_id), f as ( with e as( select user_id , sum((json->>'end')::timestamp - (json->>'start')::timestamp) min_diff from logger_instance where xform_id = any(select id from logger_xform where id_string in ('health_records','sickness','reproduction_record')) group by user_id) select user_id , round (CAST(float8 (EXTRACT(EPOCH FROM min_diff::INTERVAL)/60) as numeric),0) time_diff from e ) select g.* , round(COALESCE ((f.time_diff/g.no_cases_reported),0),0) avg_time from g left join f on g.user_id = f.user_id where division_code like '"+str(division)+"' and district_code like '" +str(district)+ "'  and upazila_code like '" + str(upazila)+"' "
-    query_para_vet_list = "with g as( with b as( with a as( with t as ( select * from vwparavet_profile_info), s as( select json->>'mobile' mobile, count(id)no_cases_reported from logger_instance where xform_id = any( select id from logger_xform where id_string in ('health_records', 'sickness', 'reproduction_record')) and date_modified between '"+str(start_date)+"' and '"+str(end_date)+"' group by mobile) select t.* , s.no_cases_reported from t join s on t.mobile = s.mobile), r as( with p as ( select json->>'mobile' mobile , xform_id, count(id)no_farmer_multiple_case from logger_instance where xform_id = any( select id from logger_xform where id_string in ('health_records', 'sickness', 'reproduction_record')) group by json->>'mobile', xform_id having count(id) > 1), q as ( select user_id , ( select mobile from farmer where id = farmer_id ) from user_farmer_map) select p.mobile , count(p.no_farmer_multiple_case) no_farmer_multiple_case from p left join q on p.mobile = q.mobile group by p.mobile ) select a.* , r.no_farmer_multiple_case from a left join r on a.mobile = r.mobile), d as (with c as ( select json->>'mobile' mobile , json->>'system_id' system_id , xform_id, count(id) no_cattle_multiple_case from logger_instance where xform_id = any( select id from logger_xform where id_string in ('health_records', 'sickness', 'reproduction_record')) and (json->>'system_id')::int = any( select cattle_system_id from cattle) group by mobile , json->>'system_id', xform_id having count(id) > 1) select c.mobile , count(c.no_cattle_multiple_case)no_cattle_multiple_case from c group by mobile) select b.* , d.no_cattle_multiple_case from b left join d on b.mobile = d.mobile), f as ( with e as( select json->>'mobile' mobile , sum((json->>'end')::timestamp - (json->>'start')::timestamp) min_diff from logger_instance where xform_id = any( select id from logger_xform where id_string in ('health_records', 'sickness', 'reproduction_record')) group by mobile) select mobile , round (cast(float8 (extract(EPOCH from min_diff::interval)/ 60) as numeric), 0) time_diff from e ) select g.* , round(coalesce ((f.time_diff / g.no_cases_reported), 0), 0) avg_time from g left join f on g.mobile = f.mobile where division_code like '"+str(division)+"' and district_code like '"+str(district)+"' and upazila_code like '"+str(upazila)+"' "
-
-    para_vet_list = makeTableList(query_para_vet_list)
-
-
-    # query_no_case_dashboard = " with x as ( with g as( with b as( with a as ( with t as (select * from vwparavet_profile_info), s as( select user_id , count(id)no_cases_reported from logger_instance where xform_id = any(select id from logger_xform where id_string in ('health_records','sickness','reproduction_record')) and date_modified between '"+str(start_date)+"' and '"+str(end_date)+"' group by user_id) select t.* , s.no_cases_reported from t join s on t.user_id = s.user_id), r as( with p as ( select user_id ,json->>'mobile' mobile , count(id)no_farmer_multiple_case from logger_instance where xform_id = any(select id from logger_xform where id_string in ('health_records','sickness','reproduction_record')) group by user_id , json->>'mobile' having count(id) > 1 ), q as ( select user_id , (select mobile from farmer where id = farmer_id ) from user_farmer_map) select p.user_id , count(p.no_farmer_multiple_case) no_farmer_multiple_case from p left join q on p.user_id = q.user_id and p.mobile = q.mobile group by p.user_id ) select a.* , r.no_farmer_multiple_case from a left join r on a.user_id = r.user_id), d as (with c as ( select user_id ,json->>'system_id' system_id , count(id) no_cattle_multiple_case from logger_instance where xform_id = any(select id from logger_xform where id_string in ('health_records','sickness','reproduction_record')) and (json->>'system_id')::int = any(select cattle_system_id from cattle) group by user_id , json->>'system_id' having count(id) > 1) select c.user_id , count(c.no_cattle_multiple_case)no_cattle_multiple_case from c group by user_id) select b.* , d.no_cattle_multiple_case from b left join d on b.user_id = d.user_id), f as ( with e as( select user_id , sum((json->>'end')::timestamp - (json->>'start')::timestamp) min_diff from logger_instance where xform_id = any(select id from logger_xform where id_string in ('health_records','sickness','reproduction_record')) group by user_id) select user_id , round (CAST(float8 (EXTRACT(EPOCH FROM min_diff::INTERVAL)/60) as numeric),0) time_diff from e ) select g.* , round(COALESCE ((f.time_diff/g.no_cases_reported),0),0) avg_time from g left join f on g.user_id = f.user_id where division_code like '"+str(division)+"' and district_code like '" +str(district)+ "'  and upazila_code like '" + str(upazila)+"'  ) select 'Extra Ordinary' category , count(no_cases_reported) cnt from x where no_cases_reported between 60 and 100 union all select 'Above Average' category , count(no_cases_reported) cnt from x where no_cases_reported between 40 and 59 union all select 'Moderate' category , count(no_cases_reported) cnt from x where no_cases_reported between 25 and 39 union all select 'Need Training' category , count(no_cases_reported) cnt from x where no_cases_reported between 15 and 24 union all select 'Poor' category , count(no_cases_reported) cnt from x where no_cases_reported between 6 and 14 union all select 'Reconsider' category , count(no_cases_reported) cnt from x where no_cases_reported between 0 and 5 "
-    # jsonForChart = get_chart_data_for_paravet_performace(query_no_case_dashboard) # get chart data
-
-
-    # print "query_no_case_dashboard"
-    # print query_no_case_dashboard
-
-    #json_para_vet_list = json.dumps({'para_vet_list': para_vet_list , 'jsonForChart' : jsonForChart} , default=decimal_date_default)
-
-    json_para_vet_list = json.dumps({'para_vet_list': para_vet_list } , default=decimal_date_default)
-    return HttpResponse(json_para_vet_list , mimetype='text/json')
-
-def get_chart_data_for_paravet_performace(query_no_case_dashboard):
-    dataset = __db_fetch_values_dict(query_no_case_dashboard)
-
-    category_list = getUniqueValues(dataset, 'category')
-    seriesData = []
-    dict = {}
-
-    dict['data'] = [nameTodata['cnt'] for nameTodata in dataset]
-    seriesData.append(dict)
-
-    jsonForChart = json.dumps({'cat_list': category_list, 'total': seriesData}, default=decimal_date_default)
-
-    return jsonForChart
-
-
-def get_paravet_no_case_tat_Dashboard(request):
-    date_range = request.POST.get('date_range')
-    if date_range == '':
-        start_date = (datetime.datetime.now() + datetime.timedelta(-30)).date()
-        end_date = datetime.datetime.now().date()
-    else:
-        dates = get_dates(str(date_range))
-        start_date = dates.get('start_date')
-        end_date = dates.get('end_date')
-    division = request.POST.get('division')
-    district = request.POST.get('district')
-    upazila = request.POST.get('upazila')
-    extra_ordinary_from = request.POST.get('extra_ordinary_from')
-    extra_ordinary_to = request.POST.get('extra_ordinary_to')
-    above_average_from = request.POST.get('above_average_from')
-    above_average_to = request.POST.get('above_average_to')
-    moderate_from = request.POST.get('moderate_from')
-    moderate_to = request.POST.get('moderate_to')
-    need_training_from = request.POST.get('need_training_from')
-    need_training_to = request.POST.get('need_training_to')
-    poor_from = request.POST.get('poor_from')
-    poor_to = request.POST.get('poor_to')
-    reconsider_from = request.POST.get('reconsider_from')
-    reconsider_to = request.POST.get('reconsider_to')
-    button_id = request.POST.get('button_id')
-
-    criteria_value = ''
-
-    if button_id == '1' :
-        criteria_value = "select 'Extra Ordinary' category , count(no_cases_reported) cnt from x where no_cases_reported between " + str( extra_ordinary_from )+" and " +str(extra_ordinary_to)+" union all select 'Above Average' category , count(no_cases_reported) cnt from x where no_cases_reported between " +str(above_average_from)+ " and " +str(above_average_to)+" union all select 'Moderate' category , count(no_cases_reported) cnt from x where no_cases_reported between "+str(moderate_from)+" and "+str(moderate_to)+" union all select 'Need Training' category , count(no_cases_reported) cnt from x where no_cases_reported between "+str(need_training_from)+" and "+str(need_training_to)+" union all select 'Poor' category , count(no_cases_reported) cnt from x where no_cases_reported between "+str(poor_from)+" and "+str(poor_to)+" union all select 'Reconsider' category , count(no_cases_reported) cnt from x where no_cases_reported between "+str(reconsider_from)+" and " + str(reconsider_to)
-    if button_id == '2' :
-        criteria_value = "select 'Extra Ordinary' category , count(avg_time) cnt from x where avg_time between " + str( extra_ordinary_from )+" and " +str(extra_ordinary_to)+" union all select 'Above Average' category , count(avg_time) cnt from x where avg_time between " +str(above_average_from)+ " and " +str(above_average_to)+" union all select 'Moderate' category , count(avg_time) cnt from x where avg_time between "+str(moderate_from)+" and "+str(moderate_to)+" union all select 'Need Training' category , count(avg_time) cnt from x where avg_time between "+str(need_training_from)+" and "+str(need_training_to)+" union all select 'Poor' category , count(avg_time) cnt from x where avg_time between "+str(poor_from)+" and "+str(poor_to)+" union all select 'Reconsider' category , count(avg_time) cnt from x where avg_time between "+str(reconsider_from)+" and " + str(reconsider_to)
-
-    #query =  " with x as ( with g as( with b as( with a as ( with t as (select * from vwparavet_profile_info), s as( select user_id , count(id)no_cases_reported from logger_instance where xform_id = any(select id from logger_xform where id_string in ('health_records','sickness','reproduction_record')) and date_modified between '"+str(start_date)+"' and '"+str(end_date)+"' group by user_id) select t.* , s.no_cases_reported from t join s on t.user_id = s.user_id), r as( with p as ( select user_id ,json->>'mobile' mobile , count(id)no_farmer_multiple_case from logger_instance where xform_id = any(select id from logger_xform where id_string in ('health_records','sickness','reproduction_record')) group by user_id , json->>'mobile' having count(id) > 1 ), q as ( select user_id , (select mobile from farmer where id = farmer_id ) from user_farmer_map) select p.user_id , count(p.no_farmer_multiple_case) no_farmer_multiple_case from p left join q on p.user_id = q.user_id and p.mobile = q.mobile group by p.user_id ) select a.* , r.no_farmer_multiple_case from a left join r on a.user_id = r.user_id), d as (with c as ( select user_id ,json->>'system_id' system_id , count(id) no_cattle_multiple_case from logger_instance where xform_id = any(select id from logger_xform where id_string in ('health_records','sickness','reproduction_record')) and (json->>'system_id')::int = any(select cattle_system_id from cattle) group by user_id , json->>'system_id' having count(id) > 1) select c.user_id , count(c.no_cattle_multiple_case)no_cattle_multiple_case from c group by user_id) select b.* , d.no_cattle_multiple_case from b left join d on b.user_id = d.user_id), f as ( with e as( select user_id , sum((json->>'end')::timestamp - (json->>'start')::timestamp) min_diff from logger_instance where xform_id = any(select id from logger_xform where id_string in ('health_records','sickness','reproduction_record')) group by user_id) select user_id , round (CAST(float8 (EXTRACT(EPOCH FROM min_diff::INTERVAL)/60) as numeric),0) time_diff from e ) select g.* , round(COALESCE ((f.time_diff/g.no_cases_reported),0),0) avg_time from g left join f on g.user_id = f.user_id where division_code like '"+str(division)+"' and district_code like '" +str(district)+ "'  and upazila_code like '" + str(upazila)+"'   ) " + str(criteria_value)
-    query =  " with x as ( with g as( with b as( with a as( with t as ( select * from vwparavet_profile_info), s as( select json->>'mobile' mobile, count(id)no_cases_reported from logger_instance where xform_id = any( select id from logger_xform where id_string in ('health_records', 'sickness', 'reproduction_record')) and date_modified between '"+str(start_date)+"' and '"+str(end_date)+"' group by mobile) select t.* , s.no_cases_reported from t join s on t.mobile = s.mobile), r as( with p as ( select json->>'mobile' mobile , xform_id, count(id)no_farmer_multiple_case from logger_instance where xform_id = any( select id from logger_xform where id_string in ('health_records', 'sickness', 'reproduction_record')) group by json->>'mobile', xform_id having count(id) > 1), q as ( select user_id , ( select mobile from farmer where id = farmer_id ) from user_farmer_map) select p.mobile , count(p.no_farmer_multiple_case) no_farmer_multiple_case from p left join q on p.mobile = q.mobile group by p.mobile ) select a.* , r.no_farmer_multiple_case from a left join r on a.mobile = r.mobile), d as (with c as ( select json->>'mobile' mobile , json->>'system_id' system_id , xform_id, count(id) no_cattle_multiple_case from logger_instance where xform_id = any( select id from logger_xform where id_string in ('health_records', 'sickness', 'reproduction_record')) and (json->>'system_id')::int = any( select cattle_system_id from cattle) group by mobile , json->>'system_id', xform_id having count(id) > 1) select c.mobile , count(c.no_cattle_multiple_case)no_cattle_multiple_case from c group by mobile) select b.* , d.no_cattle_multiple_case from b left join d on b.mobile = d.mobile), f as ( with e as( select json->>'mobile' mobile , sum((json->>'end')::timestamp - (json->>'start')::timestamp) min_diff from logger_instance where xform_id = any( select id from logger_xform where id_string in ('health_records', 'sickness', 'reproduction_record')) group by mobile) select mobile , round (cast(float8 (extract(EPOCH from min_diff::interval)/ 60) as numeric), 0) time_diff from e ) select g.* , round(coalesce ((f.time_diff / g.no_cases_reported), 0), 0) avg_time from g left join f on g.mobile = f.mobile where division_code like '"+str(division)+"' and district_code like '"+str(district)+"' and upazila_code like '"+str(upazila)+"' ) " + str(criteria_value)
-
-    dataset = __db_fetch_values_dict(query)
-
-    ## ******  ( Category for multiple value of each Legend) ******* (Start)
-
-    '''
-        uniqueList = getUniqueValues(dataset, name_field)
-        category_list = getUniqueValues(dataset, category_field)
-
-        seriesData = []
-        for ul in uniqueList:
-        print(ul)
-        dict = {}
-        dict['name'] = ul;
-
-        dict['data'] = [nameTodata[data_field] for nameTodata in dataset if nameTodata[name_field] == ul]
-        seriesData.append(dict)
-    '''
-
-    ## ******  ( Category for multiple value of each Legend) ******* (End)
-
-
-    category_list = getUniqueValues(dataset, 'category')
-    seriesData = []
-    dict = {}
-
-    dict['data'] = [nameTodata['cnt'] for nameTodata in dataset]
-    seriesData.append(dict)
-
-    jsonForChart = json.dumps({'cat_list': category_list, 'total': seriesData}, default=decimal_date_default)
-
-    return HttpResponse(jsonForChart, mimetype='text/json')
-
-
-def get_para_vet_details(request, id , mobile ):
-
-    query_get_para_vet_info = " with t as ( select * from vwparavet_profile_info), s as( select json->>'mobile' mobile , count(id)no_cases_reported from logger_instance where xform_id = any( select id from logger_xform where id_string in('health_records', 'sickness', 'reproduction_record')) group by mobile) select t.* , s.no_cases_reported from t join s on t.mobile = s.mobile where t.mobile = '"+str(mobile)+"' "
-
-    get_para_vet_info = makeTableList(query_get_para_vet_info)
-    return render(request, 'livestock/para_vet_details.html' , {'get_para_vet_info': get_para_vet_info , 'mobile':mobile } )
-
-
-
-
-def get_paravet_performance_dashboard(request):
-
-    month_from = request.POST.get('month_from')
-    month_to = request.POST.get('month_to')
-    mobile = request.POST.get('mobile')
-    button_id = request.POST.get('button_id')
-
-
-
-
-    month_limit_query = ''
-    month_sub_query = ''
-
-    if month_from == '' or month_to == '':
-        month_limit_query = " limit 12 "
-    else:
-        month_sub_query = " where to_char(s.txn_month, 'MM-YYYY') between '"+str(month_from)+"' and '"+str(month_to)+"' and to_char(s.txn_year, 'YYYY') between '"+str(month_from[3:7])+"' and '"+str(month_to[3:7])+"' "
-
-    query = ''
-    if button_id == '1' :
-        query = " with w as( with t as( select * from vwparavet_profile_info), s as( select  json ->> 'mobile' mobile, date_trunc('month', date_modified) as txn_month, date_trunc('year', date_modified) as txn_year, count(id)no_cases_reported from logger_instance where xform_id = any( select id from logger_xform where id_string in('health_records', 'sickness', 'reproduction_record')) and json ->> 'mobile' = '" +str(mobile)+ "' group by json ->> 'mobile' , txn_month, txn_year order by txn_month desc , txn_year desc) select distinct txn_month , to_char(s.txn_month, 'Mon-YY') as month_year , txn_year, s.no_cases_reported cnt from t join s on t.mobile = s.mobile  " +str( month_sub_query )+" order by txn_month desc , txn_year desc) select * from w " + str(month_limit_query)
-    elif button_id  == '2':
-        query = " with w as ( with a as( with t as( select * from vwparavet_profile_info), s as( select json ->> 'mobile' mobile , date_trunc('month', date_modified) as txn_month, date_trunc('year', date_modified) as txn_year, count(id)no_cases_reported from logger_instance where xform_id = any( select id from logger_xform where id_string in('health_records', 'sickness', 'reproduction_record')) and json ->> 'mobile' = '" +str(mobile)+"' group by json ->> 'mobile' , txn_month, txn_year order by txn_month desc , txn_year desc) select t.mobile , s.txn_month, s.txn_year , s.no_cases_reported cnt from t join s on t.mobile = s.mobile "+str(month_sub_query)+" order by txn_month desc , txn_year desc ), f as( with e as( select json ->> 'mobile' mobile , sum((json->>'end')::timestamp - (json->>'start')::timestamp) min_diff from logger_instance where xform_id = any( select id from logger_xform where id_string in ('health_records', 'sickness', 'reproduction_record')) group by json ->> 'mobile' ) select mobile , round (cast(float8 (extract(EPOCH from min_diff::interval)/ 60) as numeric), 0) time_diff from e) select distinct a.txn_month , to_char(date(a.txn_month), 'Mon-YY') as month_year , a.txn_year, round(coalesce ((f.time_diff / a.cnt), 0), 0) cnt from a left join f on a.mobile = f.mobile order by a.txn_month desc , a.txn_year desc ) select * from w  " + str(month_limit_query)
-
-
-
-    dataset = __db_fetch_values_dict(query)
-
-    ## ******  ( Category for multiple value of each Legend) ******* (Start)
-
-    '''
-        uniqueList = getUniqueValues(dataset, name_field)
-        category_list = getUniqueValues(dataset, category_field)
-
-        seriesData = []
-        for ul in uniqueList:
-        print(ul)
-        dict = {}
-        dict['name'] = ul;
-
-        dict['data'] = [nameTodata[data_field] for nameTodata in dataset if nameTodata[name_field] == ul]
-        seriesData.append(dict)
-    '''
-
-    ## ******  ( Category for multiple value of each Legend) ******* (End)
-
-
-    category_list = getUniqueValues(dataset, 'month_year')
-    seriesData = []
-    dict = {}
-
-    dict['data'] = [nameTodata['cnt'] for nameTodata in dataset]
-    seriesData.append(dict)
-
-    jsonForChart = json.dumps({'cat_list': category_list, 'total': seriesData}, default=decimal_date_default)
-
-    return HttpResponse(jsonForChart, content_type='text/json')
 
 
 
@@ -2188,90 +1986,51 @@ def getRoleId(request):
     return user_role_q_result
 
 
-def get_total_ai(request,role_id,from_date="7/1/2019",to_date="7/1/2019"):
+def get_total_ai(request,role_id):
     username = request.user.username
     if role_id == 48:
         sub_query = ''
     else:
-        #sub_query = " and submitted_by = '"+username+"' "
-        sub_query = " where submitted_by = '"+username+"' "
+        sub_query = " and submitted_by = '"+username+"' "
 
-    #total_ai = __db_fetch_single_value_excption("with t2 as( with l as(with t1 as (select distinct (json->>'system_id')::text cattle_id, (json->>'ai_or_pregnancy_or_delivery')::text ai_status, (json->>'_submitted_by')::text submitted_by from logger_instance where xform_id = 605 and (json->>'ai_or_pregnancy_or_delivery')::text = '1') select*,  (select role_name from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_type,(select status from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_status  from t1)select * from l where l.user_type = 'AI Technicians' and user_status = 1 "+sub_query+") select count(*) as serial_no from t2")
-
-    total_ai = __db_fetch_single_value_excption("with t1 as (select distinct system_id cattle_id,_submitted_by submitted_by from vwreproduction where ai_or_pregnancy_or_delivery='1' and user_type = 'AI Technicians' and reproduction_date::date between '" + from_date + "' and '"+ to_date +"')select count(distinct cattle_id) from t1 " + sub_query)
+    total_ai = __db_fetch_single_value_excption("with t2 as( with l as(with t1 as (select distinct (json->>'system_id')::text cattle_id, (json->>'ai_or_pregnancy_or_delivery')::text ai_status, (json->>'_submitted_by')::text submitted_by from logger_instance where xform_id = 605 and (json->>'ai_or_pregnancy_or_delivery')::text = '1') select*,  (select role_name from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_type,(select status from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_status  from t1)select * from l where l.user_type = 'AI Technicians' and user_status = 1 "+sub_query+") select count(*) as serial_no from t2")
     return total_ai
 
 
-def get_count_of_q5(request,role_id,from_date="7/1/2019",to_date="7/1/2019"):
+def get_count_of_q5(request,role_id):
     username = request.user.username
     if role_id == 48:
         sub_query = ''
     else:
-        sub_query = " where submitted_by = '"+username+"' "
+        sub_query = " and submitted_by = '"+username+"' "
 
-    #count_of_q5 = __db_fetch_single_value_excption("with t2 as( with l as(with t1 as (select distinct (json->>'system_id')::text cattle_id, (json->>'ai_or_pregnancy_or_delivery')::text ai_status,(json->>'_submitted_by')::text submitted_by from logger_instance where xform_id = 605 and (json->>'ai_or_pregnancy_or_delivery')::text = '1' and (json->>'artificial_reproduction_failed_number')::int > 0) select *,  (select role_name from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_type,(select status from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_status  from t1)select * from l where l.user_type = 'AI Technicians' and user_status = 1 "+sub_query+") select count(*) as serial_no from t2")
-
-    count_of_q5 = __db_fetch_single_value_excption("with t1 as (select distinct system_id cattle_id,ai_or_pregnancy_or_delivery ai_status,_submitted_by submitted_by from vwreproduction where reproduction_date::date between '" + from_date + "' and '" + to_date + "' and ai_or_pregnancy_or_delivery = '1' and (coalesce(artificial_reproduction_failed_number,'0'))::int > 0 and user_type = 'AI Technicians')select count(distinct cattle_id) from t1"+ sub_query)
-
+    count_of_q5 = __db_fetch_single_value_excption("with t2 as( with l as(with t1 as (select distinct (json->>'system_id')::text cattle_id, (json->>'ai_or_pregnancy_or_delivery')::text ai_status,(json->>'_submitted_by')::text submitted_by from logger_instance where xform_id = 605 and (json->>'ai_or_pregnancy_or_delivery')::text = '1' and (json->>'artificial_reproduction_failed_number')::int > 0) select *,  (select role_name from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_type,(select status from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_status  from t1)select * from l where l.user_type = 'AI Technicians' and user_status = 1 "+sub_query+") select count(*) as serial_no from t2")
     return count_of_q5
 
 
-def get_total_pregnant_cattle(request,role_id,from_date="7/1/2019",to_date="7/1/2019"):
+def get_total_pregnant_cattle(request,role_id):
     username = request.user.username
     if role_id == 48:
         sub_query = ''
     else:
-        sub_query = " where submitted_by = '"+username+"' "
+        sub_query = " and submitted_by = '"+username+"' "
 
-    #total_pregnant_cattle = __db_fetch_single_value_excption("with t2 as( with l as(with t1 as (select distinct (json->>'system_id')::text cattle_id, (json->>'ai_or_pregnancy_or_delivery')::text ai_status,(json->>'_submitted_by')::text submitted_by from logger_instance where xform_id = 605 and (json->>'ai_or_pregnancy_or_delivery')::text = '2' and (json->>'is_pregnant')::text = '1') select *,  (select role_name from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_type,(select status from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_status  from t1)select * from l where l.user_type = 'AI Technicians' and user_status = 1 "+sub_query+") select count(*) as serial_no from t2")
-
-    total_pregnant_cattle = __db_fetch_single_value_excption("with t1 as (select distinct system_id cattle_id,ai_or_pregnancy_or_delivery ai_status,_submitted_by submitted_by from vwreproduction where reproduction_date_pregnant::date between '" + from_date + "' and '" + to_date + "' and ai_or_pregnancy_or_delivery = '2' and is_pregnant = '1' and user_type = 'AI Technicians')select count(distinct cattle_id) from t1"+ sub_query)
+    total_pregnant_cattle = __db_fetch_single_value_excption("with t2 as( with l as(with t1 as (select distinct (json->>'system_id')::text cattle_id, (json->>'ai_or_pregnancy_or_delivery')::text ai_status,(json->>'_submitted_by')::text submitted_by from logger_instance where xform_id = 605 and (json->>'ai_or_pregnancy_or_delivery')::text = '2' and (json->>'is_pregnant')::text = '1') select *,  (select role_name from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_type,(select status from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_status  from t1)select * from l where l.user_type = 'AI Technicians' and user_status = 1 "+sub_query+") select count(*) as serial_no from t2")
     return  total_pregnant_cattle
 
 
-def get_total_target_for_ai(request,role_id,from_date="7/1/2019",to_date="7/1/2019"):
+def get_total_target_for_ai(request,role_id):
     username = request.user.username
     if role_id == 48:
         sub_query = ''
     else:
         sub_query = " and submitted_by = '"+username+"' "
 
-    #total_target_for_ai = __db_fetch_single_value_excption("with t5 as (with l as (with t3 as (select *, (trgt_january+trgt_february+trgt_march+trgt_april+trgt_may+trgt_june+trgt_july+trgt_august+trgt_september+trgt_october+trgt_november+trgt_december) as total_targert_a_year,(select username from auth_user where id = user_id)submitted_by from user_ai_target) select * ,(select role_name from approval_queue where approval_queue.mobile = t3.submitted_by limit 1 )user_type,(select status from approval_queue where approval_queue.mobile = t3.submitted_by limit 1 )user_status from t3)select * from l where l.user_type = 'AI Technicians' and user_status = 1 "+sub_query+") select sum (t5.total_targert_a_year::int) as total_target from t5")
-
-    qry="select get_ai_target('" + username + "'," + str(role_id) + ",'" + from_date + "','" + to_date + "')"
-
-    total_target_for_ai = __db_fetch_single_value_excption(qry)
-
+    total_target_for_ai = __db_fetch_single_value_excption("with t5 as (with l as (with t3 as (select *, (trgt_january+trgt_february+trgt_march+trgt_april+trgt_may+trgt_june+trgt_july+trgt_august+trgt_september+trgt_october+trgt_november+trgt_december) as total_targert_a_year,(select username from auth_user where id = user_id)submitted_by from user_ai_target) select * ,(select role_name from approval_queue where approval_queue.mobile = t3.submitted_by limit 1 )user_type,(select status from approval_queue where approval_queue.mobile = t3.submitted_by limit 1 )user_status from t3)select * from l where l.user_type = 'AI Technicians' and user_status = 1 "+sub_query+") select sum (t5.total_targert_a_year::int) as total_target from t5")
     return total_target_for_ai
 
 
-def get_total_ai_done(request,role_id,from_date="7/1/2019",to_date="7/1/2019"):
-
-    username = request.user.username
-    if role_id == 48:
-        sub_query = ''
-    else:
-        sub_query = " and submitted_by = '"+username+"' "
-
-    #total_ai = __db_fetch_single_value_excption("with t1 as (select distinct system_id cattle_id,_submitted_by submitted_by from vwreproduction where ai_or_pregnancy_or_delivery='1' and user_type = 'AI Technicians' and reproduction_date::date between '" + from_date + "' and '"+ to_date +"')select count(distinct cattle_id) from t1 " + sub_query)
-
-
-    qry="with t as(SELECT id, system_id,info_mobile_prefill,   reproduction_date::date reproduction_date,(coalesce(artificial_reproduction_failed_number,'0'))::int artificial_reproduction_failed_number,max(reproduction_date::date) over(partition by system_id) reproduction_date_max FROM vwreproduction where ai_or_pregnancy_or_delivery='1' and user_type = 'AI Technicians' and reproduction_date between '" + from_date + "' and '" + to_date + "' " + sub_query + ")select sum(artificial_reproduction_failed_number+1) total_ai from t where reproduction_date=reproduction_date_max"
-
-    print qry
-
-    #qry="with t as(SELECT id, system_id,info_mobile_prefill,   reproduction_date_pregnant::date reproduction_date_pregnant,(coalesce(artificial_reproduction_failed_number,'0'))::int artificial_reproduction_failed_number,max(reproduction_date_pregnant::date) over(partition by system_id) reproduction_date_pregnant_max FROM vwreproduction where ai_or_pregnancy_or_delivery='2' and is_pregnant='1' and user_type = 'AI Technicians' and reproduction_date_pregnant between '" + from_date + "' and '" + to_date + "' " + sub_query + ")select sum(artificial_reproduction_failed_number+1) total_ai from t where reproduction_date_pregnant=reproduction_date_pregnant_max"
-
-    print qry
-
-    total_ai_done = __db_fetch_single_value_excption(qry)
-
-
-    return total_ai_done
-
-
-'''
-def get_total_ai_done(request,role_id,from_date="7/1/2019",to_date="7/1/2019"):
+def get_total_ai_done(request,role_id):
 
     username = request.user.username
     if role_id == 48:
@@ -2287,7 +2046,7 @@ def get_total_ai_done(request,role_id,from_date="7/1/2019",to_date="7/1/2019"):
     for row in cattle_dict:
         cattle_list.append(int(row["cattle_id"]))
 
-    #print cattle_list
+    print cattle_list
 
     for cattle in cattle_list:
         d = OrderedDict()
@@ -2304,7 +2063,7 @@ def get_total_ai_done(request,role_id,from_date="7/1/2019",to_date="7/1/2019"):
             d['curr_preg_date'] = pregnant_dict[0]['pregnant_date']
             pregnant_list.append(d)
 
-    #print pregnant_list
+    print pregnant_list
     ai_done_list = []
 
     for row in pregnant_list:
@@ -2313,74 +2072,50 @@ def get_total_ai_done(request,role_id,from_date="7/1/2019",to_date="7/1/2019"):
         for row in filtered_ai_done_list:
             ai_done_list.append(int(row['id']))
 
-    #print '----ai done list ----'
-    #print ai_done_list
+    print '----ai done list ----'
+    print ai_done_list
 
     total_ai_done = __db_fetch_single_value_excption("with t2 as( with l as(with t1 as (select distinct (json->>'system_id')::text cattle_id, (json->>'ai_or_pregnancy_or_delivery')::text ai_status, (json->>'_submitted_by')::text submitted_by,case  when (json->>'artificial_reproduction_failed_number')::int is null then 1 else (json->>'artificial_reproduction_failed_number')::int + 1 end all_ai_count from logger_instance where xform_id = 605 and (json->>'ai_or_pregnancy_or_delivery')::text = '1' and id = any('{" + str(ai_done_list).strip('[]') + " }')) select *, (select role_name from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_type,(select status from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_status  from t1)select * from l where l.user_type = 'AI Technicians' and user_status = 1 "+sub_query+") select sum(all_ai_count) as serial_no from t2")
 
     return total_ai_done
-'''
+
+
 
 def ai_dashboard_content(request):
-
-    from_date = dt.now().strftime("%Y-%m-%d")
-    to_date = dt.now().strftime("%Y-%m-%d")
-    category_id = "1"
-    if request.method == 'POST':
-        from_date = request.POST.get('from_date')
-        to_date = request.POST.get('to_date')
-        category_id = request.POST.get('category_id')
-        print from_date
-        print to_date
-
-
-
-    print "####################################################11"
-    print from_date
-    print to_date
-    print category_id
-    print "####################################################11"
-
     role_id = getRoleId(request)
-    print "start: " + dt.now().strftime("%Y-%m-%d %H:%M:%S")
-    total_ai = get_total_ai(request,role_id,from_date,to_date)
-    print "total ai: " + dt.now().strftime("%Y-%m-%d %H:%M:%S")
+    # total_ai = get_total_ai(request,role_id)
+    # count_of_q5 = get_count_of_q5(request,role_id)
+    # total_pregnant_cattle = get_total_pregnant_cattle(request,role_id)
+    # total_target_for_ai = get_total_target_for_ai(request,role_id)
+    # total_ai_done = get_total_ai_done(request,role_id)
 
-    count_of_q5 = get_count_of_q5(request,role_id,from_date,to_date)
-
-    print "q5: " + dt.now().strftime("%Y-%m-%d %H:%M:%S")
-    total_pregnant_cattle = get_total_pregnant_cattle(request,role_id,from_date,to_date)
-    print "total pregnant: " + str(total_pregnant_cattle) #dt.now().strftime("%Y-%m-%d %H:%M:%S")
-    total_target_for_ai = get_total_target_for_ai(request,role_id,from_date,to_date)
-    print "target ai: " + dt.now().strftime("%Y-%m-%d %H:%M:%S")
-    total_ai_done = get_total_ai_done(request,role_id,from_date,to_date)
-    print "total ai done: " + str(total_ai_done)
+    total_ai = 1.1
+    count_of_q5 = 1.1
+    total_pregnant_cattle = 1.1
+    total_target_for_ai = 1.1
+    total_ai_done = 1.1
 
     print total_ai
     print count_of_q5
     print '------total ai done-----'
     print total_ai_done
-    print total_pregnant_cattle
 
-    #repeat_ai = 0 if total_ai==0 else (float((float(count_of_q5)*100.00)/(float(total_ai))))
-    repeat_ai = 0 if total_ai==0 else (float((float(total_ai_done)*100.00)/(float(total_ai))))
-    conception_rate = 0 if total_ai==0 else (float((float(total_pregnant_cattle)*100.00)/(float(total_ai))))
+    repeat_ai = float((float(count_of_q5)*100.00)/(float(total_ai)))
+    conception_rate = float((float(total_pregnant_cattle)*100.00)/(float(total_ai)))
 
     if total_target_for_ai == 0:
         target_achieved = 0
     else :
         target_achieved = float((float(total_ai) * 100.00) / (float(total_target_for_ai)))
 
-    service_per_conception = 0 if total_pregnant_cattle==0 else (float(float(total_ai_done)/(float(total_pregnant_cattle))))
-    #service_per_conception = 1
+    service_per_conception = float(float(total_ai_done)/(float(total_pregnant_cattle)))
+
     return render(request,'livestock/ai_dashboard_content.html',{
         'total_ai': total_ai,
         'repeat_ai':'%.2f'%repeat_ai,
         'conception_rate':'%.2f'%conception_rate,
         'target_achieved':'%.2f'%target_achieved,
-        'service_per_conception': '%.2f'%service_per_conception,
-	    'start_date': from_date,
-        'end_date': to_date
+        'service_per_conception': '%.2f'%service_per_conception
     })
 
 
@@ -2393,22 +2128,6 @@ def get_ai_percentage_dashboard(request):
 
     category_id = request.POST.get('category_id')
 
-    from_date = dt.now().strftime("%Y-%m-%d")
-    to_date = dt.now().strftime("%Y-%m-%d")
-    category_id = "1"
-    if request.method == 'POST':
-        from_date = request.POST.get('from_date')
-        if from_date is None:
-            from_date = dt.now().strftime("%Y-%m-%d")
-
-        to_date = request.POST.get('to_date')
-        if to_date is None:
-            to_date = dt.now().strftime("%Y-%m-%d")
-
-        category_id = request.POST.get('category_id')
-
-
-
     username = request.user.username
     role_id = getRoleId(request)
 
@@ -2418,13 +2137,10 @@ def get_ai_percentage_dashboard(request):
         sub_query = " and submitted_by = '" + username + "' "
 
     if category_id == '1':
-        qry_dist_list="with t2 as( with l as(with t1 as (select distinct (json->>'system_id')::text cattle_id, (json->>'ai_or_pregnancy_or_delivery')::text, (json->>'mobile')::text farmer_mobile, (json->>'_submitted_by')::text submitted_by from logger_instance where xform_id = 605 and (json->>'ai_or_pregnancy_or_delivery')::text = '1') select *,(select division from vwdivision where div_code = (select division from approval_queue where approval_queue.mobile = t1.submitted_by limit 1) limit 1) div_name,( select district from vwunion_code where dist_code = (select district from approval_queue where approval_queue.mobile = t1.submitted_by limit 1)limit 1 )dist_name, (select role_name from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_type,(select status from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_status  from t1) select * from l where l.user_type = 'AI Technicians' and user_status = 1 "+sub_query+") select count (*) as total_no_of_ai_dist, t2.div_name, t2.dist_name from t2 group by t2.dist_name, t2.div_name  order by total_no_of_ai_dist DESC"
 
-        #qry_dist_list="with t1 as(select system_id cattle_id,ai_or_pregnancy_or_delivery,mobile farmer_mobile,_submitted_by submitted_by from vwreproduction where ai_or_pregnancy_or_delivery='1' " + sub_query + "),t2 as(select paravet_aitechnician.mobile,paravet_aitechnician.involved_institution from approval_queue,paravet_aitechnician where role_name='AI Technicians' and status=1 and approval_queue.mobile=paravet_aitechnician.mobile) select (select value_label from vw_involved_institution where value_text=t2.involved_institution) involved_institution,count(distinct cattle_id) cnt from t1,t2 where t1.submitted_by=t2.mobile group by t2.involved_institution"
+        dist_list = __db_fetch_values_dict("with t2 as( with l as(with t1 as (select distinct (json->>'system_id')::text cattle_id, (json->>'ai_or_pregnancy_or_delivery')::text, (json->>'mobile')::text farmer_mobile, (json->>'_submitted_by')::text submitted_by from logger_instance where xform_id = 605 and (json->>'ai_or_pregnancy_or_delivery')::text = '1') select *,(select division from vwdivision where div_code = (select division from approval_queue where approval_queue.mobile = t1.submitted_by limit 1) limit 1) div_name,( select district from vwunion_code where dist_code = (select district from approval_queue where approval_queue.mobile = t1.submitted_by limit 1)limit 1 )dist_name, (select role_name from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_type,(select status from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_status  from t1) select * from l where l.user_type = 'AI Technicians' and user_status = 1 "+sub_query+") select count (*) as total_no_of_ai_dist, t2.div_name, t2.dist_name from t2 group by t2.dist_name, t2.div_name  order by total_no_of_ai_dist DESC")
 
-        dist_list = __db_fetch_values_dict(qry_dist_list)
-
-        print qry_dist_list
+        print dist_list
 
         for row in dist_list:
             div_dist_dict.update({str(row['div_name']): []})
@@ -2433,9 +2149,9 @@ def get_ai_percentage_dashboard(request):
             div_dist_dict[str(row['div_name'])].append(
                 [str(row['dist_name']), int(row['total_no_of_ai_dist'])])
 
-        qry_div_list="with t2 as( with l as(with t1 as (select distinct (json->>'system_id')::text cattle_id, (json->>'ai_or_pregnancy_or_delivery')::text, (json->>'mobile')::text farmer_mobile, (json->>'_submitted_by')::text submitted_by from logger_instance where xform_id = 605 and (json->>'ai_or_pregnancy_or_delivery')::text = '1') select *,(select division from vwdivision where div_code = (select division from approval_queue where approval_queue.mobile = t1.submitted_by limit 1) limit 1) div_name,( select district from vwunion_code where dist_code = (select district from approval_queue where approval_queue.mobile = t1.submitted_by limit 1)limit 1 )dist_name, (select role_name from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_type,(select status from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_status  from t1) select * from l where l.user_type = 'AI Technicians' and user_status = 1 "+sub_query+") select count (*) as total_no_of_ai, t2.div_name from t2 group by  t2.div_name  order by total_no_of_ai DESC"
-        print qry_div_list
-        div_list = __db_fetch_values_dict(qry_div_list)
+
+        div_list = __db_fetch_values_dict(
+            "with t2 as( with l as(with t1 as (select distinct (json->>'system_id')::text cattle_id, (json->>'ai_or_pregnancy_or_delivery')::text, (json->>'mobile')::text farmer_mobile, (json->>'_submitted_by')::text submitted_by from logger_instance where xform_id = 605 and (json->>'ai_or_pregnancy_or_delivery')::text = '1') select *,(select division from vwdivision where div_code = (select division from approval_queue where approval_queue.mobile = t1.submitted_by limit 1) limit 1) div_name,( select district from vwunion_code where dist_code = (select district from approval_queue where approval_queue.mobile = t1.submitted_by limit 1)limit 1 )dist_name, (select role_name from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_type,(select status from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_status  from t1) select * from l where l.user_type = 'AI Technicians' and user_status = 1 "+sub_query+") select count (*) as total_no_of_ai, t2.div_name from t2 group by  t2.div_name  order by total_no_of_ai DESC")
         for row in div_list:
             category_div.append({'name': str(row['div_name']), 'y': int(row['total_no_of_ai'])})
 
@@ -2445,12 +2161,7 @@ def get_ai_percentage_dashboard(request):
             drilldown_div.append({'name': str(row['div_name']), 'id': str(row['div_name']),
                               'data': div_dist_dict.get(row['div_name'], ['No data', 0])})
 
-        print category_div
-        #qry_ai_list_organization="with res as (with t2 as ( with x as( with l as (with t1 as (select distinct (json->>'system_id')::text cattle_id,(json->>'ai_or_pregnancy_or_delivery')::text ai_status,(json->>'_submitted_by')::text submitted_by from logger_instance where xform_id = 605 and (json->>'ai_or_pregnancy_or_delivery')::text = '1') select *,(select role_name from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 ) user_type, (select status from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_status from t1)select * from l where l.user_type = 'AI Technicians' and user_status = 1 "+sub_query+") select *, (select involved_institution from paravet_aitechnician where x.submitted_by = paravet_aitechnician.mobile) is_ from x) select count(*) as total_institution, t2.is_ involved_institution from t2 group by t2.is_) select res.total_institution, (select value_label from vw_involved_institution where value_text = res.involved_institution)involved_institution from res"
-
-        qry_ai_list_organization="with t1 as(select system_id cattle_id,ai_or_pregnancy_or_delivery,mobile farmer_mobile,_submitted_by submitted_by from vwreproduction where ai_or_pregnancy_or_delivery='1' " + sub_query + "),t2 as(select paravet_aitechnician.mobile,paravet_aitechnician.involved_institution from approval_queue,paravet_aitechnician where role_name='AI Technicians' and status=1 and approval_queue.mobile=paravet_aitechnician.mobile) select (select value_label from vw_involved_institution where value_text=t2.involved_institution) involved_institution,count(distinct cattle_id) total_institution from t1,t2 where t1.submitted_by=t2.mobile group by t2.involved_institution"
-        print qry_ai_list_organization
-        ai_list_organization = __db_fetch_values_dict(qry_ai_list_organization)
+            ai_list_organization = __db_fetch_values_dict("with res as (with t2 as ( with x as( with l as (with t1 as (select distinct (json->>'system_id')::text cattle_id,(json->>'ai_or_pregnancy_or_delivery')::text ai_status,(json->>'_submitted_by')::text submitted_by from logger_instance where xform_id = 605 and (json->>'ai_or_pregnancy_or_delivery')::text = '1') select *,(select role_name from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 ) user_type, (select status from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_status from t1)select * from l where l.user_type = 'AI Technicians' and user_status = 1 "+sub_query+") select *, (select involved_institution from paravet_aitechnician where x.submitted_by = paravet_aitechnician.mobile) is_ from x) select count(*) as total_institution, t2.is_ involved_institution from t2 group by t2.is_) select res.total_institution, (select value_label from vw_involved_institution where value_text = res.involved_institution)involved_institution from res")
 
         for row in ai_list_organization:
             category_org.append({'name': str(row['involved_institution']), 'y': int(row['total_institution'])})
@@ -2554,7 +2265,7 @@ def get_ai_percentage_dashboard(request):
         print ai_done_list
 
 
-        dist_list = __db_fetch_values_dict("with k as (with m as(with t2 as( with l as(with t1 as (select distinct (json->>'system_id')::text cattle_id, (json->>'ai_or_pregnancy_or_delivery')::text, (json->>'mobile')::text farmer_mobile, (json->>'_submitted_by')::text submitted_by from logger_instance where xform_id = 605 and (json->>'ai_or_pregnancy_or_delivery')::text = '1' and id = any('{" + str(ai_done_list).strip('[]') + " }')) select *,(select division from vwdivision where div_code = (select division from approval_queue where approval_queue.mobile = t1.submitted_by limit 1) limit 1) div_name,( select district from vwunion_code where dist_code = (select district from approval_queue where approval_queue.mobile = t1.submitted_by limit 1)limit 1 )dist_name, (select role_name from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_type,(select status from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_status  from t1) select * from l where l.user_type = 'AI Technicians' and user_status = 1 "+sub_query+") select count (*) as total_no_of_ai_dist, t2.div_name, t2.dist_name from t2 group by t2.dist_name, t2.div_name  order by total_no_of_ai_dist DESC),n as(with t4 as( with l as(with t3 as (select distinct (json->>'system_id')::text cattle_id, (json->>'ai_or_pregnancy_or_delivery')::text ai_status,(json->>'mobile')::text farmer_mobile,(json->>'_submitted_by')::text submitted_by from logger_instance where xform_id = 605 and (json->>'ai_or_pregnancy_or_delivery')::text = '2' and (json->>'is_pregnant')::text = '1') select *,(select division from vwdivision where div_code = (select division from approval_queue where approval_queue.mobile = t3.submitted_by limit 1) limit 1) div_name,( select district from vwunion_code where dist_code = (select district from approval_queue where approval_queue.mobile = t3.submitted_by limit 1)limit 1 )dist_name, (select role_name from approval_queue where approval_queue.mobile = t3.submitted_by limit 1 )user_type,(select status from approval_queue  where approval_queue.mobile = t3.submitted_by limit 1 )user_status  from t3) select * from l where l.user_type = 'AI Technicians' and user_status = 1 "+sub_query+") select count (*) as total_no_of_pregnant_dist, t4.div_name, t4.dist_name from t4 group by t4.dist_name, t4.div_name  order by total_no_of_pregnant_dist DESC) select m.div_name,m.dist_name,(n.total_no_of_pregnant_dist::float/m.total_no_of_ai_dist::float)*100  as percentage_of_spc_dist from m,n where m.div_name = n.div_name and m.dist_name = n.dist_name) select div_name,dist_name,to_char(percentage_of_spc_dist, 'FM999999999.00') total_no_of_spc_dist from k order by total_no_of_spc_dist DESC")
+        dist_list = __db_fetch_values_dict("with k as (with m as(with t2 as( with l as(with t1 as (select distinct (json->>'system_id')::text cattle_id, (json->>'ai_or_pregnancy_or_delivery')::text, (json->>'mobile')::text farmer_mobile, (json->>'_submitted_by')::text submitted_by from logger_instance where xform_id = 605 and (json->>'ai_or_pregnancy_or_delivery')::text = '1' and id = any('{" + str(ai_done_list).strip('[]') + " }')) select *,(select division from vwdivision where div_code = (select division from approval_queue where approval_queue.mobile = t1.submitted_by limit 1) limit 1) div_name,( select district from vwunion_code where dist_code = (select district from approval_queue where approval_queue.mobile = t1.submitted_by limit 1)limit 1 )dist_name, (select role_name from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_type,(select status from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_status  from t1) select * from l where l.user_type = 'AI Technicians' and user_status = 1 "+sub_query+") select count (*) as total_no_of_ai_dist, t2.div_name, t2.dist_name from t2 group by t2.dist_name, t2.div_name  order by total_no_of_ai_dist DESC),n as(with t4 as( with l as(with t3 as (select distinct (json->>'system_id')::text cattle_id, (json->>'ai_or_pregnancy_or_delivery')::text ai_status,(json->>'mobile')::text farmer_mobile,(json->>'_submitted_by')::text submitted_by from logger_instance where xform_id = 605 and (json->>'ai_or_pregnancy_or_delivery')::text = '2' and (json->>'is_pregnant')::text = '1') select *,(select division from vwdivision where div_code = (select division from approval_queue where approval_queue.mobile = t3.submitted_by limit 1) limit 1) div_name,( select district from vwunion_code where dist_code = (select district from approval_queue where approval_queue.mobile = t3.submitted_by limit 1)limit 1 )dist_name, (select role_name from approval_queue where approval_queue.mobile = t3.submitted_by limit 1 )user_type,(select status from approval_queue  where approval_queue.mobile = t3.submitted_by limit 1 )user_status  from t3) select * from l where l.user_type = 'AI Technicians' and user_status = 1 "+sub_query+") select count (*) as total_no_of_pregnant_dist, t4.div_name, t4.dist_name from t4 group by t4.dist_name, t4.div_name  order by total_no_of_pregnant_dist DESC) select m.div_name,m.dist_name,(n.total_no_of_pregnant_dist::float/m.total_no_of_ai_dist::float)  as percentage_of_spc_dist from m,n where m.div_name = n.div_name and m.dist_name = n.dist_name) select div_name,dist_name,to_char(percentage_of_spc_dist, 'FM999999999.00') total_no_of_spc_dist from k order by total_no_of_spc_dist DESC")
 
         for row in dist_list:
             div_dist_dict.update({str(row['div_name']): []})
@@ -2567,7 +2278,7 @@ def get_ai_percentage_dashboard(request):
         print div_dist_dict
 
         div_list = __db_fetch_values_dict(
-            "with k as (with m as(with t2 as( with l as(with t1 as (select distinct (json->>'system_id')::text cattle_id, (json->>'ai_or_pregnancy_or_delivery')::text, (json->>'mobile')::text farmer_mobile, (json->>'_submitted_by')::text submitted_by from logger_instance where xform_id = 605 and (json->>'ai_or_pregnancy_or_delivery')::text = '1' and id = any('{" + str(ai_done_list).strip('[]') + " }')) select *,(select division from vwdivision where div_code = (select division from approval_queue where approval_queue.mobile = t1.submitted_by limit 1) limit 1) div_name,( select district from vwunion_code where dist_code = (select district from approval_queue where approval_queue.mobile = t1.submitted_by limit 1)limit 1 )dist_name, (select role_name from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_type,(select status from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_status  from t1) select * from l where l.user_type = 'AI Technicians' and user_status = 1 "+sub_query+") select count (*) as total_no_of_ai_div, t2.div_name from t2 group by t2.div_name  order by total_no_of_ai_div DESC),n as(with t4 as( with l as(with t3 as (select distinct (json->>'system_id')::text cattle_id, (json->>'ai_or_pregnancy_or_delivery')::text ai_status,(json->>'mobile')::text farmer_mobile,(json->>'_submitted_by')::text submitted_by from logger_instance where xform_id = 605 and (json->>'ai_or_pregnancy_or_delivery')::text = '2' and (json->>'is_pregnant')::text = '1') select *,(select division from vwdivision where div_code = (select division from approval_queue where approval_queue.mobile = t3.submitted_by limit 1) limit 1) div_name,( select district from vwunion_code where dist_code = (select district from approval_queue where approval_queue.mobile = t3.submitted_by limit 1)limit 1 )dist_name, (select role_name from approval_queue where approval_queue.mobile = t3.submitted_by limit 1 )user_type,(select status from approval_queue  where approval_queue.mobile = t3.submitted_by limit 1 )user_status  from t3) select * from l where l.user_type = 'AI Technicians' and user_status = 1 "+sub_query+") select count (*) as total_no_of_pregnant_div, t4.div_name from t4 group by t4.div_name  order by total_no_of_pregnant_div DESC) select m.div_name,(n.total_no_of_pregnant_div::float/m.total_no_of_ai_div::float) as percentage_of_spc_div from m,n where m.div_name = n.div_name) select div_name,to_char(percentage_of_spc_div, 'FM999999999.00') total_no_of_spc_div from k order by total_no_of_spc_div DESC")
+            "with k as (with m as(with t2 as( with l as(with t1 as (select distinct (json->>'system_id')::text cattle_id, (json->>'ai_or_pregnancy_or_delivery')::text, (json->>'mobile')::text farmer_mobile, (json->>'_submitted_by')::text submitted_by from logger_instance where xform_id = 605 and (json->>'ai_or_pregnancy_or_delivery')::text = '1' and id = any('{" + str(ai_done_list).strip('[]') + " }')) select *,(select division from vwdivision where div_code = (select division from approval_queue where approval_queue.mobile = t1.submitted_by limit 1) limit 1) div_name,( select district from vwunion_code where dist_code = (select district from approval_queue where approval_queue.mobile = t1.submitted_by limit 1)limit 1 )dist_name, (select role_name from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_type,(select status from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_status  from t1) select * from l where l.user_type = 'AI Technicians' and user_status = 1 "+sub_query+") select count (*) as total_no_of_ai_div, t2.div_name from t2 group by t2.div_name  order by total_no_of_ai_div DESC),n as(with t4 as( with l as(with t3 as (select distinct (json->>'system_id')::text cattle_id, (json->>'ai_or_pregnancy_or_delivery')::text ai_status,(json->>'mobile')::text farmer_mobile,(json->>'_submitted_by')::text submitted_by from logger_instance where xform_id = 605 and (json->>'ai_or_pregnancy_or_delivery')::text = '2' and (json->>'is_pregnant')::text = '1') select *,(select division from vwdivision where div_code = (select division from approval_queue where approval_queue.mobile = t3.submitted_by limit 1) limit 1) div_name,( select district from vwunion_code where dist_code = (select district from approval_queue where approval_queue.mobile = t3.submitted_by limit 1)limit 1 )dist_name, (select role_name from approval_queue where approval_queue.mobile = t3.submitted_by limit 1 )user_type,(select status from approval_queue  where approval_queue.mobile = t3.submitted_by limit 1 )user_status  from t3) select * from l where l.user_type = 'AI Technicians' and user_status = 1 "+sub_query+") select count (*) as total_no_of_pregnant_div, t4.div_name from t4 group by t4.div_name  order by total_no_of_pregnant_div DESC) select m.div_name,(n.total_no_of_pregnant_div::float/m.total_no_of_ai_div::float)  as percentage_of_spc_div from m,n where m.div_name = n.div_name) select div_name,to_char(percentage_of_spc_div, 'FM999999999.00') total_no_of_spc_div from k order by total_no_of_spc_div DESC")
 
         for row in div_list:
             category_div.append({'name': str(row['div_name']), 'y': float(row['total_no_of_spc_div'])})
@@ -2579,7 +2290,7 @@ def get_ai_percentage_dashboard(request):
                                   'data': div_dist_dict.get(row['div_name'], ['No data', 0])})
 
 
-        ai_list_organization = __db_fetch_values_dict("with k as (with m as (with res as (with t2 as ( with x as( with l as (with t1 as (select distinct (json->>'system_id')::text cattle_id,(json->>'ai_or_pregnancy_or_delivery')::text ai_status,(json->>'_submitted_by')::text submitted_by from logger_instance where xform_id = 605 and (json->>'ai_or_pregnancy_or_delivery')::text = '1' and id = any('{" + str(ai_done_list).strip('[]') + " }')) select *,(select role_name from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_type, (select status from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_status from t1)select * from l where l.user_type = 'AI Technicians' and user_status = 1 "+sub_query+")select *, (select involved_institution from paravet_aitechnician where x.submitted_by = paravet_aitechnician.mobile) is_ from x) select count(*) as total_institution, t2.is_ involved_institution from t2 group by t2.is_) select res.total_institution, (select value_label from vw_involved_institution where value_text = res.involved_institution)organization from res), n as (with res as (with t2 as ( with x as( with l as (with t1 as (select distinct (json->>'system_id')::text cattle_id, (json->>'ai_or_pregnancy_or_delivery')::text ai_status,(json->>'mobile')::text farmer_mobile,(json->>'_submitted_by')::text submitted_by from logger_instance where xform_id = 605 and (json->>'ai_or_pregnancy_or_delivery')::text = '2' and (json->>'is_pregnant')::text = '1') select *, (select role_name from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 ) user_type, (select status from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 ) user_status from t1)select * from l where l.user_type = 'AI Technicians' and user_status = 1 "+sub_query+") select *, (select involved_institution from paravet_aitechnician where x.submitted_by = paravet_aitechnician.mobile) is_ from x) select count(*) as total_institution, t2.is_ involved_institution from t2 group by t2.is_) select res.total_institution, (select value_label from vw_involved_institution where value_text = res.involved_institution)organization from res) select m.organization,(m.total_institution::float/n.total_institution::float) as percentage_of_ai_org from m,n where m.organization = n.organization)select organization,to_char(percentage_of_ai_org, 'FM999999999.00')total_org_ai from k")
+        ai_list_organization = __db_fetch_values_dict("with k as (with m as (with res as (with t2 as ( with x as( with l as (with t1 as (select distinct (json->>'system_id')::text cattle_id,(json->>'ai_or_pregnancy_or_delivery')::text ai_status,(json->>'_submitted_by')::text submitted_by from logger_instance where xform_id = 605 and (json->>'ai_or_pregnancy_or_delivery')::text = '1' and id = any('{" + str(ai_done_list).strip('[]') + " }')) select *,(select role_name from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_type, (select status from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_status from t1)select * from l where l.user_type = 'AI Technicians' and user_status = 1 "+sub_query+")select *, (select involved_institution from paravet_aitechnician where x.submitted_by = paravet_aitechnician.mobile) is_ from x) select count(*) as total_institution, t2.is_ involved_institution from t2 group by t2.is_) select res.total_institution, (select value_label from vw_involved_institution where value_text = res.involved_institution)organization from res), n as (with res as (with t2 as ( with x as( with l as (with t1 as (select distinct (json->>'system_id')::text cattle_id, (json->>'ai_or_pregnancy_or_delivery')::text ai_status,(json->>'mobile')::text farmer_mobile,(json->>'_submitted_by')::text submitted_by from logger_instance where xform_id = 605 and (json->>'ai_or_pregnancy_or_delivery')::text = '2' and (json->>'is_pregnant')::text = '1') select *, (select role_name from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 ) user_type, (select status from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 ) user_status from t1)select * from l where l.user_type = 'AI Technicians' and user_status = 1 "+sub_query+") select *, (select involved_institution from paravet_aitechnician where x.submitted_by = paravet_aitechnician.mobile) is_ from x) select count(*) as total_institution, t2.is_ involved_institution from t2 group by t2.is_) select res.total_institution, (select value_label from vw_involved_institution where value_text = res.involved_institution)organization from res) select m.organization,(m.total_institution::float/n.total_institution::float)  as percentage_of_ai_org from m,n where m.organization = n.organization)select organization,to_char(percentage_of_ai_org, 'FM999999999.00')total_org_ai from k")
 
         for row in ai_list_organization:
             category_org.append({'name': str(row['organization']), 'y': float(row['total_org_ai'])})
@@ -2682,22 +2393,6 @@ def get_individual_ai_data(request):
 
 
 def get_group_performance_dashboard_bull_conception_rate(request):
-    if request.method == 'POST':
-        organization_id = request.POST.get('organization')
-        breed_id = request.POST.get('breed')
-        performance_id = request.POST.get('performance') # 1 = High performing, 2 = Low performing
-        range_id = request.POST.get('range')
-        year_id = request.POST.get('year')
-        month_id = request.POST.get('month') # 1 = jan , 2 = Feb ...
-        div_id = request.POST.get('division')
-        dis_id = request.POST.get('district')
-        upz_id = request.POST.get('upazilla')
-
-    div_list = __db_fetch_values_dict("SELECT distinct division_id as id, division as field_name FROM public.vwupazila")
-    dist_list = __db_fetch_values_dict(
-        "SELECT distinct district_id as id, district as field_name FROM public.vwupazila")
-    upz_list = __db_fetch_values_dict("SELECT id, upazila as field_name FROM public.vwupazila")
-
     query = "select id,organization from usermodule_organizations"
     df = pandas.DataFrame()
     df = pandas.read_sql(query, connection)
@@ -2712,7 +2407,7 @@ def get_group_performance_dashboard_bull_conception_rate(request):
     breed_name = df.breed_name.tolist()
     breed = zip(breed_id, breed_name)
 
-    year = dt.today().year
+    year = datetime.today().year
 
     year_list = range(year, year - 50, -1)
 
@@ -2744,15 +2439,15 @@ def get_group_performance_dashboard_bull_conception_rate(request):
     total_target_for_ai = get_total_target_for_ai(request,role_id)
     total_ai_done = get_total_ai_done(request,role_id)
 
-    repeat_ai = 0 if total_ai==0 else float((float(count_of_q5) * 100.00) / (float(total_ai)))
-    conception_rate = 0 if total_ai==0 else float((float(total_pregnant_cattle) * 100.00) / (float(total_ai)))
+    repeat_ai = float((float(count_of_q5) * 100.00) / (float(total_ai)))
+    conception_rate = float((float(total_pregnant_cattle) * 100.00) / (float(total_ai)))
 
     if total_target_for_ai == 0:
         target_achieved = 0
     else:
         target_achieved = float((float(total_ai) * 100.00) / (float(total_target_for_ai)))
 
-    service_per_conception =0 if total_pregnant_cattle==0 else float(float(total_ai_done) / (float(total_pregnant_cattle)))
+    service_per_conception = float(float(total_ai_done) / (float(total_pregnant_cattle)))
 
     return render(request, 'livestock/dashboard_group_performance_bull_conception_rate.html', {
         'organization': organization,
@@ -2763,28 +2458,10 @@ def get_group_performance_dashboard_bull_conception_rate(request):
         'repeat_ai': '%.2f' % repeat_ai,
         'conception_rate': '%.2f' % conception_rate,
         'target_achieved': '%.2f' % target_achieved,
-        'service_per_conception': '%.2f' % service_per_conception,
-        'div_list': div_list,
-        'dist_list': dist_list,
-        'upz_list': upz_list,
+        'service_per_conception': '%.2f' % service_per_conception
     })
 
 def get_group_performance_dashboard_ai_conception_rate(request):
-    if request.method == 'POST':
-        organization_id = request.POST.get('organization')
-        breed_id = request.POST.get('breed')
-        performance_id = request.POST.get('performance') # 1 = High performing, 2 = Low performing
-        range_id = request.POST.get('range')
-        year_id = request.POST.get('year')
-        month_id = request.POST.get('month') # 1 = jan , 2 = Feb ...
-        div_id = request.POST.get('division')
-        dis_id = request.POST.get('district')
-        upz_id = request.POST.get('upazilla')
-
-    div_list = __db_fetch_values_dict("SELECT distinct division_id as id, division as field_name FROM public.vwupazila")
-    dist_list = __db_fetch_values_dict("SELECT distinct district_id as id, district as field_name FROM public.vwupazila")
-    upz_list = __db_fetch_values_dict("SELECT id, upazila as field_name FROM public.vwupazila")
-
     query = "select id,organization from usermodule_organizations"
     df = pandas.DataFrame()
     df = pandas.read_sql(query, connection)
@@ -2799,7 +2476,7 @@ def get_group_performance_dashboard_ai_conception_rate(request):
     breed_name = df.breed_name.tolist()
     breed = zip(breed_id, breed_name)
 
-    year = dt.today().year
+    year = datetime.today().year
 
     year_list = range(year, year - 50, -1)
 
@@ -2812,15 +2489,15 @@ def get_group_performance_dashboard_ai_conception_rate(request):
     total_target_for_ai = get_total_target_for_ai(request,role_id)
     total_ai_done = get_total_ai_done(request,role_id)
 
-    repeat_ai = 0 if total_ai==0 else float((float(count_of_q5) * 100.00) / (float(total_ai)))
-    conception_rate = 0 if total_ai==0 else float((float(total_pregnant_cattle) * 100.00) / (float(total_ai)))
+    repeat_ai = float((float(count_of_q5) * 100.00) / (float(total_ai)))
+    conception_rate = float((float(total_pregnant_cattle) * 100.00) / (float(total_ai)))
 
     if total_target_for_ai == 0:
         target_achieved = 0
     else:
         target_achieved = float((float(total_ai) * 100.00) / (float(total_target_for_ai)))
 
-    service_per_conception = 0 if total_pregnant_cattle==0 else float(float(total_ai_done) / (float(total_pregnant_cattle)))
+    service_per_conception = float(float(total_ai_done) / (float(total_pregnant_cattle)))
 
     return render(request, 'livestock/dashboard_group_performance_ai_conception_rate.html', {
         'organization': organization,
@@ -2831,30 +2508,11 @@ def get_group_performance_dashboard_ai_conception_rate(request):
         'repeat_ai': '%.2f' % repeat_ai,
         'conception_rate': '%.2f' % conception_rate,
         'target_achieved': '%.2f' % target_achieved,
-        'service_per_conception': '%.2f' % service_per_conception,
-        'div_list':div_list,
-        'dist_list':dist_list,
-        'upz_list':upz_list,
+        'service_per_conception': '%.2f' % service_per_conception
     })
 
 
 def get_group_performance_dashboard_bull_service_per_conception(request):
-    if request.method == 'POST':
-        organization_id = request.POST.get('organization')
-        breed_id = request.POST.get('breed')
-        performance_id = request.POST.get('performance') # 1 = High performing, 2 = Low performing
-        range_id = request.POST.get('range')
-        year_id = request.POST.get('year')
-        month_id = request.POST.get('month') # 1 = jan , 2 = Feb ...
-        div_id = request.POST.get('division')
-        dis_id = request.POST.get('district')
-        upz_id = request.POST.get('upazilla')
-
-    div_list = __db_fetch_values_dict("SELECT distinct division_id as id, division as field_name FROM public.vwupazila")
-    dist_list = __db_fetch_values_dict(
-        "SELECT distinct district_id as id, district as field_name FROM public.vwupazila")
-    upz_list = __db_fetch_values_dict("SELECT id, upazila as field_name FROM public.vwupazila")
-
     query = "select id,organization from usermodule_organizations"
     df = pandas.DataFrame()
     df = pandas.read_sql(query, connection)
@@ -2869,7 +2527,7 @@ def get_group_performance_dashboard_bull_service_per_conception(request):
     breed_name = df.breed_name.tolist()
     breed = zip(breed_id, breed_name)
 
-    year = dt.today().year
+    year = datetime.today().year
     year_list = range(year, year - 50, -1)
 
     role_id = getRoleId(request)
@@ -2879,15 +2537,15 @@ def get_group_performance_dashboard_bull_service_per_conception(request):
     total_target_for_ai = get_total_target_for_ai(request,role_id)
     total_ai_done = get_total_ai_done(request,role_id)
 
-    repeat_ai =  0 if total_ai==0 else float((float(count_of_q5) * 100.00) / (float(total_ai)))
-    conception_rate =  0 if total_ai==0 else float((float(total_pregnant_cattle) * 100.00) / (float(total_ai)))
+    repeat_ai = float((float(count_of_q5) * 100.00) / (float(total_ai)))
+    conception_rate = float((float(total_pregnant_cattle) * 100.00) / (float(total_ai)))
 
     if total_target_for_ai == 0:
         target_achieved = 0
     else:
         target_achieved = float((float(total_ai) * 100.00) / (float(total_target_for_ai)))
 
-    service_per_conception =  0 if total_ai==0 else float(float(total_ai_done) / (float(total_pregnant_cattle)))
+    service_per_conception = float(float(total_ai_done) / (float(total_pregnant_cattle)))
 
     return render(request, 'livestock/dashboard_group_performance_bull_service_per_conception.html', {
         'organization': organization,
@@ -2898,28 +2556,9 @@ def get_group_performance_dashboard_bull_service_per_conception(request):
         'conception_rate': '%.2f' % conception_rate,
         'target_achieved': '%.2f' % target_achieved,
         'service_per_conception': '%.2f' % service_per_conception,
-        'div_list': div_list,
-        'dist_list': dist_list,
-        'upz_list': upz_list,
     })
 
 def get_group_performance_dashboard_ai_service_per_conception(request):
-    if request.method == 'POST':
-        organization_id = request.POST.get('organization')
-        breed_id = request.POST.get('breed')
-        performance_id = request.POST.get('performance') # 1 = High performing, 2 = Low performing
-        range_id = request.POST.get('range')
-        year_id = request.POST.get('year')
-        month_id = request.POST.get('month') # 1 = jan , 2 = Feb ...
-        div_id = request.POST.get('division')
-        dis_id = request.POST.get('district')
-        upz_id = request.POST.get('upazilla')
-
-    div_list = __db_fetch_values_dict("SELECT distinct division_id as id, division as field_name FROM public.vwupazila")
-    dist_list = __db_fetch_values_dict(
-        "SELECT distinct district_id as id, district as field_name FROM public.vwupazila")
-    upz_list = __db_fetch_values_dict("SELECT id, upazila as field_name FROM public.vwupazila")
-
     query = "select id,organization from usermodule_organizations"
     df = pandas.DataFrame()
     df = pandas.read_sql(query, connection)
@@ -2934,7 +2573,7 @@ def get_group_performance_dashboard_ai_service_per_conception(request):
     breed_name = df.breed_name.tolist()
     breed = zip(breed_id, breed_name)
 
-    year = dt.today().year
+    year = datetime.today().year
     year_list = range(year, year - 50, -1)
     ai_list = __db_fetch_values_dict("select * from paravet_aitechnician where user_type = 'AI Technicians'")
 
@@ -2945,15 +2584,15 @@ def get_group_performance_dashboard_ai_service_per_conception(request):
     total_target_for_ai = get_total_target_for_ai(request,role_id)
     total_ai_done = get_total_ai_done(request,role_id)
 
-    repeat_ai = 0 if total_ai==0 else float((float(count_of_q5) * 100.00) / (float(total_ai)))
-    conception_rate = 0 if total_ai==0 else float((float(total_pregnant_cattle) * 100.00) / (float(total_ai)))
+    repeat_ai = float((float(count_of_q5) * 100.00) / (float(total_ai)))
+    conception_rate = float((float(total_pregnant_cattle) * 100.00) / (float(total_ai)))
 
     if total_target_for_ai == 0:
         target_achieved = 0
     else:
         target_achieved = float((float(total_ai) * 100.00) / (float(total_target_for_ai)))
 
-    service_per_conception = 0 if total_pregnant_cattle==0 else float(float(total_ai_done) / (float(total_pregnant_cattle)))
+    service_per_conception = float(float(total_ai_done) / (float(total_pregnant_cattle)))
 
     cattle_list = []
     pregnant_list = []
@@ -3010,15 +2649,12 @@ def get_group_performance_dashboard_ai_service_per_conception(request):
         'repeat_ai': '%.2f' % repeat_ai,
         'conception_rate': '%.2f' % conception_rate,
         'target_achieved': '%.2f' % target_achieved,
-        'service_per_conception': '%.2f' % service_per_conception,
-        'div_list': div_list,
-        'dist_list': dist_list,
-        'upz_list': upz_list,
+        'service_per_conception': '%.2f' % service_per_conception
     })
 
 
 def get_individual_bull_performance_dashboard(request,bull_id,category_id):
-    year = dt.today().year
+    year = datetime.today().year
     year_list = range(year, year - 50, -1)
     cattle_type_list = __db_fetch_values_dict("select value as id, label as name from vwcattle_type")
     division_list = __db_fetch_values_dict("select id, division as name from vwdivision")
@@ -3031,7 +2667,7 @@ def get_individual_bull_performance_dashboard(request,bull_id,category_id):
 
 
 def get_individual_ai_performance_dashboard(request,ai_id,category_id):
-    year = dt.today().year
+    year = datetime.today().year
 
     year_list = range(year, year - 50, -1)
     cattle_type_list = __db_fetch_values_dict("select value as id, label as name from vwcattle_type")
@@ -3190,117 +2826,34 @@ def get_hc_json(request):
 
 
 def get_ai_percentage_dashboard_new(request):
-    category_org = []
     category_id = request.POST.get('category_id')
-    from_date = dt.now().strftime("%Y-%m-%d")
-    to_date = dt.now().strftime("%Y-%m-%d")
-    category_id = "1"
-
-    if request.method == 'POST':
-        from_date = request.POST.get('from_date')
-        if from_date is None:
-            from_date = dt.now().strftime("%Y-%m-%d")
-
-        to_date = request.POST.get('to_date')
-        if to_date is None:
-            to_date = dt.now().strftime("%Y-%m-%d")
-
-        category_id = request.POST.get('category_id')
-
     username = request.user.username
     role_id = getRoleId(request)
-
-    if role_id == 48:
-        sub_query = ''
-        sub_query1 = ''
-    else:
-        sub_query = " and submitted_by = '" + username + "' "
-        sub_query1 = " and _submitted_by = '" + username + "' "
 
     if category_id == '1':
         title = "Division wise total AI"
         sub_title = ""
-        query = """with t1 as( select system_id cattle_id,ai_or_pregnancy_or_delivery, mobile farmer_mobile,_submitted_by submitted_by from vwreproduction where ai_or_pregnancy_or_delivery='1' and reproduction_date between '""" + from_date + """' and '"""+ to_date+ """' """ + sub_query + """),t2 as( select mobile,vwupazila.division,vwupazila.district,vwupazila.upazila from approval_queue,vwupazila where role_name='AI Technicians' and status=1 and approval_queue.division=vwupazila.div_code and approval_queue.district=(vwupazila.div_code || vwupazila.dist_code) and approval_queue.upazila=(vwupazila.div_code || vwupazila.dist_code || vwupazila.upazila_code) ) select t2.division,t2.district,t2.upazila,count(distinct cattle_id) cnt from t1,t2 where t1.submitted_by=t2.mobile group by t2.division,t2.district,t2.upazila"""
-
-        print query
-
-
-        qry_ai_list_organization = "with t1 as(select system_id cattle_id,ai_or_pregnancy_or_delivery,mobile farmer_mobile,_submitted_by submitted_by from vwreproduction where ai_or_pregnancy_or_delivery='1' and reproduction_date between '" + from_date + "' and '" + to_date + "' " + sub_query + "),t2 as(select paravet_aitechnician.mobile,paravet_aitechnician.involved_institution from approval_queue,paravet_aitechnician where role_name='AI Technicians' and status=1 and approval_queue.mobile=paravet_aitechnician.mobile) select (select value_label from vw_involved_institution where value_text=t2.involved_institution) involved_institution,count(distinct cattle_id) total_institution from t1,t2 where t1.submitted_by=t2.mobile group by t2.involved_institution"
-
-        ai_list_organization = __db_fetch_values_dict(qry_ai_list_organization)
-
-        for row in ai_list_organization:
-            category_org.append({'name': str(row['involved_institution']), 'y': int(row['total_institution'])})
+        query = """with t1 as( select system_id cattle_id,ai_or_pregnancy_or_delivery, mobile farmer_mobile,_submitted_by submitted_by from vwreproduction where ai_or_pregnancy_or_delivery='1'),t2 as( select mobile,vwupazila.division,vwupazila.district,vwupazila.upazila from approval_queue,vwupazila where role_name='AI Technicians' and status=1 and approval_queue.division=vwupazila.div_code and approval_queue.district=(vwupazila.div_code || vwupazila.dist_code) and approval_queue.upazila=(vwupazila.div_code || vwupazila.dist_code || vwupazila.upazila_code) ) select t2.division,t2.district,t2.upazila,count(distinct cattle_id) cnt from t1,t2 where t1.farmer_mobile=t2.mobile group by t2.division,t2.district,t2.upazila"""
 
     elif category_id == '2':
         title = "Division wise Repeated AI"
         sub_title = ""
-
-        total_ai = get_total_ai(request,role_id,from_date,to_date)
-        total_ai = 1 if total_ai==0 else total_ai
-
-        query = "with t1 as(select system_id cattle_id,ai_or_pregnancy_or_delivery,_submitted_by submitted_by from vwreproduction where ai_or_pregnancy_or_delivery = '1' and reproduction_date between '" + from_date + "' and '" + to_date + "' " + sub_query1 + "),t2 as(select submitted_by,count(distinct cattle_id) cnt_ai from t1 group by submitted_by),t3 as(with t as(select id,system_id,_submitted_by info_mobile_prefill,reproduction_date::date reproduction_date_pregnant,(coalesce(artificial_reproduction_failed_number, '0'))::int artificial_reproduction_failed_number,max(reproduction_date::date) over(partition by system_id) reproduction_date_pregnant_max from vwreproduction where ai_or_pregnancy_or_delivery = '1' and user_type = 'AI Technicians' and reproduction_date between '" + from_date + "' and '" + to_date + "' " + sub_query1 + ")select info_mobile_prefill,sum(artificial_reproduction_failed_number + 1) cnt_total_ai from t where reproduction_date_pregnant = reproduction_date_pregnant_max group by info_mobile_prefill ),t4 as(select t2.submitted_by,cnt_ai,cnt_total_ai from t2,t3 where t2.submitted_by=t3.info_mobile_prefill ),t5 as(select mobile,vwupazila.division,vwupazila.district,vwupazila.upazila from approval_queue, vwupazila where role_name = 'AI Technicians' and status = 1 and approval_queue.division = vwupazila.div_code and approval_queue.district =(vwupazila.div_code || vwupazila.dist_code) and approval_queue.upazila =(vwupazila.div_code || vwupazila.dist_code || vwupazila.upazila_code) )select t5.division,t5.district,t5.upazila,(sum(cnt_total_ai)*100/"+str(total_ai)+") cnt from t4,t5 where t4.submitted_by = t5.mobile group by t5.division,t5.district,t5.upazila"
-
-        print query
-
-        ai_list_organization = __db_fetch_values_dict("with k as (with m as (with res as (with t2 as ( with x as( with l as (with t1 as (select distinct (json->>'system_id')::text cattle_id,(json->>'ai_or_pregnancy_or_delivery')::text ai_status,(json->>'_submitted_by')::text submitted_by from logger_instance where xform_id = 605 and (json->>'ai_or_pregnancy_or_delivery')::text = '1') select *,(select role_name from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_type, (select status from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_status from t1)select * from l where l.user_type = 'AI Technicians' and user_status = 1 "+sub_query+")select *, (select involved_institution from paravet_aitechnician where x.submitted_by = paravet_aitechnician.mobile) is_ from x) select count(*) as total_institution, t2.is_ involved_institution from t2 group by t2.is_) select res.total_institution, (select value_label from vw_involved_institution where value_text = res.involved_institution)organization from res), n as (with res as (with t2 as ( with x as( with l as (with t1 as (select distinct (json->>'system_id')::text cattle_id, (json->>'ai_or_pregnancy_or_delivery')::text ai_status,(json->>'_submitted_by')::text submitted_by from logger_instance where xform_id = 605 and (json->>'ai_or_pregnancy_or_delivery')::text = '1' and (json->>'artificial_reproduction_failed_number')::int > 0) select *, (select role_name from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 ) user_type, (select status from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 ) user_status from t1)select * from l where l.user_type = 'AI Technicians' and user_status = 1 "+sub_query+") select *, (select involved_institution from paravet_aitechnician where x.submitted_by = paravet_aitechnician.mobile) is_ from x) select count(*) as total_institution, t2.is_ involved_institution from t2 group by t2.is_) select res.total_institution, (select value_label from vw_involved_institution where value_text = res.involved_institution)organization from res) select m.organization,(n.total_institution::float/m.total_institution::float)*100  as percentage_of_ai_org from m,n where m.organization = n.organization)select organization,to_char(percentage_of_ai_org, 'FM999999999.00')total_org_ai from k")
-
-
-        for row in ai_list_organization:
-            category_org.append({'name': str(row['organization']), 'y': float(row['total_org_ai'])})
-
+        query = """"""
 
     elif category_id == '3':
         title = "Division wise Conception Rate"
         sub_title = ""
-
-        total_ai = get_total_ai(request,role_id,from_date,to_date)
-        total_ai = 1 if total_ai==0 else total_ai
-
-
-        query = """with t1 as( select system_id cattle_id,_submitted_by submitted_by from vwreproduction where ai_or_pregnancy_or_delivery = '2' and is_pregnant = '1' and reproduction_date_pregnant::date between '""" + from_date + """' and '"""+ to_date+ """' """ + sub_query + """),t2 as( select mobile,vwupazila.division,vwupazila.district,vwupazila.upazila from approval_queue,vwupazila where role_name='AI Technicians' and status=1 and approval_queue.division=vwupazila.div_code and approval_queue.district=(vwupazila.div_code || vwupazila.dist_code) and approval_queue.upazila=(vwupazila.div_code || vwupazila.dist_code || vwupazila.upazila_code) ) select t2.division,t2.district,t2.upazila,(count(distinct cattle_id))*100.00/"""+ str(total_ai)+""" cnt from t1,t2 where t1.submitted_by=t2.mobile group by t2.division,t2.district,t2.upazila"""
-
-        ai_list_organization = __db_fetch_values_dict(
-            "with k as (with m as (with res as (with t2 as ( with x as( with l as (with t1 as (select distinct (json->>'system_id')::text cattle_id,(json->>'ai_or_pregnancy_or_delivery')::text ai_status,(json->>'_submitted_by')::text submitted_by from logger_instance where xform_id = 605 and (json->>'ai_or_pregnancy_or_delivery')::text = '1') select *,(select role_name from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_type, (select status from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_status from t1)select * from l where l.user_type = 'AI Technicians' and user_status = 1 "+sub_query+")select *, (select involved_institution from paravet_aitechnician where x.submitted_by = paravet_aitechnician.mobile) is_ from x) select count(*) as total_institution, t2.is_ involved_institution from t2 group by t2.is_) select res.total_institution, (select value_label from vw_involved_institution where value_text = res.involved_institution)organization from res), n as (with res as (with t2 as ( with x as( with l as (with t1 as (select distinct (json->>'system_id')::text cattle_id, (json->>'ai_or_pregnancy_or_delivery')::text ai_status,(json->>'mobile')::text farmer_mobile,(json->>'_submitted_by')::text submitted_by from logger_instance where xform_id = 605 and (json->>'ai_or_pregnancy_or_delivery')::text = '2' and (json->>'is_pregnant')::text = '1') select *, (select role_name from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 ) user_type, (select status from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 ) user_status from t1)select * from l where l.user_type = 'AI Technicians' and user_status = 1 "+sub_query+") select *, (select involved_institution from paravet_aitechnician where x.submitted_by = paravet_aitechnician.mobile) is_ from x) select count(*) as total_institution, t2.is_ involved_institution from t2 group by t2.is_) select res.total_institution, (select value_label from vw_involved_institution where value_text = res.involved_institution)organization from res) select m.organization,(n.total_institution::float/m.total_institution::float)*100  as percentage_of_ai_org from m,n where m.organization = n.organization)select organization,to_char(percentage_of_ai_org, 'FM999999999.00')total_org_ai from k")
-
-        qry="with k as (with m as (with res as (with t2 as ( with x as( with l as (with t1 as (select distinct (json->>'system_id')::text cattle_id,(json->>'ai_or_pregnancy_or_delivery')::text ai_status,(json->>'_submitted_by')::text submitted_by from logger_instance where xform_id = 605 and (json->>'ai_or_pregnancy_or_delivery')::text = '1') select *,(select role_name from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_type, (select status from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 )user_status from t1)select * from l where l.user_type = 'AI Technicians' and user_status = 1 "+sub_query+")select *, (select involved_institution from paravet_aitechnician where x.submitted_by = paravet_aitechnician.mobile) is_ from x) select count(*) as total_institution, t2.is_ involved_institution from t2 group by t2.is_) select res.total_institution, (select value_label from vw_involved_institution where value_text = res.involved_institution)organization from res), n as (with res as (with t2 as ( with x as( with l as (with t1 as (select distinct (json->>'system_id')::text cattle_id, (json->>'ai_or_pregnancy_or_delivery')::text ai_status,(json->>'mobile')::text farmer_mobile,(json->>'_submitted_by')::text submitted_by from logger_instance where xform_id = 605 and (json->>'ai_or_pregnancy_or_delivery')::text = '2' and (json->>'is_pregnant')::text = '1') select *, (select role_name from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 ) user_type, (select status from approval_queue where approval_queue.mobile = t1.submitted_by limit 1 ) user_status from t1)select * from l where l.user_type = 'AI Technicians' and user_status = 1 "+sub_query+") select *, (select involved_institution from paravet_aitechnician where x.submitted_by = paravet_aitechnician.mobile) is_ from x) select count(*) as total_institution, t2.is_ involved_institution from t2 group by t2.is_) select res.total_institution, (select value_label from vw_involved_institution where value_text = res.involved_institution)organization from res) select m.organization,(n.total_institution::float/m.total_institution::float)*100  as percentage_of_ai_org from m,n where m.organization = n.organization)select organization,to_char(percentage_of_ai_org, 'FM999999999.00')total_org_ai from k"
-        #print qry
-        for row in ai_list_organization:
-            category_org.append({'name': str(row['organization']), 'y': float(row['total_org_ai'])})
-
-
-
+        query = """"""
 
     elif category_id == '4':
         title = "Division wise Service per Conception"
         sub_title = ""
-        total_pregnant_cattle = get_total_pregnant_cattle(request,role_id,from_date,to_date)
-        total_pregnant_cattle=1 if total_pregnant_cattle==0 else total_pregnant_cattle
-
-        query = "with t1 as(with t as(select id,system_id,_submitted_by submitted_by,reproduction_date::date reproduction_date_pregnant,(coalesce(artificial_reproduction_failed_number, '0'))::int artificial_reproduction_failed_number,max(reproduction_date::date) over(partition by system_id) reproduction_date_pregnant_max from vwreproduction where ai_or_pregnancy_or_delivery = '1'and user_type = 'AI Technicians'and reproduction_date between '" + from_date + "' and '" + to_date + "' " + sub_query + ")select submitted_by,sum(artificial_reproduction_failed_number + 1) cnt_total_ai from t where reproduction_date_pregnant = reproduction_date_pregnant_max group by submitted_by),t2 as(select mobile,vwupazila.division,vwupazila.district,vwupazila.upazila from approval_queue,vwupazila where role_name = 'AI Technicians' and status = 1 and approval_queue.division = vwupazila.div_code and approval_queue.district =(vwupazila.div_code || vwupazila.dist_code)and approval_queue.upazila =(vwupazila.div_code || vwupazila.dist_code || vwupazila.upazila_code) )select t2.division,t2.district,t2.upazila,(sum(cnt_total_ai)*100.00)/"+str(total_pregnant_cattle)+" from t1,t2 where t1.submitted_by = t2.mobile group by t2.division,t2.district,t2.upazila"
-
-        qry="with t1 as(with t as(select id,system_id,_submitted_by submitted_by,reproduction_date::date reproduction_date_pregnant,(coalesce(artificial_reproduction_failed_number, '0'))::int artificial_reproduction_failed_number,max(reproduction_date::date) over(partition by system_id) reproduction_date_pregnant_max from vwreproduction where ai_or_pregnancy_or_delivery = '1' and user_type = 'AI Technicians' and reproduction_date between '2018-01-01' and '2019-07-11' )select submitted_by,sum(artificial_reproduction_failed_number + 1) cnt_total_ai from t where reproduction_date_pregnant = reproduction_date_pregnant_max group by submitted_by),t2 as(select vwuserinvolved_institution.mobile,vwuserinvolved_institution.involved_institution_label from approval_queue,vwuserinvolved_institution where role_name = 'AI Technicians' and status = 1 and approval_queue.mobile = vwuserinvolved_institution.mobile)select t2.involved_institution_label organization,sum(cnt_total_ai)/"+ str(total_pregnant_cattle) +" total_org_ai from t1,t2 where t1.submitted_by = t2.mobile group by t2.involved_institution_label"
-
-        ai_list_organization = __db_fetch_values_dict(qry)
-        for row in ai_list_organization:
-            category_org.append({'name': str(row['organization']), 'y': float(row['total_org_ai'])})
-
+        query = """"""
 
     elif category_id == '5':
         title = "Division wise Target Achieved"
         sub_title = ""
         query = """"""
-        total_target_for_ai = get_total_target_for_ai(request,role_id,from_date,to_date)
-        total_target_for_ai=1 if total_target_for_ai==0 else total_target_for_ai
-
-        query = """with t1 as( select system_id cattle_id,ai_or_pregnancy_or_delivery, mobile farmer_mobile,_submitted_by submitted_by from vwreproduction where ai_or_pregnancy_or_delivery='1' and reproduction_date between '""" + from_date + """' and '"""+ to_date+ """' """ + sub_query + """),t2 as( select mobile,vwupazila.division,vwupazila.district,vwupazila.upazila from approval_queue,vwupazila where role_name='AI Technicians' and status=1 and approval_queue.division=vwupazila.div_code and approval_queue.district=(vwupazila.div_code || vwupazila.dist_code) and approval_queue.upazila=(vwupazila.div_code || vwupazila.dist_code || vwupazila.upazila_code) ) select t2.division,t2.district,t2.upazila,(count(distinct cattle_id)*100)/"""+ str(total_target_for_ai) + """ cnt from t1,t2 where t1.submitted_by=t2.mobile group by t2.division,t2.district,t2.upazila"""
-
-        qry="with t1 as(select system_id cattle_id,ai_or_pregnancy_or_delivery,mobile farmer_mobile,_submitted_by submitted_by from vwreproduction where ai_or_pregnancy_or_delivery = '1' and reproduction_date between '" + from_date + "' and '"+ to_date+ "' ),t2 as(select vwuserinvolved_institution.mobile,vwuserinvolved_institution.involved_institution_label from approval_queue,vwuserinvolved_institution where role_name = 'AI Technicians' and status = 1 and approval_queue.mobile = vwuserinvolved_institution.mobile) select t2.involved_institution_label organization,(count(distinct cattle_id)*100)/"+str(total_target_for_ai)+ " total_org_ai from t1,t2 where t1.submitted_by = t2.mobile group by t2.involved_institution_label"
-
-        ai_list_organization = __db_fetch_values_dict(qry)
-        for row in ai_list_organization:
-            category_org.append({'name': str(row['organization']), 'y': float(row['total_org_ai'])})
-
 
     try:
         dat = sqlio.read_sql_query(query, connection)
@@ -3309,10 +2862,7 @@ def get_ai_percentage_dashboard_new(request):
     except Exception as e:
         print(e)
         jsn = ''
-    #print jsn
-
+    print jsn
     return HttpResponse(json.dumps({
-        "jsn":jsn,
-        'bar_data_organization': category_org
+        "jsn":jsn
     }))
-

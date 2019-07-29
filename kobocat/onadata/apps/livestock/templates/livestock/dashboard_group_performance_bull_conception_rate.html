@@ -77,9 +77,9 @@
                 </div>
 
                 <div class="col-md-12 col-xs-12" style="margin-bottom: 20px; margin-top: 10px">
-                    <div class="col-md-12 col-xs-6 col-md-offset-3 col-xs-offset-3">
+                    <div class="col-md-6 col-xs-6 col-md-offset-3 col-xs-offset-3" style="border: 1px solid #399939;padding: 0px">
                           <div class="btn col-md-6 col-xs-6 active" style="background: #399939;color: white;font-weight: bold" onclick="location.href='';">Conception Rate</div>
-                         <!-- <div class="btn e col-md-6 col-xs-6" style="font-weight: bold;" onclick="location.href='/livestock/group_performance_dashboard/bull/service_per_conception';" >Service Per Conception</div>-->
+                         <div class="btn e col-md-6 col-xs-6" style="font-weight: bold;" onclick="location.href='/livestock/group_performance_dashboard/bull/service_per_conception';" >Service Per Conception</div>
                     </div>
                 </div>
 
@@ -103,7 +103,7 @@
                            </td>
                            <td>
                                 <!-- /livestock/individual_performance_dashboard/bull/{{row.id}}/1/ -->
-                                 <div onclick="location.href='';" style="cursor: pointer" title="See Detail">
+                                 <div onclick="location.href='/livestock/individual_performance_dashboard/bull/{{row.bull_id}}/1/';" style="cursor: pointer" title="See Detail">
                                 <div class="progress" style="margin-bottom: 0px;margin-top: 4px;position: inherit">
                                   <div class="progress-bar" role="progressbar"
                                   aria-valuemin="0" aria-valuemax="100" style="width:{{row.conception_rate}}% ;background-color: green ;">
@@ -209,6 +209,46 @@
                                                     <option value="10">Oct</option>
                                                     <option value="11">Nov</option>
                                                     <option value="12">Dec</option>
+
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <br>
+                                        <div class="col-md-12" style="padding-left: 0px;margin-left: 0px">
+                                            <div class="form-group">
+                                                <label style="float: left; margin-right: 10px">Division: </label>
+                                                <select class="form-control pull-right" style="width: 150px" name="division" id="division" required>
+                                                    <option value="%">All</option>
+                                                    {% for item in div_list %}
+                                                        <option value="{{ item.id }}">{{ item.field_name }}</option>
+                                                    {% endfor %}
+
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <br>
+                                         <div class="col-md-12" style="padding-left: 0px;margin-left: 0px">
+                                            <div class="form-group">
+                                                <label style="float: left; margin-right: 10px">District: </label>
+                                                <select class="form-control pull-right" style="width: 150px" name="district" id="district" required>
+                                                    <option value="%">All</option>
+                                                      {% for item in dist_list %}
+                                                        <option value="{{ item.id }}">{{ item.field_name }}</option>
+                                                    {% endfor %}
+
+
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <br>
+                                         <div class="col-md-12" style="padding-left: 0px;margin-left: 0px">
+                                            <div class="form-group">
+                                                <label style="float: left; margin-right: 10px">Upazila: </label>
+                                                <select class="form-control pull-right" style="width: 150px" name="upazilla" id="upazilla" required>
+                                                    <option value="%">All</option>
+                                                    {% for item in upz_list %}
+                                                        <option value="{{ item.id }}">{{ item.field_name }}</option>
+                                                    {% endfor %}
 
                                                 </select>
                                             </div>

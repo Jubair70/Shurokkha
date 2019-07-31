@@ -1,0 +1,57 @@
+{% extends "base_test.html" %}
+<head>
+    <meta charset="utf-8"/>
+    <title>{% block title %}SMS Details{% endblock %}</title>
+</head>
+{% block additional-headers %}
+
+{% endblock %}
+{% block content %}
+<div class="portlet box red">
+    <div class="portlet-title">
+        <div class="caption">
+            <i class="fa fa-reorder"></i> SMS Details
+        </div>
+    </div>
+    <div class="portlet-body">
+    <div class="row">
+                <div class="col-md-12">
+                    <a href="/livestock/list_sms/">
+                        <button type="button" class="btn btn-info pull-right" id="add_new" data-original-title=""
+                                title="">Go Back
+                        </button>
+                    </a>
+        </div>
+    </div>
+    <div style="margin-top:15px;"></div>
+    
+    
+    <table class="table table-striped">
+    <tr><th>Text</th><td>{{ sms_text }}</td></tr>
+    <tr><th>Voice clip</th><td>{{ voice_clip }}</td></tr>
+    <tr><th>Which one will be sent</th><td>{{ sms_sent_type }}</td></tr>
+    <tr><th>SMS Type</th><td>{{ sms_type }}</td></tr>
+    <tr><th>Schedule Date</th><td>{{ schedule_date }}</td></tr>
+    <tr><th>SMS Trigger Time</th><td>{{ trigger_time }}</td></tr>
+    <tr><th>Event Name</th><td>{{ event_id }}</td></tr>
+    <tr><th>Interval</th><td>{{ interval_time }}</td></tr>
+    <tr>
+    <table style="width: 90%; margin-left: 5%; border: 2px solid #eee;" class="table table-striped">
+    <tr><th style="text-align: center;" colspan="2">Recepient</th></tr>
+    <tr><th>Division</th><td>{{ divisions }}</td></tr>
+    <tr><th>District</th><td>{{ districts }}</td></tr>
+    <tr><th>Upazila</th><td>{{ upazilas }}</td></tr>
+    <tr><th>User</th><td>{{ users }}</td></tr>
+    <tr><th>Cattle Type</th><td>{{ cattle_types }}</td></tr>
+    <tr><th>Cattle Age Range</th><td>{{ age_range }}</td></tr>
+    <tr><th>No of selected users</th><td>{{ no_of_selected_users }}</td></tr>
+    </table>
+    </tr>
+    </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block additional-javascript %}
+
+{% endblock %}

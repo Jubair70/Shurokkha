@@ -1,0 +1,316 @@
+{% extends "base_test.html" %}
+<head>
+    <meta charset="utf-8"/>
+    <title>{% block title %}SMS Details{% endblock %}</title>
+</head>
+{% block additional-headers %}
+<link href="/static/css/datepicker.css" rel="stylesheet">
+<link rel="stylesheet" type="text/css" href="/static/assets/plugins/clockface/css/clockface.css">
+<link rel="stylesheet" type="text/css" href="/static/assets/plugins/bootstrap-multiselect/bootstrap-multiselect.css">
+
+{% endblock %}
+{% block content %}
+<div class="portlet box red">
+    <div class="portlet-title">
+        <div class="caption">
+            <i class="fa fa-reorder"></i> SMS Details
+        </div>
+    </div>
+    <div class="portlet-body form">
+        <form role="form" actions="" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-body">
+                <div class="form-group">
+                    <label>Text</label>
+                    <textarea id="sms_text" name="sms_text" class="form-control" rows="3" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="voice_clip_loc">Voice Clip</label>
+                    <input accept="audio/*" required type="file" id="voice_clip_loc" name="voice_clip_loc">
+                </div>
+                <div class="form-group">
+                    <label class="">Which one will be sent?</label>
+                    <br>
+                    <input type="radio" name="sms_sent_type" value="1" required> Text
+                    <input type="radio" name="sms_sent_type" value="2"> Voice Clip
+                    <input type="radio" name="sms_sent_type" value="3"> Both (Text & Voice Clip)
+                    <br>
+                </div>
+                <div class="form-group">
+                    <label>SMS Type</label>
+                    <select required id="sms_type" name="sms_type" class="form-control" onchange="changeSMSType(this);">
+                        <option value>Select SMS Type</option>
+                        <option value="1">General</option>
+                        <option value="2">Promotinal</option>
+                        <option value="3">Event Based</option>
+                    </select>
+                </div>
+                <div class="form-group schedule_date_block" style="display:none;">
+
+                    <label>Schedule Date</label>
+                    <div class="form-group">
+                        <input type="text" class="datepicker form-control" name="schedule_date" id="schedule_date">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>SMS Trigger Time</label>
+                    <input required id="trigger_time" name="trigger_time" type="text" value="12:00 PM" data-format="hh:mm A" class="form-control clockface_1 clockface-open">
+                </div>
+                <div class="event_block form-group" style="display:none;">
+                    <label>Event Name</label>
+                    <select id="event_id" name="event_id" class="form-control">
+                        <option value="0">Select Event</option>
+                    </select>
+                </div>
+
+                <div class="event_block form-group" style="display:none;">
+                    <label>Interval</label>
+                    <input min="0" type="number" class="form-control" name="interval_time" id="interval_time"> Day/s
+                </div>
+
+                <div class="portlet box red schedule_date_block" style="display:none;">
+                    <div class="portlet-title">
+                        <div class="caption">
+                            <i class="fa fa-users"></i> Add Recipient
+                        </div>
+                    </div>
+                    <div class="portlet-body">
+                        <div class="row"  style="display: -webkit-box;">
+                            <div style="padding:20px">
+                                <label>Division</label>
+                                <select id="division_id" name="division_id" class="multiplesel" multiple="multiple" onchange="getDistrictList(this);">
+                                    {% for item in divisions %}
+                                    <option value="{{ item.id }}">{{ item.name }}</option>
+                                    {% endfor%}
+                                </select>
+                            </div>
+                            <div style="padding:20px">
+                                <label>District</label>
+                                <select id="district_id" name="district_id" class="multiplesel" multiple="multiple" onchange="getUpazilaList(this);">
+                                    
+                                </select>
+                            </div>
+                            <div style="padding:20px">
+                                <label>Upazila</label>
+                                <select id="upazila_id" name="upazila_id" class="multiplesel" multiple="multiple">
+                                    
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row" style="display: -webkit-box;">
+                            <div style="padding:20px">
+                                <label>User</label>
+                                <select id="user_type" name="user_type" class="multiplesel" multiple="multiple">
+                                    <option value="1">Farmer</option>
+                                    <option value="2">Paravet</option>
+                                    <option value="3">AI Technician</option>
+                                </select>
+                            </div>
+                            <div style="padding:20px">
+                                <label>Cattle Type</label>
+                                <select id="cattle_type" name="cattle_type" class="multiplesel" multiple="multiple">
+                                    <option value="1">Cow</option>
+                                    <option value="2">Heifer</option>
+                                    <option value="3">Bull</option>
+                                    <option value="4">Calf</option>
+                                </select>
+                            </div>
+                            <div style="padding:20px">
+                            
+                            <div style="display: -webkit-box;">
+                            <label>Cattle Age Range</label>
+                            <input style="width: 100px;margin-left: 10px;" min="0" type="number" class="form-control" name="age_range_start" id="age_range_start">
+                            <span style="margin-left: 10px;"> - </span>
+                            <input style="width: 100px;margin-left: 10px;"min="0" type="number" class="form-control" name="age_range_end" id="age_range_end">
+                            </div>
+                            </div>
+                        </div>
+                        </div>
+                </div>
+
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn blue">Submit</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block additional-javascript %}
+<script type="text/javascript" src="/static/js/bootstrap-datepicker.js"></script>
+<script type="text/javascript" src="/static/assets/plugins/clockface/js/clockface.js"></script>
+<script type="text/javascript" src="/static/assets/plugins/bootstrap-multiselect/bootstrap-multiselect.js"></script>
+<script type="text/javascript">
+window.CSRF_TOKEN = "{{ csrf_token }}";
+$( document ).ready(function() {
+    $('.clockface_1').clockface();
+    $('#schedule_date').datepicker({
+                endDate: '0d',
+                format: 'yyyy-mm-dd',
+                todayHighlight: true
+            }).on('changeDate', function () {
+                $(this).datepicker('hide');
+            });
+
+    $('#division_id').multiselect({
+        includeSelectAllOption: true
+    });
+
+    $('#district_id').multiselect({
+        includeSelectAllOption: true
+    });
+
+    $('#upazila_id').multiselect({
+        includeSelectAllOption: true
+    });
+
+    
+    $('#user_type').multiselect({
+        includeSelectAllOption: true
+    });
+
+    $('#cattle_type').multiselect({
+        includeSelectAllOption: true
+    });
+});
+
+function changeSMSType(obj){
+    var selectedVal = obj.value;
+    if (selectedVal != ''){
+        if (selectedVal == 1 || selectedVal == 2){
+            $('.schedule_date_block').show();
+            $('.event_block').hide();
+        } else if (selectedVal == 3 ){
+            $('.schedule_date_block').hide();
+            $('.event_block').show();
+        }
+    }
+}
+
+
+function getDistrictList(obj) {
+            var division_id = $(obj).val();
+            if (division_id != null) {
+                $.ajax({
+                    url: '/livestock/get_district_list/',
+                    type: 'POST',
+                    data: {'division_id': division_id, 'csrfmiddlewaretoken': window.CSRF_TOKEN},
+                    success: function (res) {
+                        var district_list = JSON.parse(res);
+                        $('#district_id').multiselect('destroy');
+                        $('#district_id option').remove();
+                        $('#upazila_id').multiselect('destroy');
+                        $('#upazila_id option').remove();
+                        
+                        for (var ddx in district_list) {
+                            $('#district_id').append($('<option>', {
+                                value: district_list[ddx].id,
+                                text: district_list[ddx].name
+                            }));
+                        }
+                        $('#district_id').multiselect({
+                            includeSelectAllOption: true,
+                            selectAllValue: 'select-all-value'
+                        });
+                        $('#upazila_id').multiselect({
+                            includeSelectAllOption: true,
+                            selectAllValue: 'select-all-value'
+                        });
+                        
+                    }
+                })
+            } else {
+                $('#district_id').multiselect('destroy');
+                $('#upazila_id').multiselect('destroy');
+                
+                $('#district_id option').remove();
+                $('#upazila_id option').remove();
+                
+                $('#district_id').multiselect({
+                    includeSelectAllOption: true,
+                    selectAllValue: 'select-all-value'
+                });
+                $('#upazila_id').multiselect({
+                    includeSelectAllOption: true,
+                    selectAllValue: 'select-all-value'
+                });
+                
+            }
+        }
+
+
+        function getUpazilaList(obj) {
+            var district_id = $(obj).val();
+            if (district_id != null) {
+                $.ajax({
+                    url: '/livestock/get_upazila_list/',
+                    type: 'POST',
+                    data: {'district_id': district_id, 'csrfmiddlewaretoken': window.CSRF_TOKEN},
+                    success: function (res) {
+                        var upazila_list = JSON.parse(res);
+                        $('#upazila_id').multiselect('destroy');
+                        $('#upazila_id option').remove();
+                        
+                        for (var ddx in upazila_list) {
+                            $('#upazila_id').append($('<option>', {
+                                value: upazila_list[ddx].id,
+                                text: upazila_list[ddx].name
+                            }));
+                        }
+                        $('#upazila_id').multiselect({
+                            includeSelectAllOption: true,
+                            selectAllValue: 'select-all-value'
+                        });
+                        
+                    }
+                })
+            } else {
+                $('#upazila_id').multiselect('destroy');
+                
+                $('#upazila_id option').remove();
+                
+                $('#upazila_id').multiselect({
+                    includeSelectAllOption: true,
+                    selectAllValue: 'select-all-value'
+                });
+                
+            }
+        }
+
+
+        function getUnionList(obj) {
+            var upazila_id = $(obj).val();
+            if (upazila_id != null) {
+                $.ajax({
+                    url: '/livestock/get_union_list/',
+                    type: 'POST',
+                    data: {'upazila_id': upazila_id, 'csrfmiddlewaretoken': window.CSRF_TOKEN},
+                    success: function (res) {
+                        var sector_list = JSON.parse(res);
+                        $('#union_id').multiselect('destroy');
+                        $('#union_id option').remove();
+                        for (var ddx in sector_list) {
+                            $('#union_id').append($('<option>', {
+                                value: sector_list[ddx].id,
+                                text: sector_list[ddx].name
+                            }));
+                        }
+                        $('#union_id').multiselect({
+                            includeSelectAllOption: true,
+                            selectAllValue: 'select-all-value'
+                        });
+                    }
+                })
+            } else {
+                $('#union_id').multiselect('destroy');
+                $('#union_id option').remove();
+                $('#union_id').multiselect({
+                    includeSelectAllOption: true,
+                    selectAllValue: 'select-all-value'
+                });
+            }
+        }
+
+</script>
+{% endblock %}

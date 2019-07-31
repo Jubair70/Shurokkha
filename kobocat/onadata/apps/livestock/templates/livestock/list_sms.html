@@ -1,0 +1,60 @@
+{% extends "base_test.html" %}
+<head>
+    <meta charset="utf-8"/>
+    <title>{% block title %}SMS Details{% endblock %}</title>
+</head>
+{% block additional-headers %}
+<link rel="stylesheet" href="{{STATIC_URL}}assets/plugins/data-tables/DT_bootstrap.css"/>
+{% endblock %}
+{% block content %}
+<div class="portlet box red">
+    <div class="portlet-title">
+        <div class="caption">
+            <i class="fa fa-reorder"></i> SMS Details
+        </div>
+    </div>
+    <div class="portlet-body">
+    <div class="row">
+                <div class="col-md-12">
+                    <a href="/livestock/sms_details/">
+                        <button type="button" class="btn btn-info pull-right" id="add_new" data-original-title=""
+                                title="">Add New
+                        </button>
+                    </a>
+        </div>
+    </div>
+    <div style="margin-top:15px;"></div>
+    <table id="sms_table" class="table table-bordered">
+    <thead>
+        <tr>
+            <th>SMS ID</th>
+            <th>SMS TEXT</th>
+            <th>VOICE CLIP</th>
+            <th>SMS TYPE</th>
+            <th>EVENT</th>
+            <th>ACTION</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in sms_data %}
+        <tr>
+        <td>{{ item.sms_id }}</td>
+        <td>{{ item.sms_text }}</td>
+        <td>{{ item.voice_clip }}</td>
+        <td>{{ item.sms_type }}</td>
+        <td>{{ item.event_id }}</td>
+        <td><a href="/livestock/view_individual_sms/{{ item.id }}/"><i class="fa fa-2x fa-eye"></i></a></td>
+        </tr>
+        {% endfor %}    
+    </tbody>
+    </table>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block additional-javascript %}
+<!--datatable -->
+    <script type="text/javascript" src="{{STATIC_URL}}assets/plugins/data-tables/jquery.dataTables.js"></script>
+    <script type="text/javascript" src="{{STATIC_URL}}assets/plugins/data-tables/DT_bootstrap.js"></script>
+{% endblock %}

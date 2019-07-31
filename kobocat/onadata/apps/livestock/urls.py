@@ -1,6 +1,6 @@
 from django.conf.urls import patterns, include, url
 from django.contrib import admin
-from . import views,views_api
+from . import views,views_api,views_sms
 
 urlpatterns = patterns('',
                        url(r'^medicine_list/$', views.medicine_list, name='medicine_list'),
@@ -88,6 +88,12 @@ urlpatterns = patterns('',
                         url(r'^delete_bull_form/(?P<id>\d+)/$', views.delete_bull_form,name='delete_bull_form'),
 
 
+                        url(r'^sms_details/$', views_sms.sms_details, name='sms_details'),
+                        url(r'^view_individual_sms/(?P<sms_id>\d+)/$', views_sms.view_individual_sms,name='view_individual_sms'),
+                        url(r'^list_sms/$', views_sms.list_sms, name='list_sms'),
+                        url(r'^get_district_list/$', views_sms.get_district_list, name='get_district_list'),
+                        url(r'^get_upazila_list/$', views_sms.get_upazila_list, name='get_upazila_list'),
+                        url(r'^get_union_list/$', views_sms.get_union_list, name='get_union_list'),
 
                        ##############################
 

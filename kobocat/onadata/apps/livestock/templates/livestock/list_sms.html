@@ -4,6 +4,8 @@
     <title>{% block title %}SMS Details{% endblock %}</title>
 </head>
 {% block additional-headers %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/alertify.js/0.5.0/alertify.core.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/alertify.js/0.5.0/alertify.default.min.css"/>
 <link rel="stylesheet" href="{{STATIC_URL}}assets/plugins/data-tables/DT_bootstrap.css"/>
 {% endblock %}
 {% block content %}
@@ -43,7 +45,10 @@
         <td>{{ item.voice_clip }}</td>
         <td>{{ item.sms_type }}</td>
         <td>{{ item.event_id }}</td>
-        <td><a href="/livestock/view_individual_sms/{{ item.id }}/"><i class="fa fa-2x fa-eye"></i></a></td>
+        <td>
+        <a href="/livestock/view_individual_sms/{{ item.id }}/"><i class="fa fa-2x fa-eye"></i></a>
+        <!--<span style="cursor:pointer;" onclick="deleteSMS({{ item.id }});"><i class="fa fa-2x fa-trash"></i></span>-->
+        </td>
         </tr>
         {% endfor %}    
     </tbody>
@@ -57,4 +62,17 @@
 <!--datatable -->
     <script type="text/javascript" src="{{STATIC_URL}}assets/plugins/data-tables/jquery.dataTables.js"></script>
     <script type="text/javascript" src="{{STATIC_URL}}assets/plugins/data-tables/DT_bootstrap.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/alertify.js/0.5.0/alertify.min.js"></script>
+    
+    <script type="text/javascript">
+        function deleteSMS(sms_id){
+            alertify.confirm("Are you sure?", function (e) {
+                if (e) {
+                    alertify.success("Yes");
+                } else {
+                    alertify.success("No");
+                }
+            });
+        }
+    </script>
 {% endblock %}

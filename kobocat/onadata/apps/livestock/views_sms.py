@@ -50,23 +50,18 @@ def dictfetchall(cursor):
 
 def get_district_list(request):
     division_id = request.POST.getlist('division_id[]')
+    print [str(x) for x in division_id]
     division_id = "'" + "', '".join(str(x) for x in division_id) + "'"
-    district_list = __db_fetch_values_dict("select dist_code as id, district as name from vwdistrict where div_code in (" + str(division_id) + ")")
+    district_list = __db_fetch_values_dict("select div_code || dist_code as id, district as name from vwdistrict where div_code in (" + str(division_id) + ")")
     return HttpResponse(json.dumps(district_list))
 
 
 def get_upazila_list(request):
     district_id = request.POST.getlist('district_id[]')
-    district_id = "'" + "', '".join(str(x) for x in district_id) + "'"
-    upazila_list = __db_fetch_values_dict("select upazila_code as id, upazila as name from vwupazila where dist_code in (" + str(district_id) + ")")
+    district_id = "'" + "', '".join(str(x)[-2:] for x in district_id) + "'"
+    print "select div_code || dist_code || upazila_code as id, upazila as name from vwupazila where dist_code in (" + str(district_id) + ")"
+    upazila_list = __db_fetch_values_dict("select div_code || dist_code || upazila_code as id, upazila as name from vwupazila where dist_code in (" + str(district_id) + ")")
     return HttpResponse(json.dumps(upazila_list))
-
-
-def get_union_list(request):
-    upazila_id = request.POST.getlist('upazila_id[]')
-    upazila_id = "'" + "', '".join(str(x) for x in upazila_id) + "'"
-    union_list = __db_fetch_values_dict("select id,name from geo_union where geo_upazilla_id in (" + str(upazila_id) + ")")
-    return HttpResponse(json.dumps(union_list))
 
 
 def list_sms(request):
@@ -158,8 +153,10 @@ def get_label_name(value,type):
         if type == 1:
             return __db_fetch_single_value("select division from vwdivision where div_code='"+str(value)+"'")
         elif type == 2:
+            value = value[-2:]
             return __db_fetch_single_value("select district from vwdistrict where dist_code='"+str(value)+"'")
         elif type == 3:
+            value = value[-2:]
             return __db_fetch_single_value("select upazila from vwupazila where upazila_code='"+str(value)+"'")
         elif type == 4:
             return users_dict[value]
@@ -242,3 +239,44 @@ def view_individual_sms(request,sms_id):
         'cattle_types':cattle_types,
         'no_of_selected_users':no_of_selected_users
     })
+
+
+
+def get_recepients_count(request):
+    division_id = request.POST.getlist('division_id[]')
+    district_id = request.POST.getlist('district_id[]')
+    upazila_id = request.POST.getlist('upazila_id[]')
+    user_type = request.POST.getlist('user_type[]')
+    cattle_type = request.POST.getlist('cattle_type[]')
+    age_range_start = request.POST.get('age_range_start')
+    age_range_end = request.POST.get('age_range_end')
+
+    where_clause = 'where 1 = 1'
+
+    if division_id:
+        division_id = "'"+"', '".join(division_id)+"'"
+        where_clause += ' and t.division  = any(array['+str(division_id)+'])'
+    
+    if district_id:
+        district_id = "'"+"', '".join(district_id)+"'"
+        where_clause += ' and t.district  = any(array['+str(district_id)+'])'
+
+    if upazila_id:
+        upazila_id = "'"+"', '".join(upazila_id)+"'"
+        where_clause += ' and t.upazila  = any(array['+str(upazila_id)+'])'
+    
+    if cattle_type:
+        cattle_type = "'"+"', '".join(cattle_type)+"'"
+        where_clause += ' and t.cattle_type  = any(array['+str(cattle_type)+'])'
+    
+    if user_type:
+        user_type = "'"+"', '".join(user_type)+"'"
+        where_clause += ' and t.user_type  = any(array['+str(user_type)+'])'
+    
+    if age_range_start and age_range_end:
+        where_clause += ' and t.c_age::int between symmetric '+str(age_range_start)+' and '+str(age_range_end)
+    
+    qry = "with t as(select shurokkha_users.username,shurokkha_users.division,shurokkha_users.district,shurokkha_users.upazila,case shurokkha_users.user_type when 'Paravet' then '2' when 'AI Technicians' then '3' when 'Farmer' then '1' end as user_type,cattle.cattle_type,coalesce(cattle.cattle_age,cattle.calf_age) as c_age from shurokkha_users left join cattle on cattle.mobile = shurokkha_users.username) select count(DISTINCT username) from t " + where_clause
+    no_of_selected_users = __db_fetch_single_value(qry)
+
+    return HttpResponse(no_of_selected_users)

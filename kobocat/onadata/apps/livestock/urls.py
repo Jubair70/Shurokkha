@@ -87,13 +87,13 @@ urlpatterns = patterns('',
                         url(r'^update_bull_form/$', views.update_bull_form, name='update_bull_form'),
                         url(r'^delete_bull_form/(?P<id>\d+)/$', views.delete_bull_form,name='delete_bull_form'),
 
-
+                        url(r'^get_recepients_count/$', views_sms.get_recepients_count, name='get_recepients_count'),
                         url(r'^sms_details/$', views_sms.sms_details, name='sms_details'),
                         url(r'^view_individual_sms/(?P<sms_id>\d+)/$', views_sms.view_individual_sms,name='view_individual_sms'),
                         url(r'^list_sms/$', views_sms.list_sms, name='list_sms'),
                         url(r'^get_district_list/$', views_sms.get_district_list, name='get_district_list'),
                         url(r'^get_upazila_list/$', views_sms.get_upazila_list, name='get_upazila_list'),
-                        url(r'^get_union_list/$', views_sms.get_union_list, name='get_union_list'),
+                        #url(r'^get_union_list/$', views_sms.get_union_list, name='get_union_list'),
 
                        ##############################
 

@@ -47,7 +47,7 @@
         <td>{{ item.event_id }}</td>
         <td>
         <a href="/livestock/view_individual_sms/{{ item.id }}/"><i class="fa fa-2x fa-eye"></i></a>
-        <!--<span style="cursor:pointer;" onclick="deleteSMS({{ item.id }});"><i class="fa fa-2x fa-trash"></i></span>-->
+        <span style="cursor:pointer;" onclick="deleteSMS({{ item.id }});"><i class="fa fa-2x fa-trash"></i></span>
         </td>
         </tr>
         {% endfor %}    
@@ -65,14 +65,21 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/alertify.js/0.5.0/alertify.min.js"></script>
     
     <script type="text/javascript">
+        window.CSRF_TOKEN = "{{ csrf_token }}";
         function deleteSMS(sms_id){
-            alertify.confirm("Are you sure?", function (e) {
-                if (e) {
-                    alertify.success("Yes");
-                } else {
-                    alertify.success("No");
-                }
-            });
+            var e = confirm("Are you sure to delete this sms?");
+            if (e) {
+                $.ajax({
+                    url: '/livestock/delete_sms/',
+                    type: 'POST',
+                    data: {'sms_id': sms_id, 'csrfmiddlewaretoken': window.CSRF_TOKEN},
+                    success: function (res) {
+                        if (res != 'error') {
+                            window.location.reload();
+                        }
+                    }
+                });
+            }
         }
     </script>
 {% endblock %}

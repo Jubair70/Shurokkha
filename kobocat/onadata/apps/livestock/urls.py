@@ -88,12 +88,16 @@ urlpatterns = patterns('',
                         url(r'^delete_bull_form/(?P<id>\d+)/$', views.delete_bull_form,name='delete_bull_form'),
 
                         url(r'^get_recepients_count/$', views_sms.get_recepients_count, name='get_recepients_count'),
+                        url(r'^sms_schedule/$', views_sms.sms_schedule, name='sms_schedule'),
+                        url(r'^insert_form_schedules/$', views_sms.insert_form_schedules, name='insert_form_schedules'),
+                        url(r'^get_form_variable_type/$', views_sms.get_form_variable_type, name='get_form_variable_type'),
+                        url(r'^get_form_variables_list/$', views_sms.get_form_variables_list, name='get_form_variables_list'),
                         url(r'^sms_details/$', views_sms.sms_details, name='sms_details'),
                         url(r'^view_individual_sms/(?P<sms_id>\d+)/$', views_sms.view_individual_sms,name='view_individual_sms'),
                         url(r'^list_sms/$', views_sms.list_sms, name='list_sms'),
                         url(r'^get_district_list/$', views_sms.get_district_list, name='get_district_list'),
                         url(r'^get_upazila_list/$', views_sms.get_upazila_list, name='get_upazila_list'),
-                        #url(r'^get_union_list/$', views_sms.get_union_list, name='get_union_list'),
+                        url(r'^delete_sms/$', views_sms.delete_sms, name='delete_sms'),
 
                        ##############################
 

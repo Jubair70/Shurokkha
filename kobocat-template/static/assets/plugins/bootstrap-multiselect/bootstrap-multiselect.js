@@ -1,8 +1,8 @@
 /**
- * Bootstrap Multiselect (https://github.com/davidstutz/bootstrap-multiselect)
+ * Bootstrap Multiselect (http://davidstutz.de/bootstrap-multiselect/)
  *
  * Apache License, Version 2.0:
- * Copyright (c) 2012 - 2015 David Stutz
+ * Copyright (c) 2012 - 2018 David Stutz
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a
@@ -15,7 +15,7 @@
  * under the License.
  *
  * BSD 3-Clause License:
- * Copyright (c) 2012 - 2015 David Stutz
+ * Copyright (c) 2012 - 2018 David Stutz
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,7 +41,18 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-!function ($) {
+(function (root, factory) {
+    // check to see if 'knockout' AMD module is specified if using requirejs
+    if (typeof define === 'function' && define.amd &&
+        typeof require === 'function' && typeof require.specified === 'function' && require.specified('knockout')) {
+
+        // AMD. Register as an anonymous module.
+        define(['jquery', 'knockout'], factory);
+    } else {
+        // Browser globals
+        factory(root.jQuery, root.ko);
+    }
+})(this, function ($, ko) {
     "use strict";// jshint ;_;
 
     if (typeof ko !== 'undefined' && ko.bindingHandlers && !ko.bindingHandlers.multiselect) {
@@ -204,6 +215,7 @@
         this.buildContainer();
         this.buildButton();
         this.buildDropdown();
+        this.buildReset();
         this.buildSelectAll();
         this.buildDropdownOptions();
         this.buildFilter();
@@ -257,7 +269,7 @@
                         return this.allSelectedText;
                     }
                 }
-                else if (options.length > this.numberDisplayed) {
+                else if (this.numberDisplayed != 0 && options.length > this.numberDisplayed) {
                     return options.length + ' ' + this.nSelectedText;
                 }
                 else {
@@ -410,6 +422,7 @@
             enableFullValueFiltering: false,
             enableClickableOptGroups: false,
             enableCollapsibleOptGroups: false,
+            collapseOptGroupsByDefault: false,
             filterPlaceholder: 'Search',
             // possible options: 'text', 'value', 'both'
             filterBehavior: 'text',
@@ -422,14 +435,18 @@
             disableIfEmpty: false,
             disabledText: '',
             delimiterText: ', ',
+            includeResetOption: false,
+            includeResetDivider: false,
+            resetText: 'Reset',
             templates: {
                 button: '<button type="button" class="multiselect dropdown-toggle" data-toggle="dropdown"><span class="multiselect-selected-text"></span> <b class="caret"></b></button>',
                 ul: '<ul class="multiselect-container dropdown-menu"></ul>',
-                filter: '<li class="multiselect-item multiselect-filter"><div class="input-group"><span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span><input class="form-control multiselect-search" type="text"></div></li>',
+                filter: '<li class="multiselect-item multiselect-filter"><div class="input-group"><span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span><input class="form-control multiselect-search" type="text" /></div></li>',
                 filterClearBtn: '<span class="input-group-btn"><button class="btn btn-default multiselect-clear-filter" type="button"><i class="glyphicon glyphicon-remove-circle"></i></button></span>',
                 li: '<li><a tabindex="0"><label></label></a></li>',
                 divider: '<li class="multiselect-item divider"></li>',
-                liGroup: '<li class="multiselect-item multiselect-group"><label></label></li>'
+                liGroup: '<li class="multiselect-item multiselect-group"><label></label></li>',
+                resetButton: '<li class="multiselect-reset text-center"><div class="input-group"><a class="btn btn-default btn-block"></a></div></li>'
             }
         },
 
@@ -557,7 +574,8 @@
             }, this));
 
             // Bind the change event on the dropdown elements.
-            $('li:not(.multiselect-group) input', this.$ul).on('change', $.proxy(function(event) {
+            $(this.$ul).off('change', 'li:not(.multiselect-group) input[type="checkbox"], li:not(.multiselect-group) input[type="radio"]');
+            $(this.$ul).on('change', 'li:not(.multiselect-group) input[type="checkbox"], li:not(.multiselect-group) input[type="radio"]', $.proxy(function(event) {
                 var $target = $(event.target);
 
                 var checked = $target.prop('checked') || false;
@@ -647,7 +665,7 @@
                 }
             });
 
-            $('li a', this.$ul).on('touchstart click', $.proxy(function(event) {
+            $(this.$ul).on('touchstart click', 'li a', $.proxy(function(event) {
                 event.stopPropagation();
 
                 var $target = $(event.target);
@@ -661,8 +679,8 @@
                     var checked = $target.prop('checked') || false;
 
                     if (this.lastToggledInput !== null && this.lastToggledInput !== $target) { // Make sure we actually have a range
-                        var from = $target.closest("li").index();
-                        var to = this.lastToggledInput.closest("li").index();
+                        var from = this.$ul.find("li:visible").index($target.parents("li"));
+                        var to = this.$ul.find("li:visible").index(this.lastToggledInput.parents("li"));
 
                         if (from > to) { // Swap the indices
                             var tmp = to;
@@ -674,7 +692,7 @@
                         ++to;
 
                         // Change the checkboxes and underlying options
-                        var range = this.$ul.find("li").slice(from, to).find("input");
+                        var range = this.$ul.find("li").not(".multiselect-filter-hidden").slice(from, to).find("input");
 
                         range.prop('checked', checked);
 
@@ -721,7 +739,7 @@
                     }
 
                     var index = $items.index($items.filter(':focus'));
-
+                    
                     // Navigation up.
                     if (event.keyCode === 38 && index > 0) {
                         index--;
@@ -801,6 +819,7 @@
 
                     this.options.onChange($options, checked);
 
+                    this.$select.change();
                     this.updateButtonText();
                     this.updateSelectAll();
                 }, this));
@@ -814,7 +833,7 @@
 
                     var visible = true;
                     $inputs.each(function() {
-                        visible = visible && $(this).is(':visible');
+                        visible = visible && !$(this).hasClass('multiselect-collapsible-hidden');
                     });
 
                     if (visible) {
@@ -853,7 +872,14 @@
             var $li = $(this.options.templates.li);
             var $label = $('label', $li);
             $label.addClass(inputType);
+            $label.attr("title", label);
             $li.addClass(classes);
+
+            // Hide all children items when collapseOptGroupsByDefault is true
+            if (this.options.collapseOptGroupsByDefault && $(element).parent().prop("tagName").toLowerCase() === "optgroup") {
+                $li.addClass("multiselect-collapsible-hidden");
+                $li.hide();
+            }
 
             if (this.options.enableHTML) {
                 $label.html(" " + label);
@@ -951,6 +977,35 @@
         },
 
         /**
+         * Build the reset.
+         *
+         */
+        buildReset: function() {
+            if (this.options.includeResetOption) {
+
+                // Check whether to add a divider after the reset.
+                if (this.options.includeResetDivider) {
+                    this.$ul.prepend($(this.options.templates.divider));
+                }
+
+                var $resetButton = $(this.options.templates.resetButton);
+
+                if (this.options.enableHTML) {
+                    $('a', $resetButton).html(this.options.resetText);
+                }
+                else {
+                    $('a', $resetButton).text(this.options.resetText);
+                }
+
+                $('a', $resetButton).click($.proxy(function(){
+                    this.clearSelection();
+                }, this));
+
+                this.$ul.prepend($resetButton);
+            }
+        },
+
+        /**
          * Build the select all.
          *
          * Checks if a select all has already been created.
@@ -1020,6 +1075,7 @@
                         clearBtn.on('click', $.proxy(function(event){
                             clearTimeout(this.searchTimeout);
 
+                            this.query = '';
                             this.$filter.find('.multiselect-search').val('');
                             $('li', this.$ul).show().removeClass('multiselect-filter-hidden');
 
@@ -1089,8 +1145,14 @@
                                         }
 
                                         // Toggle current element (group or group item) according to showElement boolean.
-                                        $(element).toggle(showElement)
-                                            .toggleClass('multiselect-filter-hidden', !showElement);
+                                        if(!showElement){
+                                          $(element).css('display', 'none');
+                                          $(element).addClass('multiselect-filter-hidden');
+                                        }
+                                        if(showElement){
+                                          $(element).css('display', 'block');
+                                          $(element).removeClass('multiselect-filter-hidden');
+                                        }
 
                                         // Differentiate groups and group items.
                                         if ($(element).hasClass('multiselect-group')) {
@@ -1146,45 +1208,42 @@
          * Refreshs the multiselect based on the selected options of the select.
          */
         refresh: function () {
-            var inputs = $.map($('li input', this.$ul), $);
+            var inputs = {};
+            $('li input', this.$ul).each(function() {
+              inputs[$(this).val()] = $(this);
+            });
 
             $('option', this.$select).each($.proxy(function (index, element) {
                 var $elem = $(element);
-                var value = $elem.val();
-                var $input;
-                for (var i = inputs.length; 0 < i--; /**/) {
-                    if (value !== ($input = inputs[i]).val())
-                        continue; // wrong li
+                var $input = inputs[$(element).val()];
 
-                    if ($elem.is(':selected')) {
-                        $input.prop('checked', true);
+                if ($elem.is(':selected')) {
+                    $input.prop('checked', true);
 
-                        if (this.options.selectedClass) {
-                            $input.closest('li')
-                                .addClass(this.options.selectedClass);
-                        }
+                    if (this.options.selectedClass) {
+                        $input.closest('li')
+                            .addClass(this.options.selectedClass);
                     }
-                    else {
-                        $input.prop('checked', false);
+                }
+                else {
+                    $input.prop('checked', false);
 
-                        if (this.options.selectedClass) {
-                            $input.closest('li')
-                                .removeClass(this.options.selectedClass);
-                        }
+                    if (this.options.selectedClass) {
+                        $input.closest('li')
+                            .removeClass(this.options.selectedClass);
                     }
+                }
 
-                    if ($elem.is(":disabled")) {
-                        $input.attr('disabled', 'disabled')
-                            .prop('disabled', true)
-                            .closest('li')
-                            .addClass('disabled');
-                    }
-                    else {
-                        $input.prop('disabled', false)
-                            .closest('li')
-                            .removeClass('disabled');
-                    }
-                    break; // assumes unique values
+                if ($elem.is(":disabled")) {
+                    $input.attr('disabled', 'disabled')
+                        .prop('disabled', true)
+                        .closest('li')
+                        .addClass('disabled');
+                }
+                else {
+                    $input.prop('disabled', false)
+                        .closest('li')
+                        .removeClass('disabled');
                 }
             }, this));
 
@@ -1452,7 +1511,8 @@
 
                     $tag = $('<optgroup/>').attr({
                         label: option.label || 'Group ' + groupCounter,
-                        disabled: !!option.disabled
+                        disabled: !!option.disabled,
+                        value: option.value
                     });
 
                     forEach(option.children, function(subOption) { // add children option tags
@@ -1478,9 +1538,9 @@
                         'value': option.value,
                         'label': option.label || option.value,
                         'title': option.title,
-                        'class': option.class,
-                        'selected': !!option.selected,
-                        'disabled': !!option.disabled
+                        'class': option['class'],
+                        'selected': !!option['selected'],
+                        'disabled': !!option['disabled']
                     };
                     //Loop through attributes object and add key-value for each attribute
                     for (var key in option.attributes) {
@@ -1713,4 +1773,4 @@
         $("select[data-role=multiselect]").multiselect();
     });
 
-}(window.jQuery);
+});

@@ -1,0 +1,1245 @@
+{% extends 'base_test.html' %}
+{% load i18n %}
+{% block additional-headers %}
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
+          integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        div.block {
+            padding: 5px;
+            border: 2px solid #777;
+            margin: 10px 10px;
+            background-color: #fec977;
+        }
+
+        div.block_alt {
+            padding: 5px;
+            border: 2px solid #777;
+            margin: 10px 10px;
+            background-color: #55f1fe;
+        }
+
+        div.single-block {
+            display: grid !important;
+            padding: 5px;
+            border: 2px solid #777;
+            margin: 10px 10px;
+            background-color: #add8e6;
+        }
+
+        div.logic_block {
+            display: flow-root;
+            padding: 10px;
+            width: 50%;
+            margin: 0 Auto;
+            border: 2px solid #add8e6;
+            background-color: #add8e6;
+        }
+
+        div.other_specific {
+            display: none;
+        }
+
+        div.free_text_specific {
+            display: none;
+        }
+
+        div.select_specific {
+            display: none;
+        }
+
+        div.numeric_specific {
+            display: none;
+        }
+
+        span.delete_icon {
+            position: relative;
+            color: #FF0000;
+            cursor: pointer;
+            left: 15px;
+        }
+
+        div.outcome_block {
+            display: flow-root;
+            border: 1px solid;
+            padding: 10px;
+            margin: 10px 10px;
+        }
+
+        .custom-btn {
+            margin-right: 5px;
+        }
+
+        legend {
+            width: inherit; /* Or auto */
+            padding: 0 10px; /* To give a bit of padding on the left and right */
+            border-bottom: none;
+            font-size: 16px;
+        }
+
+        fieldset {
+            border: 1px solid #afb5ba;
+            padding-bottom: 25px;
+        }
+
+        .form-group {
+            display: -webkit-box;
+        }
+    </style>
+{% endblock %}
+{% block content %}
+    <div class="table-respnsive">
+
+    <table id="o_table" class="table table-bordered table striped">
+        <thead>
+            <tr>
+                <th>Event</th>
+                <th>Conditions</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+
+        </tbody>
+    </table>
+</div>
+<div class="outcome_block">
+    <div class="form-group">
+        <label class="col-md-3 control-label">Event Name</label>
+        <div class="col-md-9">
+            <input id="outcome_id" type="hidden" />
+            <input id="outcome_name" type="text" class="form-control" />
+        </div>
+    </div>
+</div>
+<form id="logic_form" class="form">
+    <div id="block_1" class="block">
+        <div class="buttons">
+            <input onclick="addSub(this.parentNode);" class="btn add_sub_button custom-btn" type="button" value="Add Nested Block">
+            <input onclick="addNode(this.parentNode);" class="btn add_button custom-btn" type="button" value="Add Question">
+        </div>
+
+    </div>
+    <button type="button" onclick="saveLogicTree();" class="pull-right">Save</button>
+</form>
+</div>
+
+<div class="modal fade" id="delete_logic_confirm" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+
+            </div>
+
+            <div class="modal-body">
+
+                Are you sure to delete the logic?
+                <input type="hidden" id="tobe_del_id">
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger btn-ok" data-dismiss="modal">Cancel</button>
+                <button type="button" onclick="deleteLogic()" class="btn  btn-ok" data-dismiss="modal">ok</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+{% block additional-javascript %}
+    <script type="application/javascript">
+        //var formVariables = {{ variables|safe }};
+        //var xformid = {{ xformid }};
+        var other_forms = {{ other_forms|safe }};
+        var block_count = 1;
+        var counter = 0;
+        var act_count = 0;
+        var mj = [];
+        window.CSRF_TOKEN = "{{ csrf_token }}";
+
+        /* If Action is "Cancel All Schedule"  or " Hold All schedule" then "Action To Form" will not be selected */
+        function change_action_form() {
+            if (($("#schedule_type_id").val() == '3') || ($("#schedule_type_id").val() == '4')){
+                console.log("Cancel all schedule");
+                $("#scheduled_form").val("");
+                //document.getElementById('scheduled_form').readOnly = true
+                //$("#scheduled_form").setAttribute("readonly", true);
+                //document.getElementById('scheduled_form').readonly = true;
+                //$('#scheduled_form').prop('readonly',true);
+            }
+
+        }
+
+
+
+        function parseBlockData(blockid) {
+            var subFormJson = {};
+            var operator = $('#' + blockid).children('.logic_block:first').children().children().children().val();
+            subFormJson['operator'] = operator;
+            subFormJson['blocks'] = [];
+            if ($('#' + blockid).find('.single-block').length !== 0) {
+                $('#' + blockid).children('.single-block').each(function () {
+                    var divid = $(this)[0].id;
+                    var blockFormData = Get_All_Forms_Data('#' + divid);
+                    var blockDetails = {};
+                    for (var kkx in blockFormData) {
+                        if (kkx.startsWith('form_select_') && blockFormData[kkx] != '') {
+                            blockDetails['source'] = getSource(blockFormData[kkx]);
+                        } else if (kkx.startsWith('form_study_') && blockFormData[kkx] != '') {
+                            blockDetails['study_id'] = blockFormData[kkx];
+                        } else if (kkx.startsWith('form_forms_') && blockFormData[kkx] != '') {
+                            blockDetails['form_id'] = blockFormData[kkx];
+                        } else if (kkx.startsWith('form_variables_') && blockFormData[kkx] != '') {
+                            blockDetails['variable_name'] = blockFormData[kkx];
+                        } else if (kkx.startsWith('form_variable_type_') && blockFormData[kkx] != '') {
+                            blockDetails['variable_type'] = blockFormData[kkx];
+                        } else if (kkx.startsWith('form_comparators_') && blockFormData[kkx] != '') {
+                            blockDetails['comparator'] = blockFormData[kkx];
+                        } else if (kkx.startsWith('free_text_inner_specific_') && blockFormData[kkx] != '') {
+                            blockDetails['value1'] = blockFormData[kkx];
+                        } else if (kkx.startsWith('numeric_inner_specific_') && blockFormData[kkx] != '') {
+                            blockDetails['value1'] = blockFormData[kkx];
+                        } else if (kkx.startsWith('select_inner_specific_') && blockFormData[kkx] != '') {
+                            blockDetails['value1'] = blockFormData[kkx];
+                        } else if (kkx.startsWith('start_numeric_inner_specific_') && blockFormData[kkx] != '') {
+                            blockDetails['value1'] = blockFormData[kkx];
+                        } else if (kkx.startsWith('end_numeric_inner_specific_') && blockFormData[kkx] != '') {
+                            blockDetails['value2'] = blockFormData[kkx];
+                        } else if (kkx.startsWith('form_stype_') && blockFormData[kkx] != '') {
+                            blockDetails['submission_type'] = blockFormData[kkx];
+                        }
+                    }
+                    subFormJson['blocks'].push(blockDetails);
+                });
+            }
+
+
+            if ($('#' + blockid).find('.block').length !== 0) {
+                $('#' + blockid).children('.block').each(function () {
+                    var divid = $(this)[0].id;
+                    var blockData = parseBlockData(divid);
+                    subFormJson['blocks'].push(blockData);
+                });
+            }
+
+            if ($('#' + blockid).find('.block_alt').length !== 0) {
+                $('#' + blockid).children('.block_alt').each(function () {
+                    var divid = $(this)[0].id;
+                    var blockData = parseBlockData(divid);
+                    subFormJson['blocks'].push(blockData);
+                });
+            }
+
+            return subFormJson;
+        }
+
+        depthOf = function (object) {
+            var level = 0;
+            var key;
+            for (key in object) {
+                if (!object.hasOwnProperty(key)) continue;
+                if (typeof object[key] == 'object' && key == 'blocks') {
+                    for (var kkx in object[key]) {
+                        var depth = depthOf(object[key][kkx]) + 1;
+                        level = Math.max(depth, level);
+                    }
+                }
+            }
+            return level;
+        }
+
+        function saveLogicTree() {
+            mj = [];
+            var totalJson = parseBlockData('block_1');
+            var outcome_name = $('#outcome_name').val();
+            var outcome_id = $('#outcome_id').val();
+            // enqueue logic blocks for binary tree conversion
+            generateLogicQueue(totalJson);
+            if (outcome_name != '' && mj.length != 0) {
+                $.ajax({
+                    url: '/livestock/insert_form_schedules/',
+                    type: 'POST',
+                    data: {
+                        'form_json': JSON.stringify(totalJson),
+                        'logic_json': JSON.stringify(mj),
+                        'outcome_name': outcome_name,
+                        'outcome_id': outcome_id,
+                        'csrfmiddlewaretoken': window.CSRF_TOKEN
+                    },
+                    success: function (res) {
+                        if (res != 'undefined') {
+                            window.location.reload();
+                        }
+                    }
+                })
+            } else {
+                alert("Event name or question are not added.")
+            }
+        }
+
+        function generateLogicQueue(obj) {
+            var operator = obj['operator'];
+            var sj = [];
+            sj.push(operator);
+            for (var ikx in obj['blocks']) {
+                if (obj['blocks'][ikx].hasOwnProperty('blocks')) {
+                    generateLogicQueue(obj['blocks'][ikx]);
+                } else {
+                    // push the layer to local queue
+                    sj.push(obj['blocks'][ikx]);
+                }
+            }
+            // push the layer to global queue
+            mj.push(sj);
+        }
+
+
+        function getSource(val) {
+            if (val == 1) {
+                return 'current';
+            } else if (val == 2) {
+                return 'other';
+            }
+        }
+
+
+        function changeLogicOperator(obj) {
+            var selectedValue = obj.value;
+            var selectedObjectID = obj.id;
+            var blockid = $('#' + selectedObjectID).parents().eq(3)[0].id;
+            $('#' + blockid).children('.logic_block').each(function () {
+                var log_select_id = $(this).children().children().children()[0].id;
+                $('#' + log_select_id).val(selectedValue);
+            });
+        }
+
+
+        function deleteSingleBlock(obj) {
+            var selectedValue = obj.value;
+            var selectedObjectID = obj.id;
+            if ($('#' + selectedObjectID).parent().prev().html() == undefined) {
+                if ($('#' + selectedObjectID).parent().next()[0].className != 'buttons') {
+                    $('#' + selectedObjectID).parent().next().remove();
+                }
+            } else {
+                $('#' + selectedObjectID).parent().prev().remove();
+            }
+            $('#' + selectedObjectID).parent().remove();
+            act_count--;
+        }
+
+
+        function deleteBlock(obj) {
+            var selectedValue = obj.value;
+            var selectedObjectID = obj.id;
+            if ($('#' + selectedObjectID).parent().prev().html() == undefined) {
+                if ($('#' + selectedObjectID).parent().next()[0].className != 'buttons') {
+                    $('#' + selectedObjectID).parent().next().remove();
+                }
+            } else {
+                $('#' + selectedObjectID).parent().prev().remove();
+            }
+            $('#' + selectedObjectID).parent().remove();
+            act_count--;
+        }
+
+        function addNode(element) {
+            counter++;
+            act_count++;
+            var new_entry = '';
+            if (act_count > 1) {
+                new_entry += '<div class="logic_block">';
+                new_entry += '<div class="form-group">';
+                new_entry += '<label class="col-md-6 control-label">Operation Type</label>';
+                new_entry += '<div class="col-md-6">';
+                new_entry += '<select id="logic_elem_' + counter + '" class="form-control" onchange="changeLogicOperator(this)">';
+                new_entry += '<option value="and">AND</option>';
+                new_entry += '<option value="or">OR</option>';
+                new_entry += '</select>';
+                new_entry += '</div>';
+                new_entry += '</div>';
+                new_entry += '</div>';
+            }
+            //new_entry += 'Block ' + counter + '';
+            //new_entry += '<br>';
+            new_entry += '<div id="single_block_' + counter + '" class="single-block">';
+            new_entry += '<span onclick="deleteSingleBlock(this);" class="delete_icon" id="delete_block_single_' + counter + '"><i class="fa fa-2x fa-times-circle"></i></span>';
+            //new_entry += '<div class="form-group"><label class="col-md-3 control-label">Source</label>';
+            //new_entry += '<div class="col-md-9">';
+            //new_entry += '<select id="form_select_' + counter + '" class="form-control" onchange="selectFormOption(this);">';
+            //new_entry += '<option value="">Select Any</option>';
+            //new_entry += '<option value="1">This Form</option>';
+            //new_entry += '<option value="2">Other Form</option>';
+            //new_entry += '</select>';
+            //new_entry += '</div>';
+            //new_entry += '</div>';
+            //new_entry += '<div class="form-group other_specific" id="other_study_specific_' + counter + '"><label ';
+            //new_entry += 'class="col-md-3 control-label">Study</label>';
+            //new_entry += '<div class="col-md-9">';
+            //new_entry += '<select class="form-control" id="form_study_' + counter + '" onchange="getFormsbyStudy(this);">';
+            //new_entry += '<option value="">Select Any</option>';
+            //new_entry += '</select>';
+            //new_entry += '</div>';
+            //new_entry += '</div>';
+            new_entry += '<div class="form-group" id="other_form_specific_' + counter + '"><label ';
+            new_entry += 'class="col-md-3 control-label">Form</label>';
+            new_entry += '<div class="col-md-9">';
+            new_entry += '<select class="form-control" id="form_forms_' + counter + '" onchange="getOtherFormsVariable(this);">';
+            new_entry += '<option value="">Select Any</option>';
+            for (var jjf in other_forms){
+                new_entry += '<option value="'+other_forms[jjf].id+'">'+other_forms[jjf].title+'</option>';
+            }
+            new_entry += '</select>';
+            new_entry += '</div>';
+            new_entry += '</div>';
+            new_entry += '<div class="form-group"><label class="col-md-3 control-label">Variable</label>';
+            new_entry += '<input id="form_variable_type_' + counter + '" type="hidden"/>';
+            new_entry += '<div class="col-md-9">';
+            new_entry += '<select class="form-control" id="form_variables_' + counter + '" onchange="getComparators(this);">';
+            new_entry += '<option value="">Select Any</option>';
+            new_entry += '</select>';
+            new_entry += '</div>';
+            new_entry += '</div>';
+            new_entry += '<div class="form-group"><label class="col-md-3 control-label">Comparator</label>';
+            new_entry += '<div class="col-md-9">';
+            new_entry += '<select id="form_comparators_' + counter + '" class="form-control" onchange="changeComparator(this)">';
+            new_entry += '<option value="">Select Any</option>';
+            new_entry += '</select>';
+            new_entry += '</div>';
+            new_entry += '</div>';
+            new_entry += '<div class="form-group free_text_specific" id="free_text_specific_' + counter + '">';
+            new_entry += '<label class="col-md-3 control-label">Value</label>';
+            new_entry += '<div class="col-md-9">';
+            new_entry += '<input id="free_text_inner_specific_' + counter + '" type="text" class="form-control"/>';
+            new_entry += '</div>';
+            new_entry += '</div>';
+            new_entry += '<div class="form-group numeric_specific" id="numeric_specific_' + counter + '">';
+            new_entry += '<label class="col-md-3 control-label">Value</label>';
+            new_entry += '<div class="col-md-9">';
+            new_entry += '<input id="numeric_inner_specific_' + counter + '" type="number" class="form-control"/>';
+            new_entry += '</div>';
+            new_entry += '</div>';
+            new_entry += '<div class="form-group select_specific" id="select_specific_' + counter + '">';
+            new_entry += '<label class="col-md-3 control-label">Value</label>';
+            new_entry += '<div class="col-md-9">';
+            new_entry += '<select id="select_inner_specific_' + counter + '" class="form-control">';
+            new_entry += '<option value="">Select Any</option>';
+            new_entry += '</select>';
+            new_entry += '</div>';
+            new_entry += '</div>';
+            new_entry += '<div class="form-group numeric_specific" id="start_numeric_specific_' + counter + '">';
+            new_entry += '<label class="col-md-3 control-label">Value From</label>';
+            new_entry += '<div class="col-md-9">';
+            new_entry += '<input id="start_numeric_inner_specific_' + counter + '" type="number" class="form-control"/>';
+            new_entry += '</div>';
+            new_entry += '</div>';
+            new_entry += '<div class="form-group numeric_specific" id="end_numeric_specific_' + counter + '">';
+            new_entry += '<label class="col-md-3 control-label">Value To</label>';
+            new_entry += '<div class="col-md-9">';
+            new_entry += '<input id="end_numeric_inner_specific_' + counter + '" type="number" class="form-control"/>';
+            new_entry += '</div>';
+            new_entry += '</div>';
+            new_entry += '<div class="form-group"><label class="col-md-3 control-label">Submission</label>';
+            new_entry += '<div class="col-md-9">';
+            new_entry += '<select id="form_stype_' + counter + '" class="form-control">';
+            new_entry += '<option value="any">Any</option>';
+            new_entry += '<option value="last">Last</option>';
+            new_entry += '</select>';
+            new_entry += '</div>';
+            new_entry += '</div>';
+            new_entry += '</div>';
+            //new_entry += '<br>';
+            element.insertAdjacentHTML("beforebegin", new_entry);
+        }
+
+        function addSub(element) {
+            var parent_class = element.parentNode.className;
+            if (parent_class == 'block') {
+                var new_nested_class = 'block_alt';
+            } else {
+                var new_nested_class = 'block';
+            }
+            counter++;
+            act_count++;
+            block_count++;
+            var new_sub_entry = '';
+            if (act_count > 1) {
+                new_sub_entry += '<div class="logic_block">';
+                new_sub_entry += '<div class="form-group">';
+                new_sub_entry += '<label class="col-md-6 control-label">Operation Type</label>';
+                new_sub_entry += '<div class="col-md-6">';
+                new_sub_entry += '<select id="logic_elem_' + counter + '" class="form-control" onchange="changeLogicOperator(this)">';
+                new_sub_entry += '<option value="and">AND</option>';
+                new_sub_entry += '<option value="or">OR</option>';
+                new_sub_entry += '</select>';
+                new_sub_entry += '</div>';
+                new_sub_entry += '</div>';
+                new_sub_entry += '</div>';
+            }
+            new_sub_entry += '<div id="block_' + block_count + '" class="' + new_nested_class + '">';
+            //new_sub_entry += 'Block ' + counter + '';
+            new_sub_entry += '<span onclick="deleteBlock(this);" class="delete_icon" id="delete_block_' + counter + '"><i class="fa fa-2x fa-times-circle"></i></span>';
+            //new_sub_entry += '<br>';
+            new_sub_entry += '<div id="single_block_' + counter + '" class="single-block">';
+            //new_sub_entry += '<div class="form-group"><label class="col-md-3 control-label">Source</label>';
+            //new_sub_entry += '<div class="col-md-9">';
+            //new_sub_entry += '<select id="form_select_' + counter + '" class="form-control" onchange="selectFormOption(this);">';
+            //new_sub_entry += '<option value="">Select Any</option>';
+            //new_sub_entry += '<option value="1">This Form</option>';
+            //new_sub_entry += '<option value="2">Other Form</option>';
+            //new_sub_entry += '</select>';
+            //new_sub_entry += '</div>';
+            //new_sub_entry += '</div>';
+            //new_sub_entry += '<div class="form-group other_specific" id="other_study_specific_' + counter + '"><label ';
+            //new_sub_entry += 'class="col-md-3 control-label">Study</label>';
+            //new_sub_entry += '<div class="col-md-9">';
+            //new_sub_entry += '<select class="form-control" id="form_study_' + counter + '" onchange="getFormsbyStudy(this);">';
+            //new_sub_entry += '<option value="">Select Any</option>';
+            //new_sub_entry += '</select>';
+            //new_sub_entry += '</div>';
+            //new_sub_entry += '</div>';
+            new_sub_entry += '<div class="form-group" id="other_form_specific_' + counter + '"><label ';
+            new_sub_entry += 'class="col-md-3 control-label">Form</label>';
+            new_sub_entry += '<div class="col-md-9">';
+            new_sub_entry += '<select class="form-control" id="form_forms_' + counter + '" onchange="getOtherFormsVariable(this);">';
+            new_sub_entry += '<option value="">Select Any</option>';
+            for (var jjf in other_forms){
+                new_sub_entry += '<option value="'+other_forms[jjf].id+'">'+other_forms[jjf].title+'</option>';
+            }
+            new_sub_entry += '</select>';
+            new_sub_entry += '</div>';
+            new_sub_entry += '</div>';
+            new_sub_entry += '<div class="form-group"><label class="col-md-3 control-label">Variable</label>';
+            new_sub_entry += '<input id="form_variable_type_' + counter + '" type="hidden"/>';
+            new_sub_entry += '<div class="col-md-9">';
+            new_sub_entry += '<select class="form-control" id="form_variables_' + counter + '" onchange="getComparators(this);">';
+            new_sub_entry += '<option value="">Select Any</option>';
+            new_sub_entry += '</select>';
+            new_sub_entry += '</div>';
+            new_sub_entry += '</div>';
+            new_sub_entry += '<div class="form-group"><label class="col-md-3 control-label">Comparator</label>';
+            new_sub_entry += '<div class="col-md-9">';
+            new_sub_entry += '<select id="form_comparators_' + counter + '" class="form-control" onchange="changeComparator(this)">';
+            new_sub_entry += '<option value="">Select Any</option>';
+            new_sub_entry += '</select>';
+            new_sub_entry += '</div>';
+            new_sub_entry += '</div>';
+            new_sub_entry += '<div class="form-group free_text_specific" id="free_text_specific_' + counter + '">';
+            new_sub_entry += '<label class="col-md-3 control-label">Value</label>';
+            new_sub_entry += '<div class="col-md-9">';
+            new_sub_entry += '<input id="free_text_inner_specific_' + counter + '" type="text" class="form-control"/>';
+            new_sub_entry += '</div>';
+            new_sub_entry += '</div>';
+            new_sub_entry += '<div class="form-group numeric_specific" id="numeric_specific_' + counter + '">';
+            new_sub_entry += '<label class="col-md-3 control-label">Value</label>';
+            new_sub_entry += '<div class="col-md-9">';
+            new_sub_entry += '<input id="numeric_inner_specific_' + counter + '" type="number" class="form-control"/>';
+            new_sub_entry += '</div>';
+            new_sub_entry += '</div>';
+            new_sub_entry += '<div class="form-group select_specific" id="select_specific_' + counter + '">';
+            new_sub_entry += '<label class="col-md-3 control-label">Value</label>';
+            new_sub_entry += '<div class="col-md-9">';
+            new_sub_entry += '<select id="select_inner_specific_' + counter + '" class="form-control">';
+            new_sub_entry += '<option value="">Select Any</option>';
+            new_sub_entry += '</select>';
+            new_sub_entry += '</div>';
+            new_sub_entry += '</div>';
+            new_sub_entry += '<div class="form-group numeric_specific" id="start_numeric_specific_' + counter + '">';
+            new_sub_entry += '<label class="col-md-3 control-label">Value From</label>';
+            new_sub_entry += '<div class="col-md-9">';
+            new_sub_entry += '<input id="start_numeric_inner_specific_' + counter + '" type="number" class="form-control"/>';
+            new_sub_entry += '</div>';
+            new_sub_entry += '</div>';
+            new_sub_entry += '<div class="form-group numeric_specific" id="end_numeric_specific_' + counter + '">';
+            new_sub_entry += '<label class="col-md-3 control-label">Value To</label>';
+            new_sub_entry += '<div class="col-md-9">';
+            new_sub_entry += '<input id="end_numeric_inner_specific_' + counter + '" type="number" class="form-control"/>';
+            new_sub_entry += '</div>';
+            new_sub_entry += '</div>';
+            new_sub_entry += '<div class="form-group"><label class="col-md-3 control-label">Submission</label>';
+            new_sub_entry += '<div class="col-md-9">';
+            new_sub_entry += '<select id="form_stype_' + counter + '" class="form-control">';
+            new_sub_entry += '<option value="any">Any</option>';
+            new_sub_entry += '<option value="last">Last</option>';
+            new_sub_entry += '</select>';
+            new_sub_entry += '</div>';
+            new_sub_entry += '</div>';
+            new_sub_entry += '</div>';
+            //new_sub_entry += '<br>';
+            new_sub_entry += '<div class="buttons">';
+            new_sub_entry += '<input onclick="addSub(this.parentNode);"class="btn add_sub_button custom-btn" type="button" value="Add Nested Block">';
+            new_sub_entry += '<input onclick="addNode(this.parentNode);" class="btn add_button custom-btn" type="button" value="Add Question">';
+            new_sub_entry += '</div>';
+            new_sub_entry += '</div>';
+            element.insertAdjacentHTML("beforebegin", new_sub_entry);
+            var blocks = element.parentNode.getElementsByClassName(new_nested_class);
+            /* blocks[blocks.length - 1].getElementsByClassName("add_sub_button")[0].addEventListener("click", function () {
+                addSub(this.parentNode);
+            });
+            blocks[blocks.length - 1].getElementsByClassName("add_button")[0].addEventListener("click", function () {
+                addNode(this.parentNode);
+            }); */
+        }
+
+        var buttons = document.getElementsByClassName("add_button");
+        /* for (i = 0; i < buttons.length; i++) {
+            buttons[i].addEventListener("click", function () {
+                addNode(this.parentNode);
+            });
+        } */
+        var nested_buttons = document.getElementsByClassName("add_sub_button");
+        /* for (i = 0; i < buttons.length; i++) {
+            nested_buttons[i].addEventListener("click", function () {
+                addSub(this.parentNode);
+            });
+        } */
+
+
+        function changeComparator(obj) {
+            var selectedValue = obj.value;
+            var selectedObjectID = obj.id;
+            var block_numerator = selectedObjectID.split('_')[2];
+            if (selectedValue == 'BETWEEN') {
+                $('#start_numeric_specific_' + block_numerator).css('display', 'block');
+                $('#end_numeric_specific_' + block_numerator).css('display', 'block');
+                $('#numeric_specific_' + block_numerator).css('display', 'none');
+            } else {
+                $('#start_numeric_specific_' + block_numerator).css('display', 'none');
+                $('#end_numeric_specific_' + block_numerator).css('display', 'none');
+            }
+        }
+
+
+        function selectFormOption(obj) {
+            var selectedValue = obj.value;
+            var selectedObjectID = obj.id;
+            var block_numerator = selectedObjectID.split('_')[2];
+            if (selectedValue != '') {
+                if (selectedValue == 1) {
+                    $('#other_form_specific_' + block_numerator).css('display', 'none');
+                    $('#other_study_specific_' + block_numerator).css('display', 'none');
+                    $('#form_variables_' + block_numerator + ' option:not(:first)').remove();
+                    for (var kkx in formVariables) {
+                        $('#form_variables_' + block_numerator).append($('<option>', {
+                            value: formVariables[kkx].field_name,
+                            text: formVariables[kkx].field_name
+                        }));
+                    }
+                } else {
+                    $('#other_form_specific_' + block_numerator).css('display', 'block');
+                    $('#other_study_specific_' + block_numerator).css('display', 'block');
+                    $.ajax({
+                        async: false,
+                        url: '/study/get_study_list/',
+                        type: 'POST',
+                        data: {'csrfmiddlewaretoken': window.CSRF_TOKEN},
+                        success: function (res) {
+                            var study_data = JSON.parse(res);
+                            for (var ddx in study_data) {
+                                $('#form_variables_' + block_numerator + ' option:not(:first)').remove();
+                                $('#form_study_' + block_numerator).append($('<option>', {
+                                    value: study_data[ddx].id,
+                                    text: study_data[ddx].name
+                                }));
+                            }
+                        }
+                    })
+                }
+            } else {
+                $('#form_variables_' + block_numerator + ' option:not(:first)').remove();
+                $('#other_form_specific_' + block_numerator).css('display', 'none');
+                $('#other_study_specific_' + block_numerator).css('display', 'none');
+            }
+        }
+
+
+        function getFormsbyStudy(obj) {
+            var selectedValue = obj.value;
+            var selectedObjectID = obj.id;
+            var block_numerator = selectedObjectID.split('_')[2];
+            if (selectedValue != '') {
+                $.ajax({
+                    async: false,
+                    url: '/study/get_study_forms_list/',
+                    type: 'POST',
+                    data: {'study_id': selectedValue, 'xformid': xformid, 'csrfmiddlewaretoken': window.CSRF_TOKEN},
+                    success: function (res) {
+                        var study_form_data = JSON.parse(res);
+                        $('#form_forms_' + block_numerator + ' option:not(:first)').remove();
+                        for (var ddx in study_form_data) {
+                            $('#form_forms_' + block_numerator).append($('<option>', {
+                                value: study_form_data[ddx].form_id,
+                                text: study_form_data[ddx].form_title
+                            }));
+                        }
+                    }
+                })
+            }
+            else {
+                $('#form_forms_' + block_numerator + ' option:not(:first)').remove();
+            }
+        }
+
+
+        function getOtherFormsVariable(obj) {
+            var selectedValue = obj.value;
+            var selectedObjectID = obj.id;
+            var block_numerator = selectedObjectID.split('_')[2];
+            if (selectedValue != '') {
+                $.ajax({
+                    async: false,
+                    url: '/livestock/get_form_variables_list/',
+                    type: 'POST',
+                    data: {'form_id': selectedValue, 'csrfmiddlewaretoken': window.CSRF_TOKEN},
+                    success: function (res) {
+                        var otherFormVariables = JSON.parse(res);
+                        $('#form_variables_' + block_numerator + ' option:not(:first)').remove();
+                        for (var ddx in otherFormVariables) {
+                            $('#form_variables_' + block_numerator).append($('<option>', {
+                                value: otherFormVariables[ddx].field_name,
+                                text: otherFormVariables[ddx].field_name
+                            }));
+                        }
+                    }
+                });
+            } else {
+                $('#form_variables_' + block_numerator + ' option:not(:first)').remove();
+            }
+        }
+
+
+        function getComparators(obj) {
+            var select_comparator = ['EQUALS','NOT_EQUALS'];
+            var text_comparator = ['EQUALS', 'STARTS_WITH', 'ENDS_WITH', 'CONTAINS','NOT_EQUALS'];
+            var numeric_comparator = ['EQUALS', 'GREATER_THAN', 'GREATER_THAN_EQUALS', 'LESS_THAN', 'LESS_THAN_EQUALS', 'BETWEEN','NOT_EQUALS'];
+            var selectedValue = obj.value;
+            var selectedObjectID = obj.id;
+            var block_numerator = selectedObjectID.split('_')[2];
+            if ($('#form_forms_' + block_numerator).is(":visible")) {
+                var formID = $('#form_forms_' + block_numerator).val();
+            } else {
+                var formID = xformid;
+            }
+            if (selectedValue != '') {
+                $.ajax({
+                    async: false,
+                    url: '/livestock/get_form_variable_type/',
+                    type: 'POST',
+                    data: {'form_id': formID, 'field_name': selectedValue, 'csrfmiddlewaretoken': window.CSRF_TOKEN},
+                    success: function (res) {
+                        var returnData = JSON.parse(res);
+                        var field_type = returnData[0].field_type;
+                        $('#form_variable_type_' + block_numerator).val(field_type);
+                        if (field_type == 'text' || field_type == 'calculate') {
+                            $('#form_comparators_' + block_numerator + ' option:not(:first)').remove();
+                            for (var jdx in text_comparator) {
+                                $('#form_comparators_' + block_numerator).append($('<option>', {
+                                    value: text_comparator[jdx],
+                                    text: text_comparator[jdx]
+                                }));
+                            }
+                            $('#free_text_specific_' + block_numerator).css('display', 'block');
+                            $('#select_specific_' + block_numerator).css('display', 'none');
+                            $('#numeric_specific_' + block_numerator).css('display', 'none');
+                        } else if (field_type == 'integer' || field_type == 'decimal') {
+                            $('#form_comparators_' + block_numerator + ' option:not(:first)').remove();
+                            for (var jdx in numeric_comparator) {
+                                $('#form_comparators_' + block_numerator).append($('<option>', {
+                                    value: numeric_comparator[jdx],
+                                    text: numeric_comparator[jdx]
+                                }));
+                            }
+                            $('#free_text_specific_' + block_numerator).css('display', 'none');
+                            $('#select_specific_' + block_numerator).css('display', 'none');
+                            $('#numeric_specific_' + block_numerator).css('display', 'block');
+                        } else if (field_type == 'select one' || field_type == 'select all that apply') {
+                            $('#form_comparators_' + block_numerator + ' option:not(:first)').remove();
+                            for (var jdx in select_comparator) {
+                                $('#form_comparators_' + block_numerator).append($('<option>', {
+                                    value: select_comparator[jdx],
+                                    text: select_comparator[jdx]
+                                }));
+                            }
+                            $('#free_text_specific_' + block_numerator).css('display', 'none');
+                            $('#select_specific_' + block_numerator).css('display', 'block');
+                            $('#numeric_specific_' + block_numerator).css('display', 'none');
+                            $('#select_inner_specific_' + block_numerator + ' option:not(:first)').remove();
+                            for (var dfx in returnData) {
+                                $('#select_inner_specific_' + block_numerator).append($('<option>', {
+                                    value: returnData[dfx].value_text,
+                                    text: returnData[dfx].label_bengali
+                                }));
+                            }
+                        }
+                    }
+                });
+            } else {
+                $('#form_comparators_' + block_numerator + ' option:not(:first)').remove();
+                $('#free_text_specific_' + block_numerator).css('display', 'none');
+                $('#select_specific_' + block_numerator).css('display', 'none');
+                $('#numeric_specific_' + block_numerator).css('display', 'none');
+                $('#select_inner_specific_' + block_numerator + ' option:not(:first)').remove();
+            }
+        }
+
+        function Get_All_Forms_Data(Element) {
+            Element = Element || '';
+            var All_Page_Data = {};
+            var All_Forms_Data_Temp = {};
+            if (Element != '') {
+                $(Element).find('input,select,textarea').each(function (i) {
+                    All_Forms_Data_Temp[i] = $(this);
+                });
+            }
+            else {
+                $('input,select,textarea').each(function (i) {
+                    All_Forms_Data_Temp[i] = $(this);
+                });
+            }
+
+
+            $.each(All_Forms_Data_Temp, function () {
+                var input = $(this);
+                var Element_Name;
+                var Element_Value;
+
+                if ((input.attr('type') == 'submit') || (input.attr('type') == 'button')) {
+                    return true;
+                }
+
+                if ((input.attr('name') !== undefined) && (input.attr('name') != '')) {
+                    Element_Name = input.attr('name').trim();
+                }
+                else if ((input.attr('id') !== undefined) && (input.attr('id') != '')) {
+                    Element_Name = input.attr('id').trim();
+                }
+                else if ((input.attr('class') !== undefined) && (input.attr('class') != '')) {
+                    Element_Name = input.attr('class').trim();
+                }
+
+                if (input.val() !== undefined) {
+                    if ((input.attr('type') == 'radio') || (input.attr('type') == 'checkbox')) {
+                        Element_Value = jQuery('input[name="' + Element_Name + '"]:checked').val();
+                    }
+                    else {
+                        Element_Value = input.val();
+                    }
+                }
+                else if (input.text() != undefined) {
+                    Element_Value = input.text();
+                }
+
+                if (Element_Value === undefined) {
+                    Element_Value = '';
+                }
+
+                if (Element_Name !== undefined) {
+                    var Element_Array = new Array();
+                    if (Element_Name.indexOf(' ') !== -1) {
+                        Element_Array = Element_Name.split(/(\s+)/);
+                    }
+                    else {
+                        Element_Array.push(Element_Name);
+                    }
+
+                    $.each(Element_Array, function (index, Name) {
+                        Name = Name.trim();
+                        if (Name != '') {
+                            All_Page_Data[Name] = Element_Value;
+                        }
+                    });
+                }
+            });
+            return All_Page_Data;
+        }
+
+
+        function deleteOutcome(outcome_id) {
+            if (outcome_id) {
+                $.ajax({
+                    url: '/study/delete_outcome/',
+                    type: 'POST',
+                    data: {'outcome_id': outcome_id, 'csrfmiddlewaretoken': window.CSRF_TOKEN},
+                    success: function (res) {
+                        if (res == 'deleted') {
+                            $('#row_' + outcome_id).remove();
+                        }
+                    }
+                })
+            }
+        }
+
+
+        function editOutcome(outcome_id) {
+            if (outcome_id) {
+                $.ajaxPrefilter(function (options, original_Options, jqXHR) {
+                    options.async = false;
+                });
+                $.ajax({
+                    url: '/study/edit_outcome/',
+                    type: 'POST',
+                    data: {'outcome_id': outcome_id, 'csrfmiddlewaretoken': window.CSRF_TOKEN},
+                    success: function (res) {
+
+                        $('#logic_form').html('<div id="block_1" class="block"><div class="buttons"><input onclick="addSub(this.parentNode);"class="btn add_sub_button custom-btn" type="button" value="Add Nested Block"><input onclick="addNode(this.parentNode);" class="btn add_button custom-btn" type="button" value="Add Question"></div></div><button type="button" onclick="saveLogicTree();" class="pull-right">Update</button>');
+                        var outcome_data = JSON.parse(res);
+                        var formData = outcome_data[0]['form_json'];
+                        $('#outcome_name').val(outcome_data[0]['outcome_name']);
+                        $('#outcome_id').val(outcome_data[0]['id']);
+                        //console.log(JSON.stringify(formData));
+                        if (formData.hasOwnProperty('blocks')) {
+                            parseFormData(formData, 'block_1');
+                        }
+                    }
+                })
+            }
+        }
+
+        //SELECT id, event_id, condition_id, start_point_id, interval_length, interval_unit_id,
+        // after_interval_length, after_interval_unit_id, schedule_type_id, form_id, shedule_applicable_for_id,
+        // sheduled_role_id, validity_period, created_by, created_at, updated_by, updated_at, scheduled_form, day_of_week
+        //	FROM public.logic;
+        function editLogic(logic_id) {
+            if (logic_id) {
+                $.ajax({
+                    url: '/study/edit_logic/',
+                    type: 'POST',
+                    data: {'logic_id': logic_id, 'csrfmiddlewaretoken': window.CSRF_TOKEN},
+                    success: function (res) {
+                        $('#head_logic').html("Edit Logic");
+                        //console.log(res);
+                        var logic_data = JSON.parse(res);
+
+                        if (logic_data[0]['start_point_id'] == 3) {
+                            $('.after_interval_cls').show();
+                        } else {
+                            $('.after_interval_cls').hide();
+                        }
+
+                        $('#event_id').val(logic_data[0]['event_id'])
+                        $('#condition_id').val(logic_data[0]['condition_id'])
+                        $('#scheduled_form').val(logic_data[0]['scheduled_form'])
+                        $('#schedule_type_id').val(logic_data[0]['schedule_type_id'])
+                        $('#shedule_applicable_for_id').val(logic_data[0]['shedule_applicable_for_id'])
+                        $('#sheduled_role_id').val(logic_data[0]['sheduled_role_id'])
+                        $('#after_interval_length').val(logic_data[0]['after_interval_length'])
+                        //$('#after_interval_unit_id').val(logic_data[0]['after_interval_unit_id'])
+                        $('#day_of_week').val(logic_data[0]['day_of_week'])
+                        $('#validity_period').val(logic_data[0]['validity_period'])
+                        $('#start_point_id').val(logic_data[0]['start_point_id'])
+                        $('#interval_length').val(logic_data[0]['interval_length'])
+                        $('#interval_unit_id').val(logic_data[0]['interval_unit_id'])
+                        $('#logic_id').val(logic_data[0]['id'])
+
+                    }
+                })
+            }
+        }
+
+
+        function appendCurrentFormVariables(c) {
+            for (var ddx in formVariables) {
+                $('#form_variables_' + c).append($('<option>', {
+                    value: formVariables[ddx].field_name,
+                    text: formVariables[ddx].field_name
+                }));
+            }
+        }
+
+
+        function parseFormData(formData, blockID) {
+            var sub_count = 0;
+            var sub_block_count = 0;
+            var operator = formData['operator'];
+            for (var kkx in formData['blocks']) {
+                if (formData['blocks'][kkx].hasOwnProperty('blocks')) {
+                    block_count = block_count + 1;
+                    if (sub_block_count > 0 || (sub_block_count == 0 && counter > 0)) {
+                        addLogicinEdit(counter, blockID, operator);
+                    }
+                    var prevClassName = $('#' + blockID).attr('class');
+                    if (prevClassName == 'block') {
+                        var nextClassName = 'block_alt';
+                    } else {
+                        var nextClassName = 'block';
+                    }
+                    $('#' + blockID + ' .buttons:last').before('<div id="block_' + block_count + '" class="' + nextClassName + '"><span onclick="deleteBlock(this);" class="delete_icon" id="delete_block_' + counter + '"><i class="fa fa-2x fa-times-circle"></i></span><div class="buttons"><input onclick="addSub(this.parentNode);"class="btn add_sub_button custom-btn" type="button" value="Add Nested Block"><input onclick="addNode(this.parentNode);" class="btn add_button custom-btn" type="button" value="Add Question"></div></div>');
+                    parseFormData(formData['blocks'][kkx], 'block_' + block_count + '');
+                    sub_block_count++;
+                } else {
+                    counter = counter + 1;
+                    act_count = act_count + 1;
+                    if (sub_count > 0) {
+                        addLogicinEdit(counter, blockID, operator);
+                    }
+                    addNodeinEdit(counter, blockID);
+                    if (formData['blocks'][kkx]['source'] == 'current') {
+                        $('#form_select_' + counter).val(1);
+                        appendCurrentFormVariables(counter);
+                        $('#form_variables_' + counter).val(formData['blocks'][kkx]['variable_name']);
+                        getComparators($('#form_variables_' + counter)[0]);
+                        $('#form_comparators_' + counter).val(formData['blocks'][kkx]['comparator']);
+                        changeComparator($('#form_comparators_' + counter)[0]);
+                        var value_id = $('#form_comparators_' + counter).parents().eq(1).nextAll('.form-group:visible').first().find('.col-md-9').children(":first")[0].id;
+                        $('#' + value_id).val(formData['blocks'][kkx]['value1']);
+                        if (formData['blocks'][kkx]['comparator'] == 'BETWEEN'){
+                            $('#end_numeric_inner_specific_'+counter).val(formData['blocks'][kkx]['value2']);
+                        }
+                        $('#form_stype_' + counter).val(formData['blocks'][kkx]['submission_type']);
+                    } else {
+                        $('#form_select_' + counter).val(2);
+                        selectFormOption($('#form_select_' + counter)[0]);
+                        $('#form_study_' + counter).val(formData['blocks'][kkx]['study_id']);
+                        getFormsbyStudy($('#form_study_' + counter)[0]);
+                        $('#form_forms_' + counter).val(formData['blocks'][kkx]['form_id']);
+                        getOtherFormsVariable($('#form_forms_' + counter)[0]);
+                        $('#form_variables_' + counter).val(formData['blocks'][kkx]['variable_name']);
+                        getComparators($('#form_variables_' + counter)[0]);
+                        $('#form_comparators_' + counter).val(formData['blocks'][kkx]['comparator']);
+                        changeComparator($('#form_comparators_' + counter)[0]);
+                        var value_id = $('#form_comparators_' + counter).parents().eq(1).nextAll('.form-group:visible').first().find('.col-md-9').children(":first")[0].id;
+                        $('#' + value_id).val(formData['blocks'][kkx]['value1']);
+                        if (formData['blocks'][kkx]['comparator'] == 'BETWEEN'){
+                            $('#end_numeric_inner_specific_'+counter).val(formData['blocks'][kkx]['value2']);
+                        }
+                        $('#form_stype_' + counter).val(formData['blocks'][kkx]['submission_type']);
+                    }
+                    sub_count++;
+                }
+            }
+        }
+
+
+        function addLogicinEdit(cc, blockID, operator) {
+            if (operator == 'and') {
+                var and_selected = 'selected';
+                var or_selected = '';
+            } else {
+                var and_selected = '';
+                var or_selected = 'selected';
+            }
+            var new_entry = '';
+            new_entry += '<div class="logic_block">';
+            new_entry += '<div class="form-group">';
+            new_entry += '<label class="col-md-6 control-label">Operation Type</label>';
+            new_entry += '<div class="col-md-6">';
+            new_entry += '<select id="logic_elem_' + cc + '" class="form-control" onchange="changeLogicOperator(this)">';
+            new_entry += '<option ' + and_selected + ' value="and">AND</option>';
+            new_entry += '<option ' + or_selected + ' value="or">OR</option>';
+            new_entry += '</select>';
+            new_entry += '</div>';
+            new_entry += '</div>';
+            new_entry += '</div>';
+            $('#' + blockID + ' .buttons:last').before(new_entry);
+        }
+
+
+        function addNodeinEdit(cc, blockID) {
+            var new_entry = '';
+            new_entry += '<div id="single_block_' + cc + '" class="single-block">';
+            new_entry += '<span onclick="deleteSingleBlock(this);" class="delete_icon" id="delete_block_single_' + cc + '"><i class="fa fa-2x fa-times-circle"></i></span>';
+            new_entry += '<div class="form-group"><label class="col-md-3 control-label">Source</label>';
+            new_entry += '<div class="col-md-9">';
+            new_entry += '<select id="form_select_' + cc + '" class="form-control" onchange="selectFormOption(this);">';
+            new_entry += '<option value="">Select Any</option>';
+            new_entry += '<option value="1">This Form</option>';
+            new_entry += '<option value="2">Other Form</option>';
+            new_entry += '</select>';
+            new_entry += '</div>';
+            new_entry += '</div>';
+            new_entry += '<div class="form-group other_specific" id="other_study_specific_' + cc + '"><label ';
+            new_entry += 'class="col-md-3 control-label">Study</label>';
+            new_entry += '<div class="col-md-9">';
+            new_entry += '<select class="form-control" id="form_study_' + cc + '" onchange="getFormsbyStudy(this);">';
+            new_entry += '<option value="">Select Any</option>';
+            new_entry += '</select>';
+            new_entry += '</div>';
+            new_entry += '</div>';
+            new_entry += '<div class="form-group other_specific" id="other_form_specific_' + cc + '"><label ';
+            new_entry += 'class="col-md-3 control-label">Form</label>';
+            new_entry += '<div class="col-md-9">';
+            new_entry += '<select class="form-control" id="form_forms_' + cc + '" onchange="getOtherFormsVariable(this);">';
+            new_entry += '<option value="">Select Any</option>';
+            new_entry += '</select>';
+            new_entry += '</div>';
+            new_entry += '</div>';
+            new_entry += '<div class="form-group"><label class="col-md-3 control-label">Variable</label>';
+            new_entry += '<input id="form_variable_type_' + cc + '" type="hidden"/>';
+            new_entry += '<div class="col-md-9">';
+            new_entry += '<select class="form-control" id="form_variables_' + cc + '" onchange="getComparators(this);">';
+            new_entry += '<option value="">Select Any</option>';
+            new_entry += '</select>';
+            new_entry += '</div>';
+            new_entry += '</div>';
+            new_entry += '<div class="form-group"><label class="col-md-3 control-label">Comparator</label>';
+            new_entry += '<div class="col-md-9">';
+            new_entry += '<select id="form_comparators_' + cc + '" class="form-control" onchange="changeComparator(this)">';
+            new_entry += '<option value="">Select Any</option>';
+            new_entry += '</select>';
+            new_entry += '</div>';
+            new_entry += '</div>';
+            new_entry += '<div class="form-group free_text_specific" id="free_text_specific_' + cc + '">';
+            new_entry += '<label class="col-md-3 control-label">Value</label>';
+            new_entry += '<div class="col-md-9">';
+            new_entry += '<input id="free_text_inner_specific_' + cc + '" type="text" class="form-control"/>';
+            new_entry += '</div>';
+            new_entry += '</div>';
+            new_entry += '<div class="form-group numeric_specific" id="numeric_specific_' + cc + '">';
+            new_entry += '<label class="col-md-3 control-label">Value</label>';
+            new_entry += '<div class="col-md-9">';
+            new_entry += '<input id="numeric_inner_specific_' + cc + '" type="number" class="form-control"/>';
+            new_entry += '</div>';
+            new_entry += '</div>';
+            new_entry += '<div class="form-group select_specific" id="select_specific_' + cc + '">';
+            new_entry += '<label class="col-md-3 control-label">Value</label>';
+            new_entry += '<div class="col-md-9">';
+            new_entry += '<select id="select_inner_specific_' + cc + '" class="form-control">';
+            new_entry += '<option value="">Select Any</option>';
+            new_entry += '</select>';
+            new_entry += '</div>';
+            new_entry += '</div>';
+            new_entry += '<div class="form-group numeric_specific" id="start_numeric_specific_' + cc + '">';
+            new_entry += '<label class="col-md-3 control-label">Value From</label>';
+            new_entry += '<div class="col-md-9">';
+            new_entry += '<input id="start_numeric_inner_specific_' + cc + '" type="number" class="form-control"/>';
+            new_entry += '</div>';
+            new_entry += '</div>';
+            new_entry += '<div class="form-group numeric_specific" id="end_numeric_specific_' + cc + '">';
+            new_entry += '<label class="col-md-3 control-label">Value To</label>';
+            new_entry += '<div class="col-md-9">';
+            new_entry += '<input id="end_numeric_inner_specific_' + cc + '" type="number" class="form-control"/>';
+            new_entry += '</div>';
+            new_entry += '</div>';
+            new_entry += '<div class="form-group"><label class="col-md-3 control-label">Submission</label>';
+            new_entry += '<div class="col-md-9">';
+            new_entry += '<select id="form_stype_' + cc + '" class="form-control">';
+            new_entry += '<option value="any">Any</option>';
+            new_entry += '<option value="last">Last</option>';
+            new_entry += '</select>';
+            new_entry += '</div>';
+            new_entry += '</div>';
+            new_entry += '</div>';
+            $('#' + blockID + ' .buttons').before(new_entry);
+        }
+
+
+        function saveLogicEvent() {
+            var event_form_data = Get_All_Forms_Data('#event_form');
+            //console.log(event_form_data)
+            //console.log(event_form_data['after_interval_length'])
+            event_form_data['form_id'] = xformid;
+            $.ajax({
+                url: '/study/save_event_logic/',
+                type: 'POST',
+                data: {'event_form_data': JSON.stringify(event_form_data), 'csrfmiddlewaretoken': window.CSRF_TOKEN},
+                success: function (res) {
+                    if (res != 'error') {
+                        window.location.reload();
+                    }
+                }
+            });
+        }
+
+
+        function changeIntervalOptions(obj) {
+            if (obj.value == 3) {
+                $('.after_interval_cls').show();
+            } else {
+                $('.after_interval_cls').hide();
+            }
+        }
+
+        function confirm_delete(id){
+            $('#delete_logic_confirm').modal('show');
+            $('#tobe_del_id').val(id);
+
+        }
+        function deleteLogic() {
+           var id =  $('#tobe_del_id').val();
+
+            if (id) {
+                $.ajax({
+                    url: '/study/delete_logic/',
+                    type: 'POST',
+                    data: {'logic_id': id, 'csrfmiddlewaretoken': window.CSRF_TOKEN},
+                    success: function (res) {
+                        if (res == 'deleted') {
+                            $('#logic_' + id).remove();
+                        }
+                    }
+                })
+            }
+        }
+
+
+
+
+
+
+    var outcome_data = {{ outcomes_json|safe }};
+
+        var tbody = ''
+        for (var idx in outcome_data) {
+            tbody += '<tr id="row_"'+outcome_data[idx].id+'">';
+
+            console.log(evaluateOperationExpression(outcome_data[idx].form_json))
+
+            logics = evaluateOperationExpression(outcome_data[idx].form_json)
+
+            tbody += '<td>'+outcome_data[idx].outcome_name+'</td><td  width="70%">'+logics+'</td><td>' +
+                ''
+                                       +' <button onclick="deleteOutcome('+outcome_data[idx].id+');" type="button" class="btn btn-danger custom-btn">Delete </button></td></tr>';
+
+
+        }
+
+        $("#o_table").find('tbody').html(tbody);
+
+
+
+
+    function generateExpression (element){
+        if(element["comparator"]=='BETWEEN'){
+            return (element["variable_name"]+" <strong>"+element["comparator"]+"</strong> [ "+element["value1"]+" ] and [ "+element["value2"]+" ]");
+        } else {
+            return (element["variable_name"]+" <strong>"+element["comparator"]+"</strong> [ "+element["value1"]+" ]");
+        }
+    }
+
+    function stringifyLogicalOperation(jsonObject){
+        if("blocks" in jsonObject && jsonObject["blocks"].length > 1 ){
+            var tmp = "( "+ stringifyLogicalOperation(jsonObject["blocks"][0]);
+            var i;
+            for(i = 1; i < jsonObject["blocks"].length; i++){
+                tmp+= "<br> <strong>" + jsonObject["operator"] + "</strong><br> "+   stringifyLogicalOperation(jsonObject["blocks"][i]);
+            }
+            tmp+= ' )';
+            return tmp;
+        } else {
+            if("blocks" in jsonObject){
+                return generateExpression(jsonObject["blocks"][0]);
+            }
+            else{
+                return generateExpression(jsonObject);
+            }
+        }
+
+    }
+
+    function evaluateOperationExpression(tmp_value){
+        var tmp = stringifyLogicalOperation(tmp_value);
+        if(tmp && tmp.startsWith('(')){
+            return tmp.substring(2,tmp.length-2);
+        }
+        return tmp;
+    }
+
+
+
+
+    </script>
+{% endblock %}

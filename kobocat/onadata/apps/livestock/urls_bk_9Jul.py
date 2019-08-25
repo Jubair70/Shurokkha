@@ -1,6 +1,6 @@
 from django.conf.urls import patterns, include, url
 from django.contrib import admin
-from . import views,views_api,views_sms
+from . import views,views_api
 
 urlpatterns = patterns('',
                        url(r'^medicine_list/$', views.medicine_list, name='medicine_list'),
@@ -52,14 +52,6 @@ urlpatterns = patterns('',
                         url(r'^get_sms_dashboard/$', views.get_sms_dashboard, name='get_sms_dashboard'),
                         url(r'^get_sms_dashboard_content/$', views.get_sms_dashboard_content, name='get_sms_dashboard_content'),
 
-                        url(r'^get_para_vet_performance_dashboard/$', views.get_para_vet_performance_dashboard, name='get_para_vet_performance_dashboard'),
-                        url(r'^get_para_vet_performance_dashboard_content/$', views.get_para_vet_performance_dashboard_content,
-                           name='get_para_vet_performance_dashboard_content'),
-                        url(r'^get_paravet_no_case_tat_Dashboard/$', views.get_paravet_no_case_tat_Dashboard,
-                           name='get_paravet_no_case_tat_Dashboard'),
-                        url(r'^get_para_vet_details/(?P<id>\d+)/(?P<mobile>\d+)/$', views.get_para_vet_details, name='get_para_vet_details'),
-                        url(r'^get_paravet_performance_dashboard/$', views.get_paravet_performance_dashboard,
-                           name='get_paravet_performance_dashboard'),
                        ###****************** Emtiaz work (E) ****************###
 
                         #DASHBOARD
@@ -87,17 +79,7 @@ urlpatterns = patterns('',
                         url(r'^update_bull_form/$', views.update_bull_form, name='update_bull_form'),
                         url(r'^delete_bull_form/(?P<id>\d+)/$', views.delete_bull_form,name='delete_bull_form'),
 
-                        url(r'^get_recepients_count/$', views_sms.get_recepients_count, name='get_recepients_count'),
-                        url(r'^sms_schedule/$', views_sms.sms_schedule, name='sms_schedule'),
-                        url(r'^insert_form_schedules/$', views_sms.insert_form_schedules, name='insert_form_schedules'),
-                        url(r'^get_form_variable_type/$', views_sms.get_form_variable_type, name='get_form_variable_type'),
-                        url(r'^get_form_variables_list/$', views_sms.get_form_variables_list, name='get_form_variables_list'),
-                        url(r'^sms_details/$', views_sms.sms_details, name='sms_details'),
-                        url(r'^view_individual_sms/(?P<sms_id>\d+)/$', views_sms.view_individual_sms,name='view_individual_sms'),
-                        url(r'^list_sms/$', views_sms.list_sms, name='list_sms'),
-                        url(r'^get_district_list/$', views_sms.get_district_list, name='get_district_list'),
-                        url(r'^get_upazila_list/$', views_sms.get_upazila_list, name='get_upazila_list'),
-                        url(r'^delete_sms/$', views_sms.delete_sms, name='delete_sms'),
+
 
                        ##############################
 
@@ -127,7 +109,7 @@ urlpatterns = patterns('',
                         url(r"^update_token/$", views.update_token, name='update_token'),
                         url(r"^get_cattle_info$", views_api.get_cattle_info, name='get_cattle_info'),
                         url(r"^cattle_prescription_list/(?P<cattle_id>\d+)/$", views_api.cattle_prescription_list, name='cattle_prescription_list'),
-                        url(r"^get_cattle_general_info/$", views_api.get_cattle_general_info, name='get_cattle_general_info'),
+
 
 
 

@@ -4,6 +4,7 @@
     <title>{% block title %}AI Dashboard{% endblock %}</title>
 </head>
 {% load i18n %}
+
 {% block additional-headers %}
 <link rel="stylesheet" href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css">
 <link href="https://cdn.datatables.net/buttons/1.4.2/css/buttons.dataTables.min.css" rel="stylesheet">
@@ -14,12 +15,8 @@
 <link href="/static/bootstrap4/vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
 <!-- Custom styles for this template-->
 <link href="/static/bootstrap4/css/sb-admin.css" rel="stylesheet">
-    <link rel="stylesheet" type="text/css" media="all" href="/static/css/Date-Range-Picker-For-Twitter-Bootstrap/daterangepicker.css">
-
-
+<link href="/static/css/bootstrap-datepicker.css" rel="stylesheet" type="text/css"/>
 {% endblock %}
-
-
 
 {% block content %}
 <div class="portlet box red">
@@ -33,22 +30,22 @@
             <div class="row">
                 <div class="col-md-12 col-md-offset-6 col-xs-12">
                     <div class="col-md-2 col-md-offset-1">
-                        <label>From: </label>
-                        <div class='input-group date' id='datetimepicker1'>
-                             <input class="date_pick form-control" type='text' name="from_date" id="from_date" class="form-control" />
-                             <span class="input-group-addon">
-                               <span class="glyphicon glyphicon-calendar"></span>
-                             </span>
-                        </div>
+                        <label class="control-label">From</label>
+                            <div class="input-group date form-group" data-provide="datepicker" data-date-autoclose="true" data-date-format="yyyy-mm-dd">
+                                <input type="text" id="from_date" name="from_date" class="form-control" value="{{start_date}}"  readonly>
+                                <div class="input-group-addon">
+                                    <span class="glyphicon glyphicon-th"></span>
+                                </div>
+                            </div>
                     </div>
                     <div class="col-md-2" style="">
-                        <label>To: </label>
-                         <div class='input-group date' id='datetimepicker2'>
-                             <input class="date_pick_1 form-control" type='text' name="to_date" id="to_date" class="form-control" />
-                             <span class="input-group-addon">
-                               <span class="glyphicon glyphicon-calendar"></span>
-                             </span>
-                        </div>
+                        <label class="control-label">To</label>
+                            <div class="input-group date form-group" data-provide="datepicker" data-date-autoclose="true" data-date-format="yyyy-mm-dd">
+                                <input type="text" id="to_date" name="to_date" value="{{end_date}}" class="form-control" readonly>
+                                <div class="input-group-addon">
+                                    <span class="glyphicon glyphicon-th"></span>
+                                </div>
+                            </div>
                     </div>
 
                     <div class="col-md-2" style="margin-left: 0px; padding-left: 0px">
@@ -132,29 +129,11 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/vfs_fonts.js"></script>
     <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.html5.min.js"></script>
     <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.print.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/semantic-ui/2.2.10/semantic.min.js"></script>
-    <script type="text/javascript" src="/static/js/calendar.min.js"></script>
-    <script type="text/javascript" src="/static/js/Date-Range-Picker-For-Twitter-Bootstrap/date.js"></script>
-	<script type="text/javascript" src="/static/js/Date-Range-Picker-For-Twitter-Bootstrap/daterangepicker.js"></script>
 	<script src="https://code.highcharts.com/highcharts.js"></script>
     <script src="https://code.highcharts.com/modules/exporting.js"></script>
     <script src="https://code.highcharts.com/modules/data.js"></script>
     <script src="https://code.highcharts.com/modules/drilldown.js"></script>
-
-
     <script type="text/javascript" src="/static/js/bootstrap-datepicker.js"></script>
-    <script src="https://cdn.jsdelivr.net/semantic-ui/2.2.10/semantic.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui-calendar/0.0.8/calendar.css"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui-calendar/0.0.8/calendar.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui-calendar/0.0.8/calendar.min.css"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui-calendar/0.0.8/calendar.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.15.1/moment.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.7.14/js/bootstrap-datetimepicker.min.js"></script>
-     <script type="text/javascript" src="/static/js/bootstrap-datepicker.js"></script>
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.7.14/css/bootstrap-datetimepicker.min.css">
 
     <script>
 
@@ -233,22 +212,70 @@
        $(document).ready(function(){
             document.getElementById("a").style.background = "green";
             get_percentage(1);
-            $(function() {
-               $('.date_pick').datetimepicker().data("DateTimePicker").options({format: "YYYY-MM-DD"});
-            });
-            $(function() {
-               $('.date_pick_1').datetimepicker().data("DateTimePicker").options({format: "YYYY-MM-DD"});
-            });
+            // $(function() {
+            //    $('.date_pick').datetimepicker().data("DateTimePicker").options({format: "YYYY-MM-DD"});
+            // });
+            // $(function() {
+            //    $('.date_pick_1').datetimepicker().data("DateTimePicker").options({format: "YYYY-MM-DD"});
+            // });
        });
+
+       // function get_percentage(category_id)
+       // {
+       //      $.ajax({
+       //          url: '/livestock/get_percentage_dashboard/',
+       //          type: 'POST',
+       //          dataType: 'json',
+       //          data: {
+       //              'category_id': category_id
+       //          },
+       //          beforeSend: function () {
+       //              $('#container').show();
+       //          },
+       //          success: function (result) {
+       //              $('#container').hide();
+       //              if(category_id == 1){
+       //                  dashboardBarChart('container_1', 'Division wise total AI', result.bar_data_division, result.bar_data_drilldown, '');
+       //                  dashboardBarChart('container_2', 'Organization wise Artificial Insemination', result.bar_data_organization,'','');
+       //                  document.getElementById("to").style.visibility = "visible";
+       //              }
+       //              else if(category_id == 2){
+       //                  dashboardBarChart('container_1', 'Division wise Repeated AI', result.bar_data_division,result.bar_data_drilldown,'{point.y:.1f}%');
+       //                  dashboardBarChart('container_2', 'Organization wise Repeated AI', result.bar_data_organization,'','{point.y:.1f}%');
+       //                  document.getElementById("to").style.visibility = "visible";
+       //              }
+       //              else if(category_id == 3){
+       //                  dashboardBarChart('container_1', 'Division wise Conception Rate', result.bar_data_division,result.bar_data_drilldown,'{point.y:.1f}%');
+       //                  dashboardBarChart('container_2', 'Organization wise Conception Rate', result.bar_data_organization,'','{point.y:.1f}%');
+       //                  document.getElementById("to").style.visibility = "visible";
+       //              }
+       //              else if(category_id == 4){
+       //                  dashboardBarChart('container_1', 'Division wise Service per Conception', result.bar_data_division,result.bar_data_drilldown,'');
+       //                  dashboardBarChart('container_2', 'Organization wise Service per Conception', result.bar_data_organization);
+       //                  document.getElementById("to").style.visibility = "visible";
+       //              }
+       //              else if(category_id == 5){
+       //                  dashboardBarChart('container_1', 'Division wise Target Achieved', result.bar_data_division,result.bar_data_drilldown,'{point.y:.1f}%');
+       //                  //dashboardBarChart('container_2', 'Organization wise Target Achieved', result.bar_data_organization)
+       //                  document.getElementById("to").style.visibility = "hidden";
+       //              }
+       //          }
+       //      });
+       //  }
 
        function get_percentage(category_id)
        {
+            start_date = document.getElementById("from_date").value;
+            end_date = document.getElementById("to_date").value;
+
             $.ajax({
-                url: '/livestock/get_percentage_dashboard/',
+                url: '/livestock/get_percentage_dashboard_new/',
                 type: 'POST',
                 dataType: 'json',
                 data: {
-                    'category_id': category_id
+                    'category_id': category_id,
+                    'from_date': start_date,
+                    'to_date': end_date,
                 },
                 beforeSend: function () {
                     $('#container').show();
@@ -256,33 +283,43 @@
                 success: function (result) {
                     $('#container').hide();
                     if(category_id == 1){
-                        dashboardBarChart('container_1', 'Division wise total AI', result.bar_data_division, result.bar_data_drilldown, '');
+                        Highcharts.chart('container_1', JSON.parse(result.jsn));
                         dashboardBarChart('container_2', 'Organization wise Artificial Insemination', result.bar_data_organization,'','');
                         document.getElementById("to").style.visibility = "visible";
                     }
                     else if(category_id == 2){
-                        dashboardBarChart('container_1', 'Division wise Repeated AI', result.bar_data_division,result.bar_data_drilldown,'{point.y:.1f}%');
+                        Highcharts.chart('container_1', JSON.parse(result.jsn));
                         dashboardBarChart('container_2', 'Organization wise Repeated AI', result.bar_data_organization,'','{point.y:.1f}%');
                         document.getElementById("to").style.visibility = "visible";
                     }
                     else if(category_id == 3){
-                        dashboardBarChart('container_1', 'Division wise Conception Rate', result.bar_data_division,result.bar_data_drilldown,'{point.y:.1f}%');
+                        Highcharts.chart('container_1', JSON.parse(result.jsn));
                         dashboardBarChart('container_2', 'Organization wise Conception Rate', result.bar_data_organization,'','{point.y:.1f}%');
                         document.getElementById("to").style.visibility = "visible";
                     }
                     else if(category_id == 4){
-                        dashboardBarChart('container_1', 'Division wise Service per Conception', result.bar_data_division,result.bar_data_drilldown,'');
+                        Highcharts.chart('container_1', JSON.parse(result.jsn));
                         dashboardBarChart('container_2', 'Organization wise Service per Conception', result.bar_data_organization);
                         document.getElementById("to").style.visibility = "visible";
                     }
                     else if(category_id == 5){
-                        dashboardBarChart('container_1', 'Division wise Target Achieved', result.bar_data_division,result.bar_data_drilldown,'{point.y:.1f}%');
+                        Highcharts.chart('container_1', JSON.parse(result.jsn));
                         //dashboardBarChart('container_2', 'Organization wise Target Achieved', result.bar_data_organization)
                         document.getElementById("to").style.visibility = "hidden";
                     }
                 }
             });
         }
+
+       $(function () {
+            $('#from_date').datepicker({
+                format: "yyyy-mm-dd",
+            });
+            $('#to_date').datepicker({
+                format: "yyyy-mm-dd",
+
+            });
+        });
 
 
 

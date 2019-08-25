@@ -31,6 +31,7 @@ djcelery.setup_loader()
 CURRENT_FILE = os.path.abspath(__file__)
 PROJECT_ROOT = os.path.realpath(
     os.path.join(os.path.dirname(CURRENT_FILE), '..//'))
+
 PRINT_EXCEPTION = False
 
 TEMPLATED_EMAIL_TEMPLATE_DIR = 'templated_email/'
@@ -86,7 +87,7 @@ USE_L10N = False
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
 # Examples: "http://media.lawrence.com/media/", "http://example.com/media/"
-MEDIA_URL = 'http://newdawn.mpower-social.com:8001/media/'
+MEDIA_URL = '/media/'
 
 
 # Absolute path to the directory static files should be collected to.
@@ -438,7 +439,7 @@ after_setup_logger.connect(configure_logging)
 MONGO_DATABASE = {
     'HOST': '192.168.19.88',
     'PORT': 27017,
-    'NAME': 'mjivita',
+    'NAME': 'shurokkha_test',
     'USER': '',
     'PASSWORD': ''
 }

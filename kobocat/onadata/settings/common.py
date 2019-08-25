@@ -438,7 +438,7 @@ after_setup_logger.connect(configure_logging)
 MONGO_DATABASE = {
     'HOST': '192.168.19.88',
     'PORT': 27017,
-    'NAME': 'shurokkha_new',
+    'NAME': 'mjivita',
     'USER': '',
     'PASSWORD': ''
 }

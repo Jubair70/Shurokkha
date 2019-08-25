@@ -1974,6 +1974,11 @@ def get_dashboard_content(request):
     sickness_query = "select count (*) from vwcattle_appointment where  coalesce(division::text,'') like '" + division + "' and coalesce(district::text,'') like '" + district + "' and  coalesce(upazila::text,'') like '" + upazila + "' and appointment_type ='2' and date(created_date) BETWEEN '" + start_date + "' and '" + end_date + "'"
     husbandry_query = "select count (*) from vwcattle_appointment where  coalesce(division::text,'') like '" + division + "' and coalesce(district::text,'') like '" + district + "' and  coalesce(upazila::text,'') like '" + upazila + "' and appointment_type ='1' or appointment_type ='3'  and date(created_date) BETWEEN '" + start_date + "' and '" + end_date + "'"
 
+    breed_q = "select count(*) as num_of_breed from vwcattle_farmer where(sl_final is not null or local_final is not null or hf_final is not null) and coalesce(division::text,'') like '" + str(
+        division) + "' and coalesce(district::text,'') like '" + str(
+        district) + "' and coalesce(upazila::text,'') like '" + str(upazila) + "'; "
+    breed_count = __db_fetch_single_value(breed_q)
+
     farmer_count = __db_fetch_single_value(farmer_query)
     paravet_count = __db_fetch_single_value(paravet_query)
     ai_count = __db_fetch_single_value(ai_query)
@@ -1985,7 +1990,7 @@ def get_dashboard_content(request):
     return render(request, 'livestock/dashboard_content.html',
                   {'farmer_count': farmer_count, 'paravet_count': paravet_count,
                    'ai_count': ai_count, 'vet_count': vet_count, 'cattle_count': cattle_count,
-                   'sickness_count': sickness_count, 'husbandry_count': husbandry_count})
+                   'sickness_count': sickness_count, 'husbandry_count': husbandry_count,'breed_count' : breed_count})
 
 
 def get_district(request):

@@ -28,6 +28,21 @@
     	  <div class="modal-dialog">
 				<div class="loginmodal-container">
 					<p>Welcome to SHUROKKHA Dashboard! Please enter Your User ID and Password to Sign In</p><br>
+
+                    <div class="row">
+            <div class="col-md-12">
+		<div id="div_messages"></div>
+                {% block message %}
+                {% if message or messages or message_list %}
+                {% include "message.html" %}
+                {% endif %}
+                {% endblock %}
+                {% block content %}
+                {% if template %}{% include template %}{% endif %}
+                {{ content|safe }}
+                {% endblock %}
+            </div>
+        </div>
 				  <form class="login-form" method="post" action="/usermodule/login/" >
                     {% csrf_token %}
                             <p style="color:red;">{{ data }}</p>
@@ -39,6 +54,11 @@
                             <!--<input type="submit" class="button" value="Login">-->
                            <!-- <input type="submit" class="button" value="Login">-->
                             <input type="submit" name="login" class="login loginmodal-submit" value="LOGIN"></input>
+
+
+                      <button style = "width:290px; background-color: rgb(97, 165, 93)" type="button" data-toggle="modal" class="login loginmodal-submit" data-target="#verify_user">
+  কৃষক হিসেবে লগইন করুন
+</button>
 				  </form>
 
 <!-- 				  <div class="login-help">
@@ -59,6 +79,42 @@
 			<div class="col-lg-6 pull-left">Copyright &copy; 2018 by SHUROKKHA. All rights reserved.</div>
 			<div class="col-lg-6 pull-right"><a href="#"><img src="{{ STATIC_URL }}login/images/footer-logo.png" alt="footer-logo"></a></div>
 		</div>
+
+
+        <div class="modal fade" id="verify_user" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4  class="modal-title" id="myModalLabel">কৃষকের মোবাইল নম্বর দিন এবং মোবাইলে প্রাপ্ত কোডটি লিখুন</h4>
+            </div>
+
+            <div class="modal-body">
+            <form class="login-form" method="post" action="/livestock/verify_farmer/" >
+                    {% csrf_token %}
+
+                <div class="row">
+                    <div class="form-group col-md-4">
+                        <label class="control-label">Farmer mobile no</label><br>
+                        <input id="farmer_mobile" name="farmer_mobile" class="form-control " required>
+
+                    </div>
+
+                </div>
+
+
+
+            <div class="modal-footer">
+                <button type="submit"  class="btn btn-primary">Submit</button>
+                <button type="button" class="btn btn-danger btn-ok" data-dismiss="modal">Cancel</button>
+            </div>
+            </form>
+        </div>
+    </div>
+</div>
+        </div>
 
 <script>
 /* LOGIN - MAIN.JS - dp 2017 */
@@ -161,7 +217,28 @@ $(function() {
 	});
 });*/
 //# sourceURL=pen.js
+function open_modal() {
+    $('#verify_user').modal('show');
+}
+function verify_farmer() {
+    $.ajax({
+            url: "/livestock/verify_farmer/",
+            data: {
+                'farmer_mobile' : $("#farmer_mobile").val()},
+                type : "POST",
+            success: function( data ) {
+                $('#verify_user').modal('toggle');
+                window.location.href = '/livestock/farmer-login/';
 
+
+            },
+        error: function (request, status, error) {
+                $('#verify_user').modal('toggle');
+                alert('Not valid farmer');
+    }
+       });
+
+}
 </script>
 
 

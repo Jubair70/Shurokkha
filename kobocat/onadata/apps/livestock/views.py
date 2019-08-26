@@ -654,8 +654,9 @@ def get_cattle_list(request, id):
     cattle_regi_form_owner_q = "select (select username from auth_user where id = logger_xform.user_id limit 1) as user_name from public.logger_xform where id_string = 'cattle_registration'"
     cattle_regi_form_owner = __db_fetch_single_value(cattle_regi_form_owner_q)
     # q = " select *,get_form_option_text(597,'cattle_type',cattle_type) cattle_type_text,get_form_option_text(597,'cattle_origin',cattle_origin) cattle_origin_text from vwcattle_registration where cattle_type::text  like '"+cattle_type+"'"
-    q = " select *,date(created_date)::text as register_date ,(select label from vwcattle_type where value =cattle_type ) cattle_type_text,(select label from vwcattle_origin where value =cattle_origin ) cattle_origin_text from cattle where status = 0 and cattle_type::text  like '" + cattle_type + "' and mobile = (select mobile from cattle where id = " + str(
+    q = " select *,date(created_date)::text as register_date ,(select label from vwcattle_type where value =cattle_type ) cattle_type_text,(select label from vwcattle_origin where value =cattle_origin ) cattle_origin_text from cattle where status = 0 and cattle_type::text  like '" + cattle_type + "' and mobile = (select mobile from farmer where id = " + str(
         id) + ")"
+    print q
     dataset = __db_fetch_values_dict(q)
     data_list = []
     age_cattle = 0
@@ -1957,8 +1958,8 @@ def get_dashboard(request):
 def get_dashboard_content(request):
     date_range = request.POST.get('date_range')
     if date_range == '':
-        start_date = '01/01/2010'
-        end_date = '12/28/2021'
+        start_date = '2010-01-01'
+        end_date = '2021-12-28'
     else:
         dates = get_dates(str(date_range))
         start_date = dates.get('start_date')
@@ -1974,9 +1975,13 @@ def get_dashboard_content(request):
     sickness_query = "select count (*) from vwcattle_appointment where  coalesce(division::text,'') like '" + division + "' and coalesce(district::text,'') like '" + district + "' and  coalesce(upazila::text,'') like '" + upazila + "' and appointment_type ='2' and date(created_date) BETWEEN '" + start_date + "' and '" + end_date + "'"
     husbandry_query = "select count (*) from vwcattle_appointment where  coalesce(division::text,'') like '" + division + "' and coalesce(district::text,'') like '" + district + "' and  coalesce(upazila::text,'') like '" + upazila + "' and appointment_type ='1' or appointment_type ='3'  and date(created_date) BETWEEN '" + start_date + "' and '" + end_date + "'"
 
-    breed_q = "select count(*) as num_of_breed from vwcattle_farmer where(sl_final is not null or local_final is not null or hf_final is not null) and coalesce(division::text,'') like '" + str(
+    '''
+    breed_q = "select count(*) as num_of_breed from vwcattle_farmer where (sl_final is not null or local_final is not null or hf_final is not null) and coalesce(division::text,'') like '" + str(
         division) + "' and coalesce(district::text,'') like '" + str(
         district) + "' and coalesce(upazila::text,'') like '" + str(upazila) + "'; "
+    '''
+    breed_q = "select * from coalesce(get_total_breed_service('"+start_date+"','"+end_date+"','"+str(division)+"','"+str(district)+"','"+str(upazila)+"'),0)"
+
     breed_count = __db_fetch_single_value(breed_q)
 
     farmer_count = __db_fetch_single_value(farmer_query)

@@ -36,7 +36,7 @@ import zipfile
 import time
 from django.conf import settings
 import os
-
+import logging
 
 
 from django.core.mail import send_mail, BadHeaderError
@@ -914,6 +914,133 @@ def cattle_prescription_list(request,cattle_id):
 
     return HttpResponse(json.dumps(prescription_list, default=decimal_date_default))
 
+
+
+
+#   FARMER Web LOgin
+@csrf_exempt
+def verify_farmer(request):
+    farmer_mobile = request.POST.get("farmer_mobile")
+
+    user = User.objects.filter(username=farmer_mobile).first()
+
+    if user is not None:
+
+        farmer = __db_fetch_values_dict("select * from farmer where mobile = '"+farmer_mobile+"'")
+
+        if farmer:
+            profile = user.usermoduleprofile
+            password = ''
+            print "current otp is ::" + profile.otp
+            print "Expiration date" + str(profile.expired)
+            print datetime.today()
+            if datetime.today() > profile.expired:
+                password = id_generator()
+                next_expiry_date = (datetime.today() + timedelta(hours=2))
+            else:
+                password = profile.otp
+                next_expiry_date = profile.expired
+            encrypted_password = make_password(password)
+            user.password = encrypted_password
+            user.save()
+
+            profile.expired = next_expiry_date
+            profile.otp = password
+            profile.save()
+
+            passwordHistory = UserPasswordHistory(user_id=user.id, date=datetime.now())
+            passwordHistory.password = encrypted_password
+            passwordHistory.save()
+
+            #sms_text = "সুরক্ষা-তে রেজিস্ট্রেশন সম্পন্ন করার জন্য গোপন কোডটি লিখুন.কোড : " + str(password)
+
+            sms_text = "আপনার গরুর তথ্য জানার জন্য "+ str(password)+  " কোডটি ওয়েব এ দিন।"
+            views.send_sms(farmer_mobile, sms_text.decode('utf-8'))
+            #return HttpResponseRedirect('/livestock/farmer-login/?username=farmer_mobile')
+            #return HttpResponse('1',status=200)
+            return render(request, "livestock/login_farmer.html", {'username': farmer_mobile})
+        else:
+            messages.success(request, '<i class="fa fa-check-circle"></i> Farmer is not valid.',
+                             extra_tags='alert-error crop-both-side')
+            return HttpResponseRedirect("/usermodule/login/")
+    else:
+        messages.success(request, '<i class="fa fa-check-circle"></i> Farmer is not valid.',
+                         extra_tags='alert-danger crop-both-side')
+        return HttpResponseRedirect("/usermodule/login/")
+
+
+def farmer_login(request):
+    redirect_url = ''
+    # Like before, obtain the context for the user's request.
+    context = RequestContext(request)
+    logger = logging.getLogger(__name__)
+    # If the request is a HTTP POST, try to pull out the relevant information.
+    if request.method == 'POST':
+        # Gather the username and password provided by the user.
+        # This information is obtained from the login form.
+        username = request.POST['username']
+        password = request.POST['password']
+
+        farmer = __db_fetch_values_dict("select id from farmer where mobile = '" + username + "'")
+
+        if farmer:
+            for temp in farmer:
+                farmer_pri_id = temp['id']
+
+        else:
+            return HttpResponse('You are not a valid farmer.', status=409)
+
+        # Use Django's machinery to attempt to see if the username/password
+        # combination is valid - a User object is returned if it is.
+        user = authenticate(username=username, password=password)
+
+        # If we have a User object, the details are correct.
+        # If None (Python's way of representing the absence of a value), no user
+        # with matching credentials was found.
+        if user:
+            # number of login attempts allowed
+            max_allowed_attempts = 5
+            # count of invalid logins in db
+            counter_login_attempts = UserFailedLogin.objects.filter(user_id=user.id).count()
+            # check for number of allowed logins if it crosses limit do not login.
+            if counter_login_attempts > max_allowed_attempts:
+                return HttpResponse("Your account is locked for multiple invalid logins, contact admin to unlock")
+
+            # Is the account active? It could have been disabled.
+            if user.is_active:
+                if hasattr(user, 'usermoduleprofile'):
+                    current_user = user.usermoduleprofile
+                    if date.today() > current_user.expired.date():
+                        return HttpResponseRedirect('/usermodule/change-password')
+                login(request, user)
+                UserFailedLogin.objects.filter(user_id=user.id).delete()
+                redirect_url = '/livestock/farmer_profile/' + str(farmer_pri_id) + '/'
+                return HttpResponseRedirect(redirect_url)
+            else:
+                # An inactive account was used - no logging in!
+                # return HttpResponse("Your User account is disabled.")
+                return error_page(request,"Your User account is disabled")
+        else:
+            # Bad login details were provided. So we c an't log the user in.
+            # try:
+            #     attempted_user_id = User.objects.get(username=username).pk
+            # except User.DoesNotExist:
+            #     return HttpResponse("Invalid login details supplied when login attempted.")
+            # UserFailedLogin(user_id = attempted_user_id).save()
+            # print "Invalid login details: {0}, {1}".format(username, password)
+            # return HttpResponse("Invalid login details supplied.")
+            #return error_page(request,"Invalid login details supplied")
+
+            print " Invalid login *******************************************"
+            #return HttpResponseRedirect('/livestock/farmer-login/?username=' + username+'&data=Invalid login details supplied')
+            return render(request,'livestock/login_farmer.html', {'username': username,'data': "Invalid login details supplied",'redirect_url':redirect_url})
+
+    # The request is not a HTTP POST, so display the login form.
+    # This scenario would most likely be a HTTP GET.
+    else:
+        # No context variables to pass to the template system, hence the
+        # blank dictionary object...
+        return render_to_response('livestock/login_farmer.html', {'redirect_url':redirect_url,}, context)
 
 
 

@@ -129,6 +129,9 @@ urlpatterns = patterns('',
                         url(r"^cattle_prescription_list/(?P<cattle_id>\d+)/$", views_api.cattle_prescription_list, name='cattle_prescription_list'),
                         url(r"^get_cattle_general_info/$", views_api.get_cattle_general_info, name='get_cattle_general_info'),
 
+                       # Farmer Web login
+                       url(r"^verify_farmer/$", views_api.verify_farmer, name='verify_farmer'),
+                       url(r'^farmer-login/$', views_api.farmer_login, name='farmer_login'),
 
 
                        )
